@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>引力场 · Gravity Well</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#04060f}
+body{font-family:-apple-system,"SF Mono","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#dce6ff;
+  -webkit-tap-highlight-color:transparent;user-select:none;touch-action:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;top:calc(env(safe-area-inset-top) + 14px);left:14px;z-index:2;
+  background:rgba(8,12,26,.55);border:1px solid rgba(140,180,255,.18);border-radius:14px;backdrop-filter:blur(10px);
+  padding:11px 13px;font-size:11px;letter-spacing:.08em;line-height:1.9;font-variant-numeric:tabular-nums}
+.hud h1{font-size:11px;letter-spacing:.3em;color:#8fb6ff;margin-bottom:6px;font-weight:700}
+.hud b{color:#fff;font-weight:600}
+.hud .k{display:inline-block;width:52px;color:#7d8db3}
+.tools{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 16px);left:50%;transform:translateX(-50%);z-index:2;
+  display:flex;gap:8px;align-items:center}
+button{appearance:none;border:1px solid rgba(140,180,255,.24);background:rgba(10,16,34,.6);color:#dce6ff;font:inherit;
+  font-size:12px;letter-spacing:.12em;padding:10px 16px;border-radius:99px;cursor:pointer;backdrop-filter:blur(10px);
+  transition:.2s;white-space:nowrap}
+button:active{transform:scale(.95)}
+button.on{background:rgba(90,150,255,.28);border-color:rgba(150,200,255,.6);color:#fff}
+.tip{position:fixed;bottom:calc(env(safe-area-inset-bottom) + 74px);left:0;right:0;text-align:center;font-size:11px;
+  color:rgba(190,210,255,.5);letter-spacing:.16em;z-index:2;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">
+  <h1>GRAVITY WELL</h1>
+  <div><span class="k">粒子</span><b id="s-n">0</b></div>
+  <div><span class="k">动能</span><b id="s-e">0</b></div>
+  <div><span class="k">FPS</span><b id="s-f">0</b></div>
+  <div><span class="k">模式</span><b id="s-m">吸引</b></div>
+</div>
+<div class="tip">移动指针 = 临时引力点　·　点击 = 冲击波</div>
+<div class="tools">
+  <button id="mode" class="on">指针：吸引</button>
+  <button id="count">粒子 700</button>
+  <button id="reset">重置轨道</button>
+</div>
+<script>
+(function(){
+  const cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+  const $=id=>document.getElementById(id);
+  let W,H,DPR,cx,cy;
+  function fit(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cx=W/2;cy=H/2;
+    cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.fillStyle="#04060f";ctx.fillRect(0,0,W,H);}
+  addEventListener("resize",()=>{fit();seed();});
+
+  const GM=2600, EPS=26, MAXV=9;      // 引力常数×核质量、软化半径（避免奇点数值爆炸）、限速
+  let N=700, ps=[], attract=1, pointer={x:0,y:0,on:false,str:0}, waves=[];
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+
+  function spawn(p){
+    const a=Math.random()*6.2832, r=rnd(70,Math.min(W,H)*.52);
+    p.x=cx+Math.cos(a)*r; p.y=cy+Math.sin(a)*r;
+    const v=Math.sqrt(GM*1.6/Math.max(30,r))*rnd(.88,1.05), dir=Math.random()<.82?1:-1; // 近圆轨道速度
+    p.vx=-Math.sin(a)*v*dir; p.vy=Math.cos(a)*v*dir;
+    p.m=rnd(.6,1.6); p.z=rnd(.55,1); p.hue=rnd(190,300); p.px=p.x; p.py=p.y;
+    return p;
+  }
+  function seed(){ps=[];for(let i=0;i<N;i++)ps.push(spawn({}));}
+
+  let last=performance.now(), fpsN=0, fpsT=last, fps=60, t=0;
+  function step(now){
+    const dt=Math.min(2.2,(now-last)/16.6667); last=now; t+=dt*.016;
+    // 拖尾：半透明底色覆盖，形成连续轨迹而不是一堆散点
+    ctx.fillStyle="rgba(4,6,15,.20)"; ctx.fillRect(0,0,W,H);
+
+    let ke=0;
+    ctx.globalCompositeOperation="lighter";
+    for(let i=0;i<ps.length;i++){
+      const p=ps[i];
+      let dx=cx-p.x, dy=cy-p.y, d2=dx*dx+dy*dy+EPS*EPS, inv=1/Math.sqrt(d2);
+      let ax=GM*dx*inv/d2*100, ay=GM*dy*inv/d2*100;      // a = GM·r̂/(r²+ε²)
+      if(pointer.on){                                     // 指针：临时引力点 / 排斥场
+        const px=pointer.x-p.x, py=pointer.y-p.y, pd2=px*px+py*py+900, pinv=1/Math.sqrt(pd2);
+        const k=attract?1:-1.35, f=k*1400*pointer.str;
+        ax+=f*px*pinv/pd2*100; ay+=f*py*pinv/pd2*100;
+      }
+      for(const w of waves){                              // 冲击波：环形推力扫过粒子
+        const wx=p.x-w.x, wy=p.y-w.y, wd=Math.hypot(wx,wy)||1, band=Math.abs(wd-w.r);
+        if(band<44){const f=w.p*(1-band/44)*36/wd; ax+=wx*f; ay+=wy*f;}
+      }
+      p.vx+=ax*dt*.016; p.vy+=ay*dt*.016;
+      const sp=Math.hypot(p.vx,p.vy);
+      if(sp>MAXV){p.vx*=MAXV/sp;p.vy*=MAXV/sp;}
+      p.vx*=.9995; p.vy*=.9995;                           // 极轻阻尼，保持轨道连续不抖
+      p.px=p.x; p.py=p.y; p.x+=p.vx*dt; p.y+=p.vy*dt;
+      ke+=.5*p.m*sp*sp;
+
+      const rr=Math.hypot(p.x-cx,p.y-cy);
+      if(rr<15||rr>Math.max(W,H)*1.15) spawn(p);          // 落入核心或逃逸即回收，总数恒定
+      const lum=42+Math.min(46,sp*7), al=(.32+p.z*.6);
+      ctx.strokeStyle="hsla("+(p.hue+sp*9)+",92%,"+lum+"%,"+al+")";
+      ctx.lineWidth=p.m*p.z*1.5;
+      ctx.beginPath();ctx.moveTo(p.px,p.py);ctx.lineTo(p.x,p.y);ctx.stroke();
+    }
+    for(let i=waves.length-1;i>=0;i--){
+      const w=waves[i]; w.r+=9*dt; w.p*=Math.pow(.965,dt);
+      if(w.p<.05){waves.splice(i,1);continue;}
+      ctx.strokeStyle="rgba(150,215,255,"+w.p*.5+")";ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(w.x,w.y,w.r,0,6.2832);ctx.stroke();
+    }
+    // 能量核心：内核 + 呼吸光晕 + 反向自转吸积环
+    const pulse=1+Math.sin(t*3)*.06;
+    const g=ctx.createRadialGradient(cx,cy,2,cx,cy,66*pulse);
+    g.addColorStop(0,"rgba(255,255,255,.95)");g.addColorStop(.22,"rgba(150,205,255,.62)");
+    g.addColorStop(.55,"rgba(90,120,255,.20)");g.addColorStop(1,"rgba(60,90,255,0)");
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,66*pulse,0,6.2832);ctx.fill();
+    ctx.strokeStyle="rgba(180,220,255,.35)";ctx.lineWidth=1.2;
+    ctx.beginPath();ctx.ellipse(cx,cy,40+4*Math.sin(t*2),13,t*.6,0,6.2832);ctx.stroke();
+    ctx.beginPath();ctx.ellipse(cx,cy,30,9,-t*.9,0,6.2832);ctx.stroke();
+    if(pointer.on){
+      ctx.strokeStyle=attract?"rgba(120,255,220,.5)":"rgba(255,140,170,.5)";ctx.lineWidth=1.4;
+      ctx.beginPath();ctx.arc(pointer.x,pointer.y,26+6*Math.sin(t*6),0,6.2832);ctx.stroke();
+    }
+    ctx.globalCompositeOperation="source-over";
+    pointer.str+=((pointer.on?1:0)-pointer.str)*.08*dt;
+
+    fpsN++;
+    if(now-fpsT>420){fps=Math.round(fpsN*1000/(now-fpsT));fpsN=0;fpsT=now;
+      $("s-n").textContent=ps.length;$("s-e").textContent=(ke/1000).toFixed(1)+" kJ";$("s-f").textContent=fps;}
+    requestAnimationFrame(step);
+  }
+
+  cv.addEventListener("pointermove",e=>{pointer.x=e.clientX;pointer.y=e.clientY;pointer.on=true;});
+  cv.addEventListener("pointerleave",()=>{pointer.on=false;});
+  cv.addEventListener("pointerdown",e=>{
+    pointer.x=e.clientX;pointer.y=e.clientY;pointer.on=true;
+    waves.push({x:e.clientX,y:e.clientY,r:6,p:1});
+  });
+  $("mode").onclick=()=>{attract=!attract;$("mode").textContent="指针："+(attract?"吸引":"排斥");
+    $("mode").classList.toggle("on",attract);$("s-m").textContent=attract?"吸引":"排斥";};
+  $("count").onclick=()=>{N=N>=1200?350:N>=700?1200:700;$("count").textContent="粒子 "+N;seed();};
+  $("reset").onclick=()=>{waves=[];seed();};
+
+  fit();seed();
+  // 首帧就给一次冲击波，静态截图也能看出场在运动
+  waves.push({x:cx,y:cy,r:40,p:.8});
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>

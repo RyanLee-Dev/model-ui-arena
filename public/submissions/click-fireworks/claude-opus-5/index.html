@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>夜宴 · 点击放烟花</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#05060f}
+body{font-family:-apple-system,"SF Pro Text","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#dfe7ff;
+  -webkit-tap-highlight-color:transparent;user-select:none;touch-action:manipulation}
+.sky{position:fixed;inset:0;background:
+  radial-gradient(2px 2px at 12% 18%,rgba(255,255,255,.85),transparent 60%),
+  radial-gradient(1.6px 1.6px at 78% 12%,rgba(255,255,255,.7),transparent 60%),
+  radial-gradient(1.4px 1.4px at 42% 8%,rgba(255,255,255,.6),transparent 60%),
+  radial-gradient(1.8px 1.8px at 63% 26%,rgba(255,255,255,.55),transparent 60%),
+  radial-gradient(1.4px 1.4px at 25% 32%,rgba(255,255,255,.5),transparent 60%),
+  radial-gradient(1.6px 1.6px at 88% 36%,rgba(255,255,255,.45),transparent 60%),
+  radial-gradient(120% 80% at 50% 110%,#1b2450 0%,#0a0e22 45%,#05060f 75%)}
+.moon{position:fixed;right:12%;top:9%;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle at 34% 32%,#fffdf3,#ffe9b8 58%,#e8c98a);
+  box-shadow:0 0 60px 14px rgba(255,231,170,.22)}
+.city{position:fixed;left:0;right:0;bottom:0;height:22vh;background:linear-gradient(180deg,#080b1c,#03040a);
+  clip-path:polygon(0% 100%,0% 62%,5% 62%,5% 44%,9% 44%,9% 66%,15% 66%,15% 30%,19% 30%,19% 58%,26% 58%,26% 47%,31% 47%,
+  31% 71%,38% 71%,38% 38%,42% 38%,42% 24%,46% 24%,46% 55%,53% 55%,53% 42%,58% 42%,58% 66%,65% 66%,65% 33%,69% 33%,
+  69% 57%,76% 57%,76% 46%,81% 46%,81% 68%,88% 68%,88% 39%,93% 39%,93% 60%,100% 60%,100% 100%);opacity:.96}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:2}
+.hud{position:fixed;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:3;display:flex;justify-content:center;pointer-events:none}
+.chip{display:flex;gap:14px;align-items:center;padding:9px 16px;border-radius:99px;font-size:11.5px;letter-spacing:.1em;
+  background:rgba(10,14,32,.55);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(10px);font-variant-numeric:tabular-nums}
+.chip b{color:#ffd479;font-weight:600}
+.title{position:fixed;top:calc(env(safe-area-inset-top) + 20px);left:0;right:0;z-index:3;text-align:center;pointer-events:none}
+.title h1{font-size:15px;font-weight:600;letter-spacing:.42em;text-indent:.42em;color:rgba(255,255,255,.9);
+  text-shadow:0 0 18px rgba(140,180,255,.55)}
+.title p{margin-top:6px;font-size:11px;letter-spacing:.22em;color:rgba(200,214,255,.55)}
+</style>
+</head>
+<body>
+<div class="sky"></div><div class="moon"></div><div class="city"></div>
+<canvas id="cv"></canvas>
+<div class="title"><h1>夜 宴</h1><p>点击 / 触摸任意位置放烟花</p></div>
+<div class="hud"><div class="chip"><span>烟花 <b id="n-shell">0</b></span><span>粒子 <b id="n-part">0</b></span><span>FPS <b id="n-fps">0</b></span></div></div>
+<script>
+(function(){
+  const cv=document.getElementById("cv"), ctx=cv.getContext("2d",{alpha:true});
+  let W=0,H=0,DPR=1;
+  function fit(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;
+    cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+  addEventListener("resize",fit);fit();
+
+  const G=0.055, SG=0.15, MAX=1600;   // 粒子重力 / 升空重力（px/frame²）与粒子池硬上限，超出丢弃最老的
+  const shells=[], parts=[];
+  const PAL=[[8,100],[45,100],[190,95],[280,90],[330,95],[120,85],[16,100],[215,100]];
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+
+  function launch(tx,ty){
+    const sx=tx+rnd(-40,40), pal=PAL[(Math.random()*PAL.length)|0];
+    const dy=Math.max(60,H-ty);
+    shells.push({x:sx,y:H+4,vx:(tx-sx)/Math.sqrt(2*dy/SG),vy:-Math.sqrt(2*SG*dy),
+      hue:pal[0],sat:pal[1],ty:ty,type:(Math.random()*4)|0,r:rnd(2.2,4.6)});
+  }
+  function burst(x,y,hue,sat,type){
+    const n=type===3?150:90+((Math.random()*70)|0), power=rnd(2.4,5.6);
+    for(let i=0;i<n;i++){
+      const a=Math.random()*6.2832;
+      // 环形烟花速度恒定，牡丹型用 sqrt 分布让粒子体积均匀，柳树型初速小、阻力大
+      const sp=type===1?power*rnd(.94,1.06):type===2?power*.55*Math.sqrt(Math.random()):power*Math.sqrt(Math.random());
+      const z=type===1?Math.cos(rnd(-.4,.4)):1;
+      parts.push({x,y,vx:Math.cos(a)*sp*z,vy:Math.sin(a)*sp*z-rnd(0,.6),
+        h:type===3?(hue+rnd(-40,40)+360)%360:hue+rnd(-12,12),s:sat,
+        life:1,decay:type===2?rnd(.006,.011):rnd(.010,.020),
+        drag:type===2?.982:.968,size:rnd(.9,2.1),tw:Math.random()*6.28,g:type===2?1.5:1});
+    }
+    for(let i=0;i<18;i++){                     // 中心闪光碎屑
+      const a=Math.random()*6.2832,sp=rnd(.4,1.6);
+      parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,h:hue,s:30,life:1,decay:.05,drag:.9,size:rnd(2,4),tw:0,g:.4});
+    }
+    if(parts.length>MAX)parts.splice(0,parts.length-MAX);
+  }
+
+  let last=performance.now(),fired=0,lastUser=0,nextAuto=900;
+  function loop(now){
+    const dt=Math.min(2.4,(now-last)/16.6667);last=now;
+    // 拖尾：用 destination-out 逐帧擦除，让 CSS 夜空透出来，同时不会累积成黑块
+    ctx.globalCompositeOperation="destination-out";
+    ctx.fillStyle="rgba(0,0,0,"+(0.16*dt).toFixed(3)+")";ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation="lighter";
+
+    for(let i=shells.length-1;i>=0;i--){
+      const s=shells[i];
+      s.x+=s.vx*dt;s.y+=s.vy*dt;s.vy+=SG*dt;
+      ctx.strokeStyle="hsla("+s.hue+","+s.sat+"%,58%,.55)";ctx.lineWidth=s.r*.9;ctx.lineCap="round";
+      ctx.beginPath();ctx.moveTo(s.x-s.vx*2.6,s.y-s.vy*2.6);ctx.lineTo(s.x,s.y);ctx.stroke();
+      ctx.fillStyle="hsla("+s.hue+","+s.sat+"%,78%,.95)";
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r*.62,0,6.2832);ctx.fill();
+      if(s.vy>=0||s.y<=s.ty){burst(s.x,s.y,s.hue,s.sat,s.type);shells.splice(i,1);}
+    }
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];
+      p.vx*=Math.pow(p.drag,dt);p.vy=p.vy*Math.pow(p.drag,dt)+G*p.g*dt;
+      p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=p.decay*dt;p.tw+=.35*dt;
+      if(p.life<=0||p.y>H+30){parts.splice(i,1);continue;}
+      const a=p.life*(p.life>.35?1:(.55+.45*Math.sin(p.tw*3)));   // 余辉阶段开始闪烁
+      const col="hsla("+p.h+","+p.s+"%,"+(46+p.life*20)+"%,";
+      ctx.strokeStyle=col+a+")";ctx.lineCap="round";              // 按速度方向画短拖影，像火星而不是圆点
+      ctx.lineWidth=p.size*(.45+p.life*.75);
+      ctx.beginPath();ctx.moveTo(p.x-p.vx*2.1,p.y-p.vy*2.1);ctx.lineTo(p.x,p.y);ctx.stroke();
+      if(p.life>.5){                                              // 高亮期附加小光晕
+        ctx.fillStyle=col+(a*.16)+")";
+        ctx.beginPath();ctx.arc(p.x,p.y,p.size*2.4,0,6.2832);ctx.fill();
+      }
+    }
+    ctx.globalCompositeOperation="source-over";
+
+    if(now-lastUser>2600&&now>nextAuto){                          // 闲置时自动放，画面不会空
+      launch(rnd(W*.15,W*.85),rnd(H*.14,H*.46));fired++;nextAuto=now+rnd(900,1800);
+    }
+    requestAnimationFrame(loop);
+  }
+  // FPS 用固定窗口统计，避免每帧字符串刷新
+  let fpsFrames=0,fpsT=performance.now();
+  setInterval(()=>{
+    document.getElementById("n-shell").textContent=fired;
+    document.getElementById("n-part").textContent=parts.length;
+    const now=performance.now();
+    document.getElementById("n-fps").textContent=Math.round(fpsFrames*1000/(now-fpsT));
+    fpsFrames=0;fpsT=now;
+  },500);
+  const rafCount=()=>{fpsFrames++;requestAnimationFrame(rafCount);};
+
+  function pointer(e){
+    const t=e.touches?e.touches[0]:e, x=t.clientX, y=Math.min(t.clientY,H*.82);
+    lastUser=performance.now();fired++;launch(x,y);
+    if(Math.random()<.35)setTimeout(()=>{fired++;launch(x+rnd(-90,90),y+rnd(-50,50));},rnd(90,260));
+  }
+  addEventListener("pointerdown",pointer,{passive:true});
+  [0,420,900].forEach((d,i)=>setTimeout(()=>{fired++;launch(W*(.28+i*.22),H*(.2+i*.08));},d));
+  requestAnimationFrame(loop);requestAnimationFrame(rafCount);
+})();
+</script>
+</body>
+</html>

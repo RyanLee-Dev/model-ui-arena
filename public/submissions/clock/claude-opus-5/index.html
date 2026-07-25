@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>光阴 · Aurora Clock</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg0:#04060e;--bg1:#152241;--fg:#eef4ff;--dim:#8ea3c9;--acc:#61e8ff;--sec:#ff5f8f;--line:rgba(255,255,255,.12);--card:rgba(255,255,255,.06)}
+body[data-phase=dawn]{--bg0:#2a1a35;--bg1:#ff9c6b;--fg:#fff4ec;--dim:#e6bda9;--acc:#ffd166;--sec:#ff4d6d;--line:rgba(255,255,255,.16);--card:rgba(255,255,255,.10)}
+body[data-phase=day]{--bg0:#c9deff;--bg1:#fdf7ec;--fg:#0d1728;--dim:#5d7291;--acc:#0a84ff;--sec:#ff3b5c;--line:rgba(13,23,40,.14);--card:rgba(255,255,255,.6)}
+body[data-phase=dusk]{--bg0:#0a0f2e;--bg1:#8a3f8f;--fg:#fdeaff;--dim:#c9a9dc;--acc:#ffb457;--sec:#ff5f8f;--line:rgba(255,255,255,.14);--card:rgba(255,255,255,.08)}
+body{min-height:100svh;display:grid;place-items:center;padding:20px;color:var(--fg);overflow:hidden;
+  font-family:-apple-system,"SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  background:radial-gradient(135% 105% at 50% -12%,var(--bg1),var(--bg0) 62%);transition:background .9s ease,color .9s ease}
+.wrap{width:min(360px,100%);display:flex;flex-direction:column;align-items:center;gap:18px}
+.meta{width:100%;display:flex;justify-content:space-between;align-items:center;font-size:12px;letter-spacing:.28em;color:var(--dim);text-transform:uppercase}
+.meta b{color:var(--fg);font-weight:600;letter-spacing:.18em}
+.dial{width:100%;height:auto;overflow:visible;filter:drop-shadow(0 18px 40px rgba(0,0,0,.35))}
+.halo{transition:opacity .9s ease,r .9s ease}
+.tick{stroke:var(--dim);opacity:.55}
+.tick.major{stroke:var(--fg);opacity:.9}
+.tick.live{stroke:var(--acc);opacity:1}
+.num{fill:var(--dim);font-size:15px;font-weight:600;text-anchor:middle;dominant-baseline:middle;letter-spacing:.04em}
+#hands line,#hands circle{transition:none}
+.digital{text-align:center;line-height:1}
+.time{display:flex;align-items:baseline;justify-content:center;gap:2px;font-variant-numeric:tabular-nums;
+  font-size:clamp(46px,15vw,60px);font-weight:200;letter-spacing:-.02em}
+.time i{font-style:normal;color:var(--acc);animation:blink 1s steps(1,end) infinite;padding:0 2px}
+.time small{font-size:.42em;font-weight:600;color:var(--sec);margin-left:8px;letter-spacing:.06em;transform:translateY(-.9em)}
+@keyframes blink{50%{opacity:.18}}
+.date{margin-top:10px;font-size:13px;color:var(--dim);letter-spacing:.18em}
+.bar{width:100%;height:3px;border-radius:99px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--sec),var(--acc));transition:width .4s ease}
+.foot{width:100%;display:flex;justify-content:space-between;font-size:11px;color:var(--dim);letter-spacing:.14em}
+@media(max-height:640px){.wrap{gap:12px}.time{font-size:clamp(38px,12vw,48px)}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="meta"><span id="phase">— —</span><b id="zone">UTC</b></div>
+  <svg class="dial" viewBox="0 0 300 300" role="img" aria-label="模拟时钟">
+    <defs>
+      <radialGradient id="face" cx="50%" cy="30%" r="75%">
+        <stop offset="0" stop-color="var(--card)"/><stop offset="1" stop-color="var(--card)" stop-opacity="0"/>
+      </radialGradient>
+      <linearGradient id="hand" gradientUnits="userSpaceOnUse" x1="150" y1="175" x2="150" y2="55">
+        <stop offset="0" stop-color="var(--dim)"/><stop offset="1" stop-color="var(--fg)"/>
+      </linearGradient>
+    </defs>
+    <circle class="halo" id="halo" cx="150" cy="150" r="142" fill="none" stroke="var(--acc)" stroke-width="1" opacity=".25"/>
+    <circle cx="150" cy="150" r="140" fill="url(#face)" stroke="var(--line)" stroke-width="1"/>
+    <circle cx="150" cy="150" r="128" fill="none" stroke="var(--line)" stroke-width="2.5"/>
+    <circle id="arc" cx="150" cy="150" r="128" fill="none" stroke="var(--acc)" stroke-width="2.5"
+            stroke-linecap="round" transform="rotate(-90 150 150)" stroke-dasharray="804.2" stroke-dashoffset="804.2"/>
+    <g id="ticks" stroke-linecap="round"></g>
+    <g id="nums"></g>
+    <g id="hands">
+      <line id="hh" x1="150" y1="162" x2="150" y2="88" stroke="url(#hand)" stroke-width="9" stroke-linecap="round"/>
+      <line id="mm" x1="150" y1="168" x2="150" y2="64" stroke="url(#hand)" stroke-width="5.5" stroke-linecap="round"/>
+      <g id="ss">
+        <line x1="150" y1="176" x2="150" y2="52" stroke="var(--sec)" stroke-width="1.8"/>
+        <circle cx="150" cy="52" r="4" fill="var(--sec)"/>
+      </g>
+      <circle cx="150" cy="150" r="6.5" fill="var(--bg0)" stroke="var(--fg)" stroke-width="2.5"/>
+    </g>
+  </svg>
+  <div class="digital">
+    <div class="time"><span id="t-h">00</span><i>:</i><span id="t-m">00</span><small id="t-s">00</small></div>
+    <div class="date" id="date">—</div>
+  </div>
+  <div class="bar"><i id="fill"></i></div>
+  <div class="foot"><span id="left">今日剩余 —</span><span id="pct">0.0%</span></div>
+</main>
+<script>
+(function(){
+  const $=id=>document.getElementById(id);
+  const R=Math.PI/180, ARC=2*Math.PI*128;
+  const ticksEl=$("ticks"), numsEl=$("nums"), NS="http://www.w3.org/2000/svg";
+  const tickNodes=[];
+
+  // 刻度：60 格，每 5 格加粗；整点数字只画 12/3/6/9，保持画面呼吸感
+  for(let i=0;i<60;i++){
+    const major=i%5===0, a=(i*6-90)*R, r1=major?110:118, r2=124;
+    const l=document.createElementNS(NS,"line");
+    l.setAttribute("x1",150+Math.cos(a)*r1); l.setAttribute("y1",150+Math.sin(a)*r1);
+    l.setAttribute("x2",150+Math.cos(a)*r2); l.setAttribute("y2",150+Math.sin(a)*r2);
+    l.setAttribute("stroke-width",major?3:1.2);
+    l.setAttribute("class","tick"+(major?" major":""));
+    ticksEl.appendChild(l); tickNodes.push(l);
+  }
+  [[12,0],[3,90],[6,180],[9,270]].forEach(([n,deg])=>{
+    const a=(deg-90)*R, t=document.createElementNS(NS,"text");
+    t.setAttribute("x",150+Math.cos(a)*94); t.setAttribute("y",150+Math.sin(a)*94);
+    t.setAttribute("class","num"); t.textContent=n; numsEl.appendChild(t);
+  });
+
+  const WEEK=["周日","周一","周二","周三","周四","周五","周六"];
+  const pad=n=>String(n).padStart(2,"0");
+  const phaseOf=h=>h<5?"night":h<8?"dawn":h<17?"day":h<20?"dusk":"night";
+  const phaseName={dawn:"黎明 DAWN",day:"白昼 DAY",dusk:"黄昏 DUSK",night:"深夜 NIGHT"};
+  $("zone").textContent=(Intl.DateTimeFormat().resolvedOptions().timeZone||"LOCAL").split("/").pop();
+
+  let lastSec=-1, lastDay=-1, lastPhase="";
+  function frame(){
+    const d=new Date();
+    const ms=d.getMilliseconds(), s=d.getSeconds()+ms/1000;
+    const m=d.getMinutes()+s/60, h=d.getHours()%12+m/60;
+
+    // 指针：秒针连续扫秒（不跳格），分/时针同步微动，全部走单一 rAF
+    $("ss").setAttribute("transform","rotate("+s*6+" 150 150)");
+    $("mm").setAttribute("transform","rotate("+m*6+" 150 150)");
+    $("hh").setAttribute("transform","rotate("+h*30+" 150 150)");
+    $("arc").setAttribute("stroke-dashoffset",ARC*(1-s/60));
+
+    const sec=d.getSeconds();
+    if(sec!==lastSec){                        // 每秒才改 DOM 文本，减少无谓重排
+      lastSec=sec;
+      $("t-h").textContent=pad(d.getHours());
+      $("t-m").textContent=pad(d.getMinutes());
+      $("t-s").textContent=pad(sec);
+      tickNodes.forEach((n,i)=>n.classList.toggle("live",i===sec));
+      const halo=$("halo");                   // 每秒一次光晕呼吸
+      halo.setAttribute("r",146); halo.setAttribute("opacity",.55);
+      setTimeout(()=>{halo.setAttribute("r",142);halo.setAttribute("opacity",.25);},120);
+
+      const day=d.getDate(), passed=(d.getHours()*3600+d.getMinutes()*60+sec)/864;
+      $("fill").style.width=passed+"%";
+      $("pct").textContent=passed.toFixed(1)+"%";
+      const rest=86400-passed*864;
+      $("left").textContent="今日剩余 "+pad(Math.floor(rest/3600))+"h"+pad(Math.floor(rest%3600/60))+"m";
+      if(day!==lastDay){
+        lastDay=day;
+        $("date").textContent=d.getFullYear()+" 年 "+(d.getMonth()+1)+" 月 "+day+" 日 · "+WEEK[d.getDay()];
+      }
+      const p=phaseOf(d.getHours());
+      if(p!==lastPhase){ lastPhase=p; document.body.dataset.phase=p; $("phase").textContent=phaseName[p]; }
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

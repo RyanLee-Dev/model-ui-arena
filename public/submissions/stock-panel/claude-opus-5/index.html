@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>盯盘 · Market Watch</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080a0f;--panel:#111520;--edge:rgba(255,255,255,.08);--fg:#e9edf6;--dim:#78829a;--up:#ff4d5e;--down:#12c48b;--gold:#ffc453}
+body{min-height:100svh;display:grid;place-items:center;padding:18px;background:radial-gradient(120% 80% at 50% 0%,#161c2b,var(--bg) 62%);
+  color:var(--fg);font-family:-apple-system,"SF Pro Text","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.panel{width:min(360px,100%);background:linear-gradient(180deg,#141926,var(--panel));border:1px solid var(--edge);border-radius:22px;
+  padding:16px;box-shadow:0 26px 56px rgba(0,0,0,.6)}
+header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px}
+h1{font-size:16px;font-weight:700;letter-spacing:.06em}
+.sub{display:block;font-size:10px;color:var(--dim);letter-spacing:.16em;margin-top:3px}
+.live{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--dim);letter-spacing:.14em;font-variant-numeric:tabular-nums}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--up);animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,77,94,.5)}70%{opacity:.5;box-shadow:0 0 0 7px rgba(255,77,94,0)}}
+.hero{background:rgba(255,255,255,.03);border:1px solid var(--edge);border-radius:16px;padding:12px 12px 8px}
+.hrow{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:6px}
+.name{font-size:15px;font-weight:700}
+.code{font-size:10px;color:var(--dim);letter-spacing:.16em;margin-top:2px}
+.price{font-size:28px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em;text-align:right}
+.chg{font-size:12px;font-variant-numeric:tabular-nums;text-align:right;margin-top:2px}
+#chart{width:100%;height:auto;display:block}
+.axis{display:flex;justify-content:space-between;font-size:9.5px;color:var(--dim);letter-spacing:.1em;padding:2px 2px 0}
+.alert{margin:10px 0;font-size:11.5px;line-height:1.5;border-radius:12px;padding:9px 11px;border:1px solid transparent;
+  background:rgba(255,196,83,.09);border-color:rgba(255,196,83,.28);color:#ffd88a;transition:.3s}
+.alert.calm{background:rgba(255,255,255,.03);border-color:var(--edge);color:var(--dim)}
+ul{list-style:none;display:flex;flex-direction:column;gap:2px}
+li{display:grid;grid-template-columns:1fr 62px 84px;align-items:center;gap:8px;padding:9px 8px;border-radius:12px;cursor:pointer;
+  transition:background .2s;border:1px solid transparent}
+li:hover{background:rgba(255,255,255,.04)}
+li.on{background:rgba(255,255,255,.06);border-color:var(--edge)}
+li .t{font-size:13px;font-weight:600}
+li .c{font-size:10px;color:var(--dim);letter-spacing:.1em;margin-top:2px}
+li svg{width:62px;height:26px;display:block}
+.val{text-align:right;font-variant-numeric:tabular-nums}
+.val .p{font-size:13.5px;font-weight:600}
+.pill{display:inline-block;margin-top:3px;font-size:10.5px;font-weight:700;padding:2px 6px;border-radius:6px;line-height:1.35}
+.up{color:var(--up)}.down{color:var(--down)}
+.pill.up{background:rgba(255,77,94,.15)}.pill.down{background:rgba(18,196,139,.15)}
+@keyframes flashUp{0%{background:rgba(255,77,94,.28)}100%{background:transparent}}
+@keyframes flashDown{0%{background:rgba(18,196,139,.28)}100%{background:transparent}}
+.fu{animation:flashUp .55s ease-out}.fd{animation:flashDown .55s ease-out}
+.foot{margin-top:10px;font-size:9.5px;color:var(--dim);letter-spacing:.1em;text-align:center}
+</style>
+</head>
+<body>
+<main class="panel">
+  <header>
+    <div><h1>自选盯盘</h1><span class="sub">MOCK STREAM · 红涨绿跌</span></div>
+    <div class="live"><i></i>LIVE <span id="clock">09:30:00</span></div>
+  </header>
+  <section class="hero">
+    <div class="hrow">
+      <div><div class="name" id="h-name">—</div><div class="code" id="h-code">—</div></div>
+      <div><div class="price" id="h-price">—</div><div class="chg" id="h-chg">—</div></div>
+    </div>
+    <svg id="chart" viewBox="0 0 322 108">
+      <defs>
+        <linearGradient id="fillUp" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ff4d5e" stop-opacity=".34"/><stop offset="1" stop-color="#ff4d5e" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="fillDown" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#12c48b" stop-opacity=".34"/><stop offset="1" stop-color="#12c48b" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <line id="base" x1="0" x2="322" stroke="rgba(255,255,255,.16)" stroke-width="1" stroke-dasharray="3 4"/>
+      <path id="area" d="" fill="url(#fillUp)"/>
+      <polyline id="line" fill="none" stroke="#ff4d5e" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle id="head" r="3" fill="#fff"/>
+    </svg>
+    <div class="axis"><span id="a-lo">—</span><span id="a-open">昨收 —</span><span id="a-hi">—</span></div>
+  </section>
+  <div class="alert calm" id="alert">波动监控中…</div>
+  <ul id="list"></ul>
+  <div class="foot">数据为本地模拟随机游走，仅用于 UI 演示，不构成任何投资建议</div>
+</main>
+<script>
+(function(){
+  const $=id=>document.getElementById(id), NS="http://www.w3.org/2000/svg", N=60;
+  const STOCKS=[
+    {n:"贵州茅台",c:"SH 600519",p:1683.4,v:.0016},
+    {n:"宁德时代",c:"SZ 300750",p:262.85,v:.0030},
+    {n:"比亚迪",  c:"SZ 002594",p:341.60,v:.0026},
+    {n:"中际旭创",c:"SZ 300308",p:158.72,v:.0052},
+    {n:"工商银行",c:"SH 601398",p:7.42, v:.0009}
+  ];
+  const gauss=()=>(Math.random()+Math.random()+Math.random()+Math.random()-2)/1.2;  // 近似正态，避免锯齿抖动
+  STOCKS.forEach((s,k)=>{                              // 回补 60 根分时，首帧就是完整日内曲线
+    s.open=+(s.p*(1+(Math.random()-.5)*.004)).toFixed(2);
+    s.hist=[];let p=s.open;
+    for(let i=0;i<N;i++){p=Math.max(.01,p*(1+gauss()*s.v+Math.sin(i/9+k*2)*s.v*.42));s.hist.push(+p.toFixed(2));}
+    s.p=s.hist[N-1];s.hi=Math.max(...s.hist);s.lo=Math.min(...s.hist);
+  });
+  let sel=0, tick=0;
+
+  const spark=(s)=>{                                   // 迷你趋势图：60 点收敛到 62×26
+    const h=s.hist,max=Math.max(...h),min=Math.min(...h),sp=Math.max(1e-6,max-min);
+    return h.map((v,i)=>(i/(N-1)*60+1).toFixed(1)+","+(23-(v-min)/sp*20).toFixed(1)).join(" ");
+  };
+  const fmt=p=>p.toFixed(2), sign=d=>d>=0?"+":"";
+
+  function row(s,i){
+    const d=s.p-s.open, pct=d/s.open*100, cls=d>=0?"up":"down";
+    return "<li data-i='"+i+"'"+(i===sel?" class='on'":"")+">"+
+      "<div><div class='t'>"+s.n+"</div><div class='c'>"+s.c+"</div></div>"+
+      "<svg viewBox='0 0 62 26'><polyline points='"+spark(s)+"' fill='none' stroke-width='1.6' stroke-linejoin='round' stroke='"+
+        (d>=0?"#ff4d5e":"#12c48b")+"'/></svg>"+
+      "<div class='val'><div class='p "+cls+"'>"+fmt(s.p)+"</div>"+
+      "<span class='pill "+cls+"'>"+(d>=0?"▲":"▼")+" "+sign(d)+d.toFixed(2)+" "+sign(pct)+pct.toFixed(2)+"%</span></div></li>";
+  }
+  function paintList(){
+    $("list").innerHTML=STOCKS.map(row).join("");
+    [...$("list").children].forEach(li=>li.onclick=()=>{sel=+li.dataset.i;paintList();paintHero(true);});
+  }
+  function paintHero(){
+    const s=STOCKS[sel],h=s.hist,d=s.p-s.open,pct=d/s.open*100,up=d>=0;
+    const max=Math.max(...h,s.open),min=Math.min(...h,s.open),sp=Math.max(1e-6,max-min);
+    const X=i=>(i/(N-1))*318+2, Y=v=>102-((v-min)/sp)*96;
+    const pts=h.map((v,i)=>X(i).toFixed(1)+","+Y(v).toFixed(1)).join(" ");
+    $("line").setAttribute("points",pts);
+    $("line").setAttribute("stroke",up?"#ff4d5e":"#12c48b");
+    $("area").setAttribute("d","M2,106 L"+pts.replace(/ /g," L")+" L320,106 Z");
+    $("area").setAttribute("fill",up?"url(#fillUp)":"url(#fillDown)");
+    $("base").setAttribute("y1",Y(s.open));$("base").setAttribute("y2",Y(s.open));
+    $("head").setAttribute("cx",X(N-1));$("head").setAttribute("cy",Y(s.p));
+    $("head").setAttribute("fill",up?"#ff4d5e":"#12c48b");
+    $("h-name").textContent=s.n;$("h-code").textContent=s.c;
+    $("h-price").textContent=fmt(s.p);$("h-price").className="price "+(up?"up":"down");
+    $("h-chg").innerHTML="<span class='"+(up?"up":"down")+"'>"+(up?"▲":"▼")+" "+sign(d)+d.toFixed(2)+
+      "　"+sign(pct)+pct.toFixed(2)+"%</span>";
+    $("a-lo").textContent="最低 "+fmt(s.lo);$("a-hi").textContent="最高 "+fmt(s.hi);
+    $("a-open").textContent="昨收 "+fmt(s.open);
+  }
+  function updateRow(s,i,dir){                          // 只改动价格文本与涨跌块，避免整表重建
+    const li=$("list").children[i];if(!li)return;
+    const d=s.p-s.open,pct=d/s.open*100,cls=d>=0?"up":"down";
+    li.querySelector(".p").textContent=fmt(s.p);li.querySelector(".p").className="p "+cls;
+    const pill=li.querySelector(".pill");
+    pill.className="pill "+cls;pill.textContent=(d>=0?"▲":"▼")+" "+sign(d)+d.toFixed(2)+" "+sign(pct)+pct.toFixed(2)+"%";
+    li.querySelector("polyline").setAttribute("points",spark(s));
+    li.querySelector("polyline").setAttribute("stroke",d>=0?"#ff4d5e":"#12c48b");
+    li.classList.remove("fu","fd");void li.offsetWidth;li.classList.add(dir>0?"fu":"fd");
+  }
+  function stream(){
+    tick++;
+    STOCKS.forEach((s,i)=>{
+      const drift=Math.sin(tick/26+i)*s.v*.35;                 // 缓慢趋势 + 随机扰动
+      const step=s.p*(gauss()*s.v+drift);
+      s.p=Math.max(.01,+(s.p+step).toFixed(2));
+      s.hi=Math.max(s.hi,s.p);s.lo=Math.min(s.lo,s.p);
+      s.hist.push(s.p);if(s.hist.length>N)s.hist.shift();
+      updateRow(s,i,step);
+    });
+    paintHero();
+    const t=new Date(2026,0,1,9,30,0);t.setSeconds(t.getSeconds()+tick*3);
+    $("clock").textContent=t.toTimeString().slice(0,8);
+    risk();
+    setTimeout(stream,900);
+  }
+  function risk(){
+    const hot=STOCKS.map(s=>({s,pct:(s.p-s.open)/s.open*100}))
+      .sort((a,b)=>Math.abs(b.pct)-Math.abs(a.pct))[0];
+    const s=hot.s,h=s.hist.slice(-20),m=h.reduce((a,b)=>a+b,0)/h.length;
+    const vol=Math.sqrt(h.reduce((a,b)=>a+(b-m)**2,0)/h.length)/m*100;
+    const box=$("alert");
+    if(Math.abs(hot.pct)>=1.5||vol>=.9){
+      box.classList.remove("calm");
+      box.textContent="⚠ 风险提示："+s.n+" 现价 "+fmt(s.p)+"，日内"+(hot.pct>=0?"涨":"跌")+
+        Math.abs(hot.pct).toFixed(2)+"%，20 档波动率 "+vol.toFixed(2)+"%，注意仓位与止损。";
+    }else{
+      box.classList.add("calm");
+      box.textContent="波动监控中：全场最大振幅 "+Math.abs(hot.pct).toFixed(2)+"%（"+s.n+"），波动率 "+vol.toFixed(2)+"%，暂无异动。";
+    }
+  }
+  paintList();paintHero();stream();
+})();
+</script>
+</body>
+</html>

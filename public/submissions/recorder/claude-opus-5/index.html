@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>PocketRec · 录音机原型</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0b0d12;--panel:#151922;--edge:rgba(255,255,255,.09);--fg:#e8ecf5;--dim:#7d8798;--rec:#ff4757;--ok:#31d0aa;--warn:#ffb648}
+body{min-height:100svh;display:grid;place-items:center;padding:20px;background:radial-gradient(120% 90% at 50% 0%,#1b2130,var(--bg) 60%);
+  color:var(--fg);font-family:-apple-system,"SF Pro Text","PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.device{width:min(360px,100%);background:linear-gradient(180deg,#1c212c,var(--panel));border:1px solid var(--edge);border-radius:26px;
+  padding:20px;box-shadow:0 30px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06)}
+.top{display:flex;align-items:center;justify-content:space-between;font-size:11px;letter-spacing:.22em;color:var(--dim);text-transform:uppercase}
+.led{display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.12em}
+.dot{width:9px;height:9px;border-radius:50%;background:#39404f;transition:background .25s}
+[data-state=rec] .dot{background:var(--rec);animation:beat 1s ease-in-out infinite}
+[data-state=pause] .dot{background:var(--warn)}
+[data-state=done] .dot{background:var(--ok)}
+@keyframes beat{0%,100%{box-shadow:0 0 0 0 rgba(255,71,87,.55)}70%{box-shadow:0 0 0 10px rgba(255,71,87,0)}}
+.time{margin:16px 0 4px;font-size:52px;font-weight:200;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-align:center}
+.time small{font-size:.36em;color:var(--dim);font-weight:600;margin-left:4px}
+.hint{text-align:center;font-size:12px;color:var(--dim);height:16px;letter-spacing:.06em}
+.wave{position:relative;margin:14px 0 16px;border-radius:14px;background:#0d1017;border:1px solid var(--edge);overflow:hidden}
+canvas{display:block;width:100%;height:104px}
+.meter{position:absolute;left:12px;bottom:8px;font-size:10px;letter-spacing:.16em;color:var(--dim)}
+.ctrls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+button{appearance:none;border:1px solid var(--edge);background:#1e2430;color:var(--fg);font:inherit;font-size:13px;font-weight:600;
+  padding:13px 6px;border-radius:14px;cursor:pointer;transition:transform .12s,background .2s,opacity .2s,color .2s}
+button:active{transform:scale(.96)}
+button:disabled{opacity:.35;cursor:not-allowed}
+#rec{background:linear-gradient(180deg,#ff5b68,#e02c3c);border-color:transparent;color:#fff}
+#stop.arm{background:linear-gradient(180deg,#ffc46b,#f0912a);border-color:transparent;color:#2b1a00}
+.card{margin-top:16px;border:1px solid var(--edge);border-radius:16px;background:rgba(49,208,170,.07);padding:14px;
+  opacity:0;transform:translateY(8px);transition:.35s ease;pointer-events:none;max-height:0;overflow:hidden}
+.card.show{opacity:1;transform:none;max-height:260px;pointer-events:auto}
+.card h3{font-size:12px;letter-spacing:.2em;color:var(--ok);margin-bottom:10px;text-transform:uppercase}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;font-size:13px}
+.rows div{display:flex;justify-content:space-between;border-bottom:1px dashed var(--edge);padding-bottom:5px}
+.rows span{color:var(--dim)}
+@media(max-width:390px){.time{font-size:46px}}
+</style>
+</head>
+<body>
+<main class="device" id="app" data-state="idle">
+  <div class="top"><span class="led"><i class="dot"></i><span id="label">待机 IDLE</span></span><span id="clock">44.1kHz · MONO</span></div>
+  <div class="time"><span id="t">00:00</span><small id="ms">.0</small></div>
+  <div class="hint" id="hint">按下「录音」开始</div>
+  <div class="wave"><canvas id="cv"></canvas><span class="meter" id="meter">LV —</span></div>
+  <div class="ctrls">
+    <button id="rec">● 录音</button>
+    <button id="pause" disabled>❚❚ 暂停</button>
+    <button id="stop" disabled>■ 停止</button>
+  </div>
+  <section class="card" id="card">
+    <h3>本次录音摘要</h3>
+    <div class="rows">
+      <div><span>时长</span><b id="s-dur">00:00</b></div>
+      <div><span>状态</span><b id="s-state">已完成</b></div>
+      <div><span>暂停次数</span><b id="s-pause">0</b></div>
+      <div><span>峰值电平</span><b id="s-peak">0 dB</b></div>
+      <div><span>平均电平</span><b id="s-avg">0 dB</b></div>
+      <div><span>估算体积</span><b id="s-size">0 KB</b></div>
+    </div>
+  </section>
+</main>
+<script>
+(function(){
+  const $=id=>document.getElementById(id), app=$("app"), cv=$("cv"), ctx=cv.getContext("2d");
+  const recBtn=$("rec"), pauseBtn=$("pause"), stopBtn=$("stop");
+  let state="idle", elapsed=0, last=0, pauses=0, armed=0, armTimer=null;
+  let samples=[], live=new Array(64).fill(0), phase=0;
+
+  function fit(){                                  // DPR 适配，避免波形发虚
+    const r=cv.getBoundingClientRect(), d=Math.min(devicePixelRatio||1,2);
+    cv.width=r.width*d; cv.height=104*d; ctx.setTransform(d,0,0,d,0,0);
+  }
+  addEventListener("resize",fit); fit();
+
+  const pad=n=>String(n).padStart(2,"0");
+  const fmt=s=>pad(Math.floor(s/60))+":"+pad(Math.floor(s%60));
+  const db=v=>v<=0.001?"-∞":(20*Math.log10(Math.min(1,v))).toFixed(1);
+
+  function setState(s){
+    state=s; app.dataset.state=s;
+    $("label").textContent={idle:"待机 IDLE",rec:"录音中 REC",pause:"已暂停 PAUSE",done:"已完成 DONE"}[s];
+    recBtn.textContent=s==="idle"||s==="done"?"● 录音":"● 录音";
+    recBtn.disabled=s==="rec"||s==="pause";
+    pauseBtn.disabled=s!=="rec"&&s!=="pause";
+    pauseBtn.textContent=s==="pause"?"▶ 继续":"❚❚ 暂停";
+    stopBtn.disabled=s!=="rec"&&s!=="pause";
+    $("hint").textContent={idle:"按下「录音」开始",rec:"正在录音，可暂停或停止",
+      pause:"已暂停，按「继续」接着录",done:"已生成录音摘要，按「录音」重新开始"}[s];
+  }
+
+  // 模拟拾音：多正弦叠加 + 轻噪声，得到自然起伏的电平（不申请麦克风权限）
+  function amplitude(t){
+    const env=.42+.30*Math.sin(t*1.7)+.16*Math.sin(t*4.3+1.1)+.10*Math.sin(t*9.1+.4);
+    return Math.max(.04,Math.min(1,env*(.86+Math.random()*.28)));
+  }
+
+  function draw(){
+    const w=cv.clientWidth,h=104,mid=h/2;
+    ctx.clearRect(0,0,w,h);
+    ctx.strokeStyle="rgba(255,255,255,.06)"; ctx.beginPath(); ctx.moveTo(0,mid); ctx.lineTo(w,mid); ctx.stroke();
+    const data=state==="done"?resample(samples,64):live, n=data.length, bw=w/n;
+    for(let i=0;i<n;i++){
+      const v=data[i], bh=Math.max(2,v*(h-16)), x=i*bw+bw*.18, bwid=bw*.64;
+      const g=ctx.createLinearGradient(0,mid-bh/2,0,mid+bh/2);
+      if(state==="done"){ g.addColorStop(0,"#31d0aa"); g.addColorStop(1,"rgba(49,208,170,.35)"); }
+      else if(state==="pause"){ g.addColorStop(0,"#ffb648"); g.addColorStop(1,"rgba(255,182,72,.3)"); }
+      else { g.addColorStop(0,"#ff6b7a"); g.addColorStop(1,"rgba(255,71,87,.32)"); }
+      ctx.fillStyle=state==="idle"?"rgba(160,180,215,.28)":g;
+      ctx.beginPath(); ctx.roundRect(x,mid-bh/2,bwid,bh,bwid/2); ctx.fill();
+    }
+    if(state==="rec"){                              // 录音头游标
+      ctx.fillStyle="rgba(255,71,87,.9)"; ctx.fillRect(w-2,8,2,h-16);
+    }
+  }
+  function resample(src,n){
+    if(!src.length) return new Array(n).fill(0);
+    const out=[],step=src.length/n;
+    for(let i=0;i<n;i++){
+      let m=0; for(let j=Math.floor(i*step);j<Math.floor((i+1)*step)+1&&j<src.length;j++) m=Math.max(m,src[j]);
+      out.push(m);
+    }
+    return out;
+  }
+
+  let acc=0;
+  function loop(now){
+    const dt=last?(now-last)/1000:0; last=now;
+    if(state==="rec"){
+      elapsed+=dt; acc+=dt;
+      if(acc>=.05){                                 // 每 50ms 采一个电平点
+        acc=0; const v=amplitude(phase+=.05);
+        samples.push(v); live.push(v); if(live.length>64) live.shift();
+        $("meter").textContent="LV "+db(v)+" dB";
+      }
+      $("t").textContent=fmt(elapsed);
+      $("ms").textContent="."+Math.floor(elapsed*10%10);
+    }else if(state==="idle"){                       // 待机也走环境底噪，设备看起来是「活」的
+      acc+=dt;
+      if(acc>=.08){acc=0;const v=.05+Math.random()*.05+Math.abs(Math.sin(phase+=.11))*.13;
+        live.push(v);if(live.length>64)live.shift();$("meter").textContent="LV "+db(v)+" dB · 监听中";}
+    }
+    draw(); requestAnimationFrame(loop);
+  }
+
+  recBtn.onclick=()=>{ if(state==="rec"||state==="pause")return;
+    elapsed=0;pauses=0;samples=[];live=new Array(64).fill(0);$("card").classList.remove("show");
+    $("t").textContent="00:00";$("ms").textContent=".0";setState("rec"); };
+  pauseBtn.onclick=()=>{ if(state==="rec"){pauses++;setState("pause");} else if(state==="pause"){setState("rec");} };
+  stopBtn.onclick=()=>{                              // 误操作防护：停止需二次确认
+    if(!armed){ armed=1; stopBtn.classList.add("arm"); stopBtn.textContent="再按确认";
+      $("hint").textContent="确认停止本次录音？3 秒内再按一次";
+      armTimer=setTimeout(()=>{armed=0;stopBtn.classList.remove("arm");stopBtn.textContent="■ 停止";setState(state);},3000);
+      return; }
+    clearTimeout(armTimer); armed=0; stopBtn.classList.remove("arm"); stopBtn.textContent="■ 停止";
+    const peak=samples.length?Math.max(...samples):0, avg=samples.length?samples.reduce((a,b)=>a+b,0)/samples.length:0;
+    $("s-dur").textContent=fmt(elapsed); $("s-pause").textContent=pauses;
+    $("s-state").textContent=elapsed<1?"过短（已保留）":"已完成";
+    $("s-peak").textContent=db(peak)+" dB"; $("s-avg").textContent=db(avg)+" dB";
+    $("s-size").textContent=(elapsed*44100*2/1024).toFixed(0)+" KB";
+    setState("done"); $("card").classList.add("show");
+  };
+
+  setState("idle"); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

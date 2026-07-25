@@ -1,5 +1,22 @@
 [
   {
+    "id": "clock:claude-opus-5",
+    "theme": "clock",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/clock/claude-opus-5/",
+    "publicPath": "/submissions/clock/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 146,
+    "linesCss": 29,
+    "linesJs": 67,
+    "sizeBytes": 8349,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:00:05.089Z"
+  },
+  {
     "id": "clock:gpt-5.6-sol",
     "theme": "clock",
     "model": "gpt-5.6-sol",
@@ -644,6 +661,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.624Z"
+  },
+  {
+    "id": "recorder:claude-opus-5",
+    "theme": "recorder",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/recorder/claude-opus-5/",
+    "publicPath": "/submissions/recorder/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 173,
+    "linesCss": 34,
+    "linesJs": 102,
+    "sizeBytes": 9793,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:00:28.158Z"
   },
   {
     "id": "recorder:gpt-5.6-sol",
@@ -1292,6 +1326,23 @@
     "updatedAt": "2026-05-20T00:00:26.626Z"
   },
   {
+    "id": "weather-card:claude-opus-5",
+    "theme": "weather-card",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/claude-opus-5/",
+    "publicPath": "/submissions/weather-card/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 198,
+    "linesCss": 38,
+    "linesJs": 110,
+    "sizeBytes": 12604,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T05:52:50.450Z"
+  },
+  {
     "id": "weather-card:gpt-5.6-sol",
     "theme": "weather-card",
     "model": "gpt-5.6-sol",
@@ -1936,6 +1987,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.631Z"
+  },
+  {
+    "id": "stock-panel:claude-opus-5",
+    "theme": "stock-panel",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/claude-opus-5/",
+    "publicPath": "/submissions/stock-panel/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 184,
+    "linesCss": 40,
+    "linesJs": 99,
+    "sizeBytes": 10762,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:03:58.047Z"
   },
   {
     "id": "stock-panel:gpt-5.6-sol",
@@ -2584,6 +2652,23 @@
     "updatedAt": "2026-05-20T00:00:26.629Z"
   },
   {
+    "id": "click-fireworks:claude-opus-5",
+    "theme": "click-fireworks",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/claude-opus-5/",
+    "publicPath": "/submissions/click-fireworks/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 142,
+    "linesCss": 27,
+    "linesJs": 96,
+    "sizeBytes": 8063,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:09:54.026Z"
+  },
+  {
     "id": "click-fireworks:gpt-5.6-sol",
     "theme": "click-fireworks",
     "model": "gpt-5.6-sol",
@@ -3230,6 +3315,23 @@
     "updatedAt": "2026-05-20T00:00:26.621Z"
   },
   {
+    "id": "neon-countdown:claude-opus-5",
+    "theme": "neon-countdown",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/claude-opus-5/",
+    "publicPath": "/submissions/neon-countdown/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 156,
+    "linesCss": 43,
+    "linesJs": 78,
+    "sizeBytes": 8469,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:08:49.415Z"
+  },
+  {
     "id": "neon-countdown:gpt-5.6-sol",
     "theme": "neon-countdown",
     "model": "gpt-5.6-sol",
@@ -3415,6 +3517,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-16T02:23:52.808Z"
+  },
+  {
+    "id": "particle-gravity:claude-opus-5",
+    "theme": "particle-gravity",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/claude-opus-5/",
+    "publicPath": "/submissions/particle-gravity/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 151,
+    "linesCss": 20,
+    "linesJs": 102,
+    "sizeBytes": 7695,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:01:39.471Z"
   },
   {
     "id": "particle-gravity:gpt-5.6-sol",
@@ -3604,6 +3723,23 @@
     "updatedAt": "2026-06-17T05:10:00.381Z"
   },
   {
+    "id": "cheetah-trophy-run:claude-opus-5",
+    "theme": "cheetah-trophy-run",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/claude-opus-5/",
+    "publicPath": "/submissions/cheetah-trophy-run/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 387,
+    "linesCss": 21,
+    "linesJs": 53,
+    "sizeBytes": 24126,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:24:12.199Z"
+  },
+  {
     "id": "cheetah-trophy-run:gpt-5.6-sol",
     "theme": "cheetah-trophy-run",
     "model": "gpt-5.6-sol",
@@ -3789,6 +3925,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-06-16T02:23:52.807Z"
+  },
+  {
+    "id": "dslr-camera:claude-opus-5",
+    "theme": "dslr-camera",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/claude-opus-5/",
+    "publicPath": "/submissions/dslr-camera/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 350,
+    "linesCss": 13,
+    "linesJs": 61,
+    "sizeBytes": 21728,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:54:25.218Z"
   },
   {
     "id": "dslr-camera:gpt-5.6-sol",
@@ -3978,6 +4131,23 @@
     "updatedAt": "2026-06-16T02:23:52.808Z"
   },
   {
+    "id": "schwarzschild-black-hole:claude-opus-5",
+    "theme": "schwarzschild-black-hole",
+    "model": "claude-opus-5",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/claude-opus-5/",
+    "publicPath": "/submissions/schwarzschild-black-hole/claude-opus-5/index.html",
+    "renderKind": "html",
+    "linesTotal": 572,
+    "linesCss": 53,
+    "linesJs": 471,
+    "sizeBytes": 27810,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:48:42.734Z"
+  },
+  {
     "id": "schwarzschild-black-hole:gpt-5.6-sol",
     "theme": "schwarzschild-black-hole",
     "model": "gpt-5.6-sol",
@@ -4044,6 +4214,25 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-07-18T08:32:29.335Z"
+  },
+  {
+    "id": "carwash-decision:claude-opus-5",
+    "theme": "carwash-decision",
+    "model": "claude-opus-5",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/claude-opus-5/response.md",
+    "publicPath": "/submissions/carwash-decision/claude-opus-5/response.md",
+    "renderKind": "text",
+    "linesTotal": 7,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 932,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-25T06:51:24.298Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n理由1：洗的是车，车必须到场。50 米是「人」的距离，不是「车」的距离；人走过去，车留在家里，洗车这件事根本没法开始。\n理由2：这 50 米几乎没有成本。怠速起步、挪车、熄火不到一分钟，油耗和磨损可以忽略，却省下你来回取车、再开回来停好的两趟折腾。\n理由3：洗完的车更需要你开着走。刚洗过的车最怕沾灰和水渍风干，直接从工位开走、路上吹干最干净；把车停在家里再走过去，等于洗完还要多跑一趟。\n理由4：例外只有一种——你去的目的不是洗车本身。若只是先去问价、预约排队或看看是否营业，那就走过去，等轮到你了再回来开车。\n建议：直接开车过去，顺手把车里的垃圾和后备箱杂物带下来一起清掉；如果店里排队，把车停好登记后再步行回家等叫号。"
   },
   {
     "id": "carwash-decision:gpt-5.6-sol",
