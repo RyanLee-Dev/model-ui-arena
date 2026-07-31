@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<!-- 设计说明：夜航仪表风时钟。极光渐变背景随昼夜缓慢漂移；玻璃卡片带渐变描边与内高光；表盘 60 刻度四档灰度 + 12/3/6/9 衬线数字；时针带尾锤、秒针细长带发光尾点，rAF 平滑扫掠无卡顿；数字时间秒位高亮、日期周次分层；中心光点每秒呼吸，昼夜两套配色 1.4s 渐变过渡。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>夜航时钟</title>
+<style>
+:root{--ink:#f2f6ff;--sub:rgba(242,246,255,.5);--acc:#6ee7ff;--sec:#ff5e8a;--card:rgba(18,24,42,.55)}
+body.day{--ink:#152a4f;--sub:rgba(21,42,79,.5);--acc:#0a84ff;--sec:#ff3d6e;--card:rgba(255,255,255,.62)}
+*{margin:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;overflow:hidden;background:radial-gradient(140% 120% at 30% 10%,#182240 0%,#0a0f20 55%,#05070f 100%);font-family:"SF Pro Display",-apple-system,"PingFang SC",sans-serif;color:var(--ink);transition:background 1.4s}
+body.day{background:radial-gradient(140% 120% at 30% 10%,#eaf4ff 0%,#cfe0f4 55%,#a9c6ea 100%)}
+.aurora{position:fixed;inset:0;z-index:0;overflow:hidden}
+.aurora span{position:absolute;border-radius:50%;filter:blur(72px);mix-blend-mode:screen;animation:drift 16s ease-in-out infinite}
+.aurora span:nth-child(1){width:46vmax;height:46vmax;left:-15vmax;top:-17vmax;background:radial-gradient(circle,rgba(110,231,255,.5),transparent 62%)}
+.aurora span:nth-child(2){width:42vmax;height:42vmax;right:-13vmax;top:5vmax;background:radial-gradient(circle,rgba(139,123,255,.45),transparent 62%);animation-delay:-5.5s}
+.aurora span:nth-child(3){width:36vmax;height:36vmax;left:20vmax;bottom:-19vmax;background:radial-gradient(circle,rgba(255,94,138,.32),transparent 62%);animation-delay:-10s}
+body.day .aurora span{opacity:.3}
+@keyframes drift{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(4.5vmax,-3vmax) scale(1.12)}}
+.card{position:relative;z-index:1;width:min(92vw,372px);padding:38px 24px 30px;border-radius:36px;background:var(--card);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(22px);box-shadow:0 36px 90px rgba(3,8,20,.55),inset 0 1px 0 rgba(255,255,255,.2);text-align:center;transition:background 1.4s,border-color 1.4s}
+.face{position:relative;width:248px;height:248px;margin:6px auto 24px}
+.face svg{position:absolute;inset:0;color:var(--ink)}
+.cap{position:absolute;left:50%;top:50%;width:16px;height:16px;margin:-8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,var(--acc) 70%);box-shadow:0 0 18px var(--acc);animation:br 1s ease-in-out infinite}
+.cap::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid var(--acc);opacity:.5}
+@keyframes br{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+.digi{font-variant-numeric:tabular-nums;font-size:46px;font-weight:600;letter-spacing:3px;line-height:1}
+.digi b{color:var(--sec);font-weight:600;text-shadow:0 0 14px color-mix(in srgb,var(--sec) 55%,transparent)}
+.date{margin-top:10px;font-size:13px;color:var(--sub);letter-spacing:4px}
+.chip{display:inline-flex;align-items:center;gap:6px;margin-top:16px;padding:5px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);font-size:11px;color:var(--sub);letter-spacing:2px}
+.chip i{width:6px;height:6px;border-radius:50%;background:var(--acc);box-shadow:0 0 8px var(--acc);animation:bl 2s infinite}
+@keyframes bl{50%{opacity:.3}}
+@media(max-width:390px){.digi{font-size:38px}.face{width:220px;height:220px}.card{padding:28px 16px 24px}}
+</style>
+</head>
+<body>
+<div class="aurora"><span></span><span></span><span></span></div>
+<div class="card">
+  <div class="face">
+    <svg viewBox="0 0 248 248">
+      <circle cx="124" cy="124" r="116" fill="none" stroke="currentColor" stroke-opacity=".14" stroke-width="1.5"/>
+      <circle cx="124" cy="124" r="104" fill="none" stroke="currentColor" stroke-opacity=".07" stroke-width="1"/>
+      <g id="ticks"></g>
+      <g id="nums"></g>
+      <g id="hands">
+        <g id="hh"></g><g id="mh"></g><g id="sh"></g>
+      </g>
+    </svg>
+    <div class="cap"></div>
+  </div>
+  <div class="digi" id="digi">--:--:<b>--</b></div>
+  <div class="date" id="date">——— —— ——</div>
+  <div class="chip"><i></i><span id="zone">本地时间 · --</span></div>
+</div>
+<script>
+const NS="http://www.w3.org/2000/svg",svg=document.querySelector("svg"),C=124;
+const ticks=document.getElementById("ticks"),nums=document.getElementById("nums"),
+hh=document.getElementById("hh"),mh=document.getElementById("mh"),sh=document.getElementById("sh");
+const ROM=["Ⅻ","Ⅲ","Ⅵ","Ⅸ"];
+for(let i=0;i<60;i++){
+  const a=i*6*Math.PI/180,l=document.createElementNS(NS,"line");
+  const big=i%5===0,onum=i%15===0;
+  const r1=big?(onum?92:97):104,r2=onum?102:109;
+  l.setAttribute("x1",C+Math.cos(a)*r1);l.setAttribute("y1",C+Math.sin(a)*r1);
+  l.setAttribute("x2",C+Math.cos(a)*r2);l.setAttribute("y2",C+Math.sin(a)*r2);
+  l.setAttribute("stroke","currentColor");l.setAttribute("stroke-opacity",onum?.9:big?.55:.22);
+  l.setAttribute("stroke-width",onum?3:big?2.2:1.1);l.setAttribute("stroke-linecap","round");
+  ticks.appendChild(l)}
+for(let i=0;i<4;i++){
+  const a=i*90*Math.PI/180,t=document.createElementNS(NS,"text");
+  t.setAttribute("x",C+Math.cos(a)*74);t.setAttribute("y",C+Math.sin(a)*74);
+  t.setAttribute("text-anchor","middle");t.setAttribute("dominant-baseline","central");
+  t.setAttribute("font-size","19");t.setAttribute("font-weight","300");t.setAttribute("letter-spacing","1");
+  t.setAttribute("fill","currentColor");t.setAttribute("opacity",.85);
+  t.textContent=ROM[i];nums.appendChild(t)}
+function hand(color,width){const p=document.createElementNS(NS,"path");p.setAttribute("fill","currentColor");return p}
+const hPath=document.createElementNS(NS,"path");
+hPath.setAttribute("d","M124,96 L128.5,124 L124,142 L119.5,124 Z");hPath.setAttribute("fill","currentColor");hPath.setAttribute("stroke","currentColor");hPath.setAttribute("stroke-width","1.5");
+const mPath=document.createElementNS(NS,"path");
+mPath.setAttribute("d","M124,64 L126.2,124 L124,136 L121.8,124 Z");mPath.setAttribute("fill","currentColor");mPath.setAttribute("opacity",.92);
+const sPath=document.createElementNS(NS,"path");
+sPath.setAttribute("d","M124,38 L125.2,124 L124,152 L122.8,124 Z");sPath.setAttribute("fill","#ff5e8a");
+sPath.setAttribute("filter","drop-shadow(0 0 6px rgba(255,94,138,.8))");
+hh.appendChild(hPath);mh.appendChild(mPath);sh.appendChild(sPath);
+const digi=document.getElementById("digi"),date=document.getElementById("date"),zone=document.getElementById("zone");
+const WEEK=["日","一","二","三","四","五","六"];
+function tick(){
+  const d=new Date(),ho=d.getHours(),mi=d.getMinutes(),se=d.getSeconds()+d.getMilliseconds()/1000;
+  hh.setAttribute("transform",`rotate(${(ho%12+mi/60)*30} 124 124)`);
+  mh.setAttribute("transform",`rotate(${(mi+se/60)*6} 124 124)`);
+  sh.setAttribute("transform",`rotate(${se*6} 124 124)`);
+  digi.innerHTML=`${String(ho).padStart(2,"0")}:${String(mi).padStart(2,"0")}:<b>${String(d.getSeconds()).padStart(2,"0")}</b>`;
+  date.textContent=`${d.getFullYear()} / ${String(d.getMonth()+1).padStart(2,"0")} / ${String(d.getDate()).padStart(2,"0")} · 周${WEEK[d.getDay()]}`;
+  zone.textContent=`本地时间 · ${ho>=12?"PM":"AM"} ${ho>=6&&ho<18?"昼":"夜"}`;
+  document.body.classList.toggle("day",ho>=6&&ho<18);
+  requestAnimationFrame(tick)}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

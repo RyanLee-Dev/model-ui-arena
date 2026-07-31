@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<!-- 设计说明：仲夏夜祭烟花。点击任意位置从底部发射带辉光拖尾的火箭，抵达后随机绽放四种烟花：球状彩爆（渐变粒子+余烬）、环形爆（粒子沿圆周飞散）、双色对爆、碎闪爆（延迟二次微型爆）；叠加混合+半透明残迹形成光晕拖影；星空两层闪烁、偶发流星划过；月亮悬于右上；粒子数设上限防内存膨胀，指针事件兼容触摸。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>点击放烟花</title>
+<style>
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#03050c;font-family:"SF Pro Display",-apple-system,"PingFang SC",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crosshair;touch-action:none}
+.moon{position:fixed;right:9%;top:8%;width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 36% 32%,#fffdf4,#e6ecfa 68%,rgba(230,236,250,0) 76%);box-shadow:0 0 44px 12px rgba(214,226,255,.32);z-index:2;pointer-events:none}
+.moon::after{content:"";position:absolute;left:30%;top:22%;width:60%;height:60%;border-radius:50%;background:rgba(168,180,210,.28);filter:blur(3px)}
+.hint{position:fixed;left:50%;top:18px;transform:translateX(-50%);color:rgba(232,238,255,.9);font-size:13px;letter-spacing:3px;text-shadow:0 2px 14px rgba(0,0,0,.9);background:rgba(16,22,40,.5);border:1px solid rgba(255,255,255,.16);padding:8px 20px;border-radius:999px;backdrop-filter:blur(10px);pointer-events:none;z-index:3}
+.fps{position:fixed;right:12px;bottom:12px;color:rgba(232,238,255,.45);font-size:11px;font-variant-numeric:tabular-nums;pointer-events:none;z-index:3}
+@media(max-width:390px){.hint{font-size:11px;padding:6px 14px}.moon{right:6%;top:6%;width:44px;height:44px}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="moon"></div>
+<div class="hint">✦ 点击任意位置 · 绽放烟花 ✦</div>
+<div class="fps" id="fps"></div>
+<script>
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+let W=0,H=0,parts=[],rockets=[],stars=[],shoots=[],flashes=[],last=performance.now(),autoT=0,fc=0,fs=0;
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;stars=[];
+for(let i=0;i<150;i++)stars.push({x:Math.random()*W,y:Math.random()*H*.75,r:Math.random()*1.4+.3,t:Math.random()*7,p:Math.random()*Math.PI*2})}
+addEventListener("resize",resize);resize();
+const PAL=["hsl(330,100%,66%)","hsl(190,100%,66%)","hsl(48,100%,64%)","hsl(150,100%,60%)","hsl(275,100%,70%)","hsl(8,100%,66%)"];
+function launch(tx,ty){const lx=Math.random()*W*.6+W*.2,hue=PAL[(Math.random()*PAL.length)|0],type=["sphere","sphere","sphere","ring","double","crackle"][(Math.random()*6)|0];
+rockets.push({x:lx,y:H+8,vx:(tx-lx)/600,vy:-(H-ty+8)/600,tx,ty,hue,type,trail:[]})}
+function explode(x,y,hue,type){
+const n=type==="ring"?56:74+Math.random()*40;
+for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,sp=type==="ring"?2.9+Math.random()*.5:1+Math.random()*5;
+parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1,decay:.0016+Math.random()*.002,size:1.4+Math.random()*2,hue:type==="double"?(i<n/2?hue:PAL[(Math.random()*PAL.length)|0]):hue+Math.random()*34-17})}
+for(let i=0;i<14;i++){const a=Math.random()*Math.PI*2,sp=.3+Math.random()*1.2;
+parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-.4,life:1,decay:.0004+Math.random()*.0003,size:3+Math.random()*3,hue,glow:true})}
+if(type==="crackle")setTimeout(()=>{for(let k=0;k<3;k++)setTimeout(()=>{const a=Math.random()*7,bx=x+Math.cos(a)*30*Math.random(),by=y+Math.sin(a)*30*Math.random();
+for(let i=0;i<26;i++){const b=Math.random()*7,sp=.6+Math.random()*2.6;parts.push({x:bx,y:by,vx:Math.cos(b)*sp,vy:Math.sin(b)*sp,life:1,decay:.0026+Math.random()*.002,size:1+Math.random()*1.4,hue:hue+40})}},k*140)},260);
+flashes.push({x,y,r:6,al:.5});
+if(parts.length>1500)parts.splice(0,parts.length-1500)}
+addEventListener("pointerdown",e=>launch(e.clientX,e.clientY));
+function frame(now){
+const dt=Math.min(now-last,32);last=now;
+ctx.globalCompositeOperation="source-over";ctx.fillStyle="rgba(4,6,14,.26)";ctx.fillRect(0,0,W,H);
+ctx.globalCompositeOperation="lighter";
+for(let i=stars.length-1;i>=0;i--){const s=stars[i];s.t+=.02;ctx.globalAlpha=.35+Math.sin(s.t+s.p)*.3;ctx.fillStyle="#dbe4ff";ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.fill()}
+ctx.globalAlpha=1;
+for(let i=shoots.length-1;i>=0;i--){const s=shoots[i];s.x+=s.vx;s.y+=s.vy;s.l--;
+ctx.strokeStyle="rgba(220,232,255,.8)";ctx.lineWidth=1.6;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(s.x,s.y);ctx.lineTo(s.x-s.vx*8,s.y-s.vy*8);ctx.stroke();if(s.l<0)shoots.splice(i,1)}
+autoT+=dt;if(autoT>3400+Math.random()*3000){autoT=0;if(Math.random()<.3)shoots.push({x:Math.random()*W*.6+W*.2,y:Math.random()*H*.3,vx:4+Math.random()*5,vy:3+Math.random()*4,l:40});else launch(Math.random()*W*.8+W*.1,Math.random()*H*.5+H*.15)}
+for(let i=rockets.length-1;i>=0;i--){const r=rockets[i];r.x+=r.vx*dt*.6;r.y+=r.vy*dt*.6;
+r.trail.push([r.x,r.y]);if(r.trail.length>14)r.trail.shift();
+if(Math.hypot(r.tx-r.x,r.ty-r.y)<20){explode(r.tx,r.ty,r.hue,r.type);rockets.splice(i,1);continue}
+ctx.strokeStyle=r.hue;ctx.lineWidth=2.6;ctx.lineCap="round";
+ctx.beginPath();r.trail.forEach((p,k)=>k?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke()}
+for(let i=flashes.length-1;i>=0;i--){const f=flashes[i];f.r+=dt*.55;f.al-=.022*dt;
+if(f.al<=0){flashes.splice(i,1);continue}
+const g=ctx.createRadialGradient(f.x,f.y,0,f.x,f.y,f.r);
+g.addColorStop(0,`rgba(255,240,200,${f.al*.5})`);g.addColorStop(1,"rgba(255,240,200,0)");
+ctx.fillStyle=g;ctx.beginPath();ctx.arc(f.x,f.y,f.r,0,7);ctx.fill()}
+for(let i=parts.length-1;i>=0;i--){const p=parts[i];p.x+=p.vx*dt*.6;p.y+=p.vy*dt*.6;p.vy+=.045*dt;p.vx*=.985;p.vy*=.985;p.life-=p.decay*dt;
+if(p.life<=0){parts.splice(i,1);continue}
+const a=Math.max(p.life,0),g=p.glow?.4:1;
+ctx.fillStyle=`hsla(${p.hue},100%,60%,${a*.55*g})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size*(p.glow?3.4:2.6),0,7);ctx.fill();
+ctx.fillStyle=`hsla(${p.hue},100%,80%,${a*g})`;ctx.beginPath();ctx.arc(p.x,p.y,p.size*(p.glow?.9:1),0,7);ctx.fill()}
+fc++;fs+=dt;if(fs>500){document.getElementById("fps").textContent=Math.round(fc*1000/fs)+" FPS";fc=0;fs=0}
+requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

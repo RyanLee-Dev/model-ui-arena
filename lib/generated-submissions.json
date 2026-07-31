@@ -459,6 +459,23 @@
     "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
+    "id": "clock:deepseek-v4-flash",
+    "theme": "clock",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/clock/deepseek-v4-flash/",
+    "publicPath": "/submissions/clock/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 101,
+    "linesCss": 25,
+    "linesJs": 42,
+    "sizeBytes": 7564,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:15:05.600Z"
+  },
+  {
     "id": "clock:kimi-k2.7",
     "theme": "clock",
     "model": "kimi-k2.7",
@@ -1120,6 +1137,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.625Z"
+  },
+  {
+    "id": "recorder:deepseek-v4-flash",
+    "theme": "recorder",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/recorder/deepseek-v4-flash/",
+    "publicPath": "/submissions/recorder/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 130,
+    "linesCss": 45,
+    "linesJs": 49,
+    "sizeBytes": 9769,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:22:07.885Z"
   },
   {
     "id": "recorder:kimi-k2.7",
@@ -1785,6 +1819,23 @@
     "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
+    "id": "weather-card:deepseek-v4-flash",
+    "theme": "weather-card",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/deepseek-v4-flash/",
+    "publicPath": "/submissions/weather-card/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 137,
+    "linesCss": 46,
+    "linesJs": 54,
+    "sizeBytes": 12033,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:16:37.538Z"
+  },
+  {
     "id": "weather-card:kimi-k2.7",
     "theme": "weather-card",
     "model": "kimi-k2.7",
@@ -2446,6 +2497,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.628Z"
+  },
+  {
+    "id": "stock-panel:deepseek-v4-flash",
+    "theme": "stock-panel",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/deepseek-v4-flash/",
+    "publicPath": "/submissions/stock-panel/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 101,
+    "linesCss": 31,
+    "linesJs": 44,
+    "sizeBytes": 8474,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:17:16.735Z"
   },
   {
     "id": "stock-panel:kimi-k2.7",
@@ -3111,6 +3179,23 @@
     "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
+    "id": "click-fireworks:deepseek-v4-flash",
+    "theme": "click-fireworks",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/deepseek-v4-flash/",
+    "publicPath": "/submissions/click-fireworks/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 74,
+    "linesCss": 8,
+    "linesJs": 46,
+    "sizeBytes": 6341,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:17:40.925Z"
+  },
+  {
     "id": "click-fireworks:kimi-k2.7",
     "theme": "click-fireworks",
     "model": "kimi-k2.7",
@@ -3451,6 +3536,23 @@
     "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
+    "id": "neon-countdown:deepseek-v4-flash",
+    "theme": "neon-countdown",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/deepseek-v4-flash/",
+    "publicPath": "/submissions/neon-countdown/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 76,
+    "linesCss": 25,
+    "linesJs": 21,
+    "sizeBytes": 5994,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:18:03.356Z"
+  },
+  {
     "id": "neon-countdown:kimi-k2.7",
     "theme": "neon-countdown",
     "model": "kimi-k2.7",
@@ -3653,6 +3755,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-08T06:30:31.827Z"
+  },
+  {
+    "id": "particle-gravity:deepseek-v4-flash",
+    "theme": "particle-gravity",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/deepseek-v4-flash/",
+    "publicPath": "/submissions/particle-gravity/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 75,
+    "linesCss": 9,
+    "linesJs": 47,
+    "sizeBytes": 5952,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:18:25.506Z"
   },
   {
     "id": "particle-gravity:kimi-k2.7",
@@ -3859,6 +3978,23 @@
     "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
+    "id": "cheetah-trophy-run:deepseek-v4-flash",
+    "theme": "cheetah-trophy-run",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/deepseek-v4-flash/",
+    "publicPath": "/submissions/cheetah-trophy-run/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 248,
+    "linesCss": 3,
+    "linesJs": 0,
+    "sizeBytes": 16704,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:19:30.357Z"
+  },
+  {
     "id": "cheetah-trophy-run:kimi-k2.7",
     "theme": "cheetah-trophy-run",
     "model": "kimi-k2.7",
@@ -4063,6 +4199,23 @@
     "updatedAt": "2026-06-08T06:30:31.826Z"
   },
   {
+    "id": "dslr-camera:deepseek-v4-flash",
+    "theme": "dslr-camera",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/deepseek-v4-flash/",
+    "publicPath": "/submissions/dslr-camera/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 194,
+    "linesCss": 9,
+    "linesJs": 0,
+    "sizeBytes": 12823,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:20:13.617Z"
+  },
+  {
     "id": "dslr-camera:kimi-k2.7",
     "theme": "dslr-camera",
     "model": "kimi-k2.7",
@@ -4197,6 +4350,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-07-20T13:58:32.796Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:deepseek-v4-flash",
+    "theme": "schwarzschild-black-hole",
+    "model": "deepseek-v4-flash",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/deepseek-v4-flash/",
+    "publicPath": "/submissions/schwarzschild-black-hole/deepseek-v4-flash/index.html",
+    "renderKind": "html",
+    "linesTotal": 316,
+    "linesCss": 31,
+    "linesJs": 229,
+    "sizeBytes": 20481,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T15:20:42.843Z"
   },
   {
     "id": "schwarzschild-black-hole:fable-5",
@@ -4727,6 +4897,25 @@
     "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：洗车店距你家仅50米，步行时间约1分钟，远比启动车辆、出库、找车位再入库的效率高。开车反而需要额外的发动、倒车、停车操作，对于50米距离来说得不偿失。\n\n理由2：洗车目的是让车变干净，如果洗完车再开50米回家，途中可能经过积水、扬尘或鸟粪区域，导致刚洗好的车身再次沾染污渍。走过去取车则避免了这一风险，洗完即净。\n\n理由3：大多数洗车店需要你把车留在店内排队或等待，如果你开车过去但前面有车在洗，你需要把车停在附近等待。50米距离走路过去可以先看排队情况再决定何时取车，灵活度更高。\n\n建议：直接步行前往洗车店，洗完后再把车开回家，既保持车身洁净又节省时间。"
+  },
+  {
+    "id": "carwash-decision:deepseek-v4-flash",
+    "theme": "carwash-decision",
+    "model": "deepseek-v4-flash",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/deepseek-v4-flash/response.md",
+    "publicPath": "/submissions/carwash-decision/deepseek-v4-flash/response.md",
+    "renderKind": "text",
+    "linesTotal": 8,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 577,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-31T14:50:25.669Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n\n理由1：要洗的是车本身，车不会自己走到店里——走过去只能让人先到，车还停在原地，达不到洗车的真正目的。\n理由2：50 米对车辆几乎零成本，发动机刚启动就到店，既不费油，也没有违停、堵车或找车位的顾虑。\n理由3：开车到店门口即停即洗，洗完后直接开回家，流程最顺，也避免了车留在店外过夜或二次往返的麻烦。\n\n建议：直接上车慢慢开过去，50 米到店即洗；出门前确认车窗锁好，随车证件随身带。"
   },
   {
     "id": "carwash-decision:kimi-k2.7",

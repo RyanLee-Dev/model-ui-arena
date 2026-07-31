@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!-- 设计说明：星云引力井。中央能量核心由多层径向辉光+旋转轨道弧构成，1/r² 引力约束粒子近圆轨道；粒子色相随时间缓慢漂移、尺寸与亮度分层制造深度，半透明残迹形成星云尾迹；点击任意处产生扩散冲击环并径向推离粒子；手指/鼠标悬停生成局部引力点并带涟漪；玻璃 HUD 实时显示粒子数、能量、FPS 与当前模式，指针事件兼容触摸。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>粒子引力场</title>
+<style>
+*{margin:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#04050c;color:#dfe7ff;font-family:"SF Pro Display",-apple-system,"PingFang SC",sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+.hud{position:fixed;left:14px;top:14px;font-size:12px;line-height:2;color:#8f9fc9;background:rgba(12,16,32,.62);border:1px solid rgba(255,255,255,.1);padding:10px 16px;border-radius:16px;backdrop-filter:blur(12px);pointer-events:none;z-index:2;font-variant-numeric:tabular-nums;box-shadow:0 10px 30px rgba(0,0,0,.4)}
+.hud b{color:#7cffd4;font-weight:600}
+.hud .mode{color:#ffd479}
+.hud .t{font-size:9px;letter-spacing:2px;color:#5c6b95}
+.tip{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);font-size:11px;color:#5a6b9a;letter-spacing:2px;pointer-events:none;z-index:2;white-space:nowrap}
+@media(max-width:390px){.hud{font-size:11px;left:10px;top:10px}.tip{font-size:10px}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud"><div class="t">GRAVITY WELL</div><div>粒子 <b id="pn">0</b></div><div>能量 <b id="en">0</b></div><div>FPS <b id="fp">0</b></div><div>模式 <span class="mode" id="md">引力井</span></div></div>
+<div class="tip">点击 = 冲击波 · 划过 = 局部引力</div>
+<script>
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+let W=0,H=0,cx=0,cy=0,parts=[],sws=[],ripples=[],hover=null,last=performance.now(),fc=0,fs=0;
+const GM=4200,N=500;
+function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight;cx=W/2;cy=H/2;seed()}
+function seed(){parts=[];const maxR=Math.min(W,H)*.44;
+for(let i=0;i<N;i++){const r=34+Math.random()*(maxR-34),a=Math.random()*7,vc=Math.sqrt(GM/r)*(.86+Math.random()*.34);
+parts.push({x:cx+Math.cos(a)*r,y:cy+Math.sin(a)*r,vx:-Math.sin(a)*vc,vy:Math.cos(a)*vc,s:.8+Math.random()*2,h:235+Math.random()*70})}}
+addEventListener("resize",resize);resize();
+addEventListener("pointerdown",e=>{sws.push({x:e.clientX,y:e.clientY,r:6,sp:8,al:1});document.getElementById("md").textContent="冲击波"});
+addEventListener("pointermove",e=>{hover={x:e.clientX,y:e.clientY};if(Math.random()<.2)ripples.push({x:e.clientX,y:e.clientY,r:4,al:.5})});
+addEventListener("pointerup",()=>hover=null);addEventListener("pointerleave",()=>hover=null);
+function frame(now){
+const dt=Math.min(now-last,32);last=now;
+ctx.globalCompositeOperation="source-over";ctx.fillStyle="rgba(4,5,12,.3)";ctx.fillRect(0,0,W,H);
+ctx.globalCompositeOperation="lighter";
+for(let i=parts.length-1;i>=0;i--){const p=parts[i],dx=cx-p.x,dy=cy-p.y,r=Math.hypot(dx,dy)||1,f=GM/(r*r);
+let ax=dx/r*f,ay=dy/r*f;
+if(hover){const hx=hover.x-p.x,hy=hover.y-p.y,hr=Math.hypot(hx,hy);if(hr<120){const hf=1500/(hr+10);ax+=hx/hr*hf;ay+=hy/hr*hf;document.getElementById("md").textContent="局部引力"}}
+for(let j=sws.length-1;j>=0;j--){const s=sws[j],sx=s.x-p.x,sy=s.y-p.y,sr=Math.hypot(sx,sy);if(sr<s.r+46&&sr>s.r){const k=7.5*(1-(sr-s.r)/46);ax+=sx/sr*k*6;ay+=sy/sr*k*6}}
+p.vx+=ax*dt;p.vy+=ay*dt;p.vx*=.996;p.vy*=.996;p.x+=p.vx*dt;p.y+=p.vy*dt;
+p.h+=dt*.008;
+if(r>Math.min(W,H)*.5){const pull=(r-Math.min(W,H)*.5)*.012;p.vx-=dx/r*pull;p.vy-=dy/r*pull}
+const a=Math.min(1,Math.max(0,(Math.min(W,H)*.5-r)/(Math.min(W,H)*.12)));
+ctx.fillStyle=`hsla(${p.h},100%,66%,${a*.6})`;ctx.beginPath();ctx.arc(p.x,p.y,p.s*2.6,0,7);ctx.fill();
+ctx.fillStyle=`hsla(${p.h},100%,82%,${a})`;ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,7);ctx.fill()}
+for(let i=sws.length-1;i>=0;i--){const s=sws[i];s.r+=s.sp*dt;s.al-=.016*dt;
+const g=ctx.createRadialGradient(s.x,s.y,s.r-14,s.x,s.y,s.r);
+g.addColorStop(0,`rgba(124,255,212,${Math.max(0,s.al*.5)})`);g.addColorStop(.7,`rgba(255,212,121,${Math.max(0,s.al*.35)})`);g.addColorStop(1,"rgba(255,255,255,0)");
+ctx.strokeStyle=g;ctx.lineWidth=3;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();
+if(s.al<=0||s.r>Math.max(W,H))sws.splice(i,1)}
+for(let i=ripples.length-1;i>=0;i--){const p=ripples[i];p.r+=dt*.5;p.al-=.03*dt;
+if(p.al<=0){ripples.splice(i,1);continue}
+ctx.strokeStyle=`rgba(124,212,255,${p.al})`;ctx.lineWidth=1;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.stroke()}
+const pulse=.5+Math.sin(now/300)*.5;
+const g1=ctx.createRadialGradient(cx,cy,0,cx,cy,30);
+g1.addColorStop(0,`rgba(255,255,255,${.9-pulse*.15})`);g1.addColorStop(.35,"rgba(160,226,255,.85)");g1.addColorStop(1,"rgba(124,160,255,0)");
+ctx.fillStyle=g1;ctx.beginPath();ctx.arc(cx,cy,30,0,7);ctx.fill();
+ctx.strokeStyle=`rgba(140,220,255,${.55+pulse*.35})`;ctx.lineWidth=2;
+for(let k=0;k<2;k++){ctx.beginPath();ctx.ellipse(cx,cy,46+k*16,22+k*7,now/4000+k,0,7);ctx.stroke()}
+ctx.strokeStyle=`rgba(255,212,121,${.3+pulse*.25})`;ctx.lineWidth=1.4;ctx.beginPath();ctx.ellipse(cx,cy,40,19,now/4000+Math.PI/3,.6,2.6);ctx.stroke();
+let E=0;parts.forEach(p=>E+=p.vx*p.vx+p.vy*p.vy);
+document.getElementById("pn").textContent=parts.length;
+document.getElementById("en").textContent=(E/1e5).toFixed(2)+"e5";
+fc++;fs+=dt;if(fs>500){document.getElementById("fp").textContent=Math.round(fc*1000/fs);fc=0;fs=0}
+requestAnimationFrame(frame)}
+requestAnimationFrame(frame);
+setInterval(()=>{const m=document.getElementById("md");if(m.textContent==="冲击波")setTimeout(()=>m.textContent="引力井",1200);if(m.textContent==="局部引力")setTimeout(()=>m.textContent="引力井",400)},500);
+</script>
+</body>
+</html>

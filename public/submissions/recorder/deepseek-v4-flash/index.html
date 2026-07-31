@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!-- 设计说明：复古磁带录音机。双磁带盘以金属辐条+轮毂呈现，录音时旋转、暂停缓停；两盘之间的"磁带带面"即实时波形区，波形经目标插值平滑起伏并带青色辉光；右侧 VU 电平表随音量摆动；mm:ss 计时数字大而精确，录音时冒号闪烁、红点呼吸；REC/暂停/停止三态按钮语义清晰，停止需二次确认，停止后弹出本次录音摘要。 -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>复古磁带录音机</title>
+<style>
+:root{--bg:#101218;--card:#1a1d26;--ink:#f3f5fb;--sub:#8b92a8;--amber:#ffb454;--red:#ff4d5e;--teal:#35e0c8;--line:rgba(255,255,255,.09)}
+*{margin:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(130% 120% at 50% 0%,#1c2029 0%,#0c0e14 60%);color:var(--ink);font-family:"SF Pro Display",-apple-system,"PingFang SC",sans-serif}
+.rec{width:min(94vw,352px);border-radius:30px;background:linear-gradient(170deg,#20242f 0%,var(--card) 40%);padding:22px 20px 24px;border:1px solid var(--line);box-shadow:0 34px 80px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08)}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;font-size:11px;letter-spacing:1px;color:var(--sub)}
+.brand{font-weight:700;letter-spacing:3px;color:#c9cede}
+.tag{display:flex;align-items:center;gap:7px}
+.tag i{width:8px;height:8px;border-radius:50%;background:#3d4351;transition:.3s}
+.tag em{font-style:normal}
+.rec.on .tag i{background:var(--red);box-shadow:0 0 10px var(--red);animation:bl 1s infinite}
+.rec.pause .tag i{background:var(--amber);box-shadow:0 0 10px var(--amber)}
+@keyframes bl{50%{opacity:.2}}
+.deck{display:flex;align-items:stretch;gap:12px;padding:14px 12px;border-radius:18px;background:#12141c;box-shadow:inset 0 2px 10px rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.05)}
+.reel{position:relative;flex:0 0 78px;width:78px;height:78px;border-radius:50%;background:repeating-conic-gradient(#40464f 0 5deg,#262a32 5deg 10deg);box-shadow:inset 0 0 16px rgba(0,0,0,.75),0 3px 10px rgba(0,0,0,.45)}
+.reel::before{content:"";position:absolute;inset:9px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#565d6b,#2b2f38 72%)}
+.reel::after{content:"";position:absolute;inset:9px;border-radius:50%;box-shadow:inset 0 0 8px rgba(0,0,0,.55)}
+.hub{position:absolute;left:50%;top:50%;width:20px;height:20px;margin:-10px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#d3d9e2,#7a808c 78%);box-shadow:0 2px 5px rgba(0,0,0,.6)}
+.hub::before{content:"";position:absolute;inset:4px;border-radius:50%;background:#1b1e25}
+.reel.spin{animation:spin 2.6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.tape{flex:1;position:relative;min-width:0;display:flex;flex-direction:column}
+.tape canvas{flex:1;width:100%;min-height:58px;display:block;border-radius:8px;background:linear-gradient(180deg,#0d0f15,#101319)}
+.meter{display:flex;align-items:flex-end;justify-content:flex-end;height:22px;margin-top:6px}
+.meter i{width:4px;border-radius:2px;background:linear-gradient(180deg,var(--teal),var(--amber) 70%,var(--red));height:20%;transition:height .08s linear}
+.time{display:flex;justify-content:center;align-items:baseline;gap:4px;margin:18px 0 2px;font-variant-numeric:tabular-nums}
+.time b{font-size:40px;font-weight:600;letter-spacing:1px}
+.time i{font-style:normal;font-size:40px;color:var(--sub)}
+.rec.on .time i{color:var(--ink);animation:bl 1s steps(1) infinite}
+.stat{text-align:center;font-size:11px;color:var(--sub);letter-spacing:1px;margin-bottom:16px}
+.btns{display:flex;gap:10px}
+.btn{flex:1;height:54px;border:0;border-radius:16px;font-size:14px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:transform .12s,filter .2s;font-family:inherit}
+.btn:active{transform:scale(.96)}
+.go{background:linear-gradient(180deg,#ff5d6e,#e23b4c);color:#fff;box-shadow:0 10px 24px rgba(255,77,94,.35)}
+.go.pause{background:linear-gradient(180deg,#ffc069,#e89b2f);color:#241603;box-shadow:0 10px 24px rgba(255,180,84,.3)}
+.st{background:#2b2f3a;color:var(--sub)}
+.st.confirm{background:linear-gradient(180deg,#ff5d6e,#e23b4c);color:#fff;animation:bl .5s 3}
+.summary{position:fixed;inset:0;display:grid;place-items:center;background:rgba(5,6,10,.66);backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .3s;z-index:5}
+.summary.show{opacity:1;pointer-events:auto}
+.box{width:min(86vw,304px);background:linear-gradient(170deg,#232733,#1a1d26);border-radius:24px;padding:26px 22px;text-align:center;border:1px solid rgba(255,255,255,.1);box-shadow:0 30px 70px rgba(0,0,0,.6)}
+.box h3{font-size:15px;letter-spacing:4px;color:#c9cede;margin-bottom:16px}
+.row{display:flex;justify-content:space-between;padding:10px 4px;border-top:1px solid rgba(255,255,255,.07);font-size:13px}
+.row span{color:var(--sub)}.row b{font-variant-numeric:tabular-nums}
+.row b.ok{color:var(--teal)}
+.box button{margin-top:18px;width:100%;height:46px;border:0;border-radius:14px;background:linear-gradient(180deg,#3fe0c8,#1fae97);color:#04211c;font-weight:700;font-size:13px;letter-spacing:2px;cursor:pointer}
+@media(max-width:390px){.reel{flex-basis:64px;width:64px;height:64px}.time b,.time i{font-size:34px}}
+</style>
+</head>
+<body>
+<div class="rec" id="rec">
+  <div class="top"><span class="brand">LANK · CASSETTE</span><span class="tag"><i id="dot"></i><em id="tag">待机</em></span></div>
+  <div class="deck">
+    <div class="reel" id="r1"><div class="hub"></div></div>
+    <div class="tape">
+      <canvas id="cv" width="300" height="120"></canvas>
+      <div class="meter"><i id="meter"></i></div>
+    </div>
+    <div class="reel" id="r2"><div class="hub"></div></div>
+  </div>
+  <div class="time"><b id="mm">00</b><i>:</i><b id="ss">00</b></div>
+  <div class="stat" id="stat">按下 REC 开始录音</div>
+  <div class="btns"><button class="btn go" id="go">● REC</button><button class="btn st" id="st">■ 停止</button></div>
+</div>
+<div class="summary" id="sm"><div class="box"><h3>录音摘要</h3>
+  <div class="row"><span>时长</span><b class="ok" id="sDur">00:00</b></div>
+  <div class="row"><span>状态</span><b id="sSt">已完成</b></div>
+  <div class="row"><span>录音片段</span><b id="sSeg">0</b></div>
+  <div class="row"><span>文件</span><b>LANK_TAPE.wav</b></div>
+  <button id="okBtn">知道了</button></div></div>
+<script>
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d"),W=cv.width,H=cv.height;
+const rec=document.getElementById("rec"),time=document.getElementById("mm"),time2=document.getElementById("ss"),
+stat=document.getElementById("stat"),tag=document.getElementById("tag"),go=document.getElementById("go"),st=document.getElementById("st");
+let state="idle",start=0,elapsed=0,segments=0,vals=[],targs=[];
+for(let i=0;i<56;i++){vals.push(0);targs.push(0)}
+const NB=vals.length;
+const fmt=ms=>{const s=Math.floor(ms/1000);return [String(Math.floor(s/60)).padStart(2,"0"),String(s%60).padStart(2,"0")]};
+function setState(s){
+state=s;
+rec.className="rec "+(s==="pause"?"pause":s==="rec"?"on":"");
+document.getElementById("r1").classList.toggle("spin",s==="rec");
+document.getElementById("r2").classList.toggle("spin",s==="rec");
+if(s==="idle"){go.textContent="● REC";go.className="btn go";st.textContent="■ 停止";st.className="btn st";tag.textContent="待机";stat.textContent="按下 REC 开始录音";targs=vals.map(()=>0)}
+if(s==="rec"){go.textContent="❚❚ 暂停";go.className="btn go pause";st.className="btn st";tag.textContent="录音中";stat.textContent="● REC 正在录音"}
+if(s==="pause"){go.textContent="▶ 继续";go.className="btn go";tag.textContent="已暂停";stat.textContent="已暂停 · 可继续或停止"}}
+function loop(now){
+if(state==="rec"){
+elapsed+=now-(start||now);start=now;
+const [m,ss]=fmt(elapsed);time.textContent=m;time2.textContent=ss;
+if(Math.random()<.6){const i=(Math.random()*NB)|0;targs[i]=Math.random()*52+10}
+document.getElementById("meter").style.height=(16+Math.random()*78)+"%"}
+for(let i=0;i<NB;i++){vals[i]+=(targs[i]-vals[i])*.14;if(Math.random()<.01)targs[i]=0}
+ctx.clearRect(0,0,W,H);
+ctx.strokeStyle="rgba(53,224,200,.14)";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+const bw=W/NB;
+for(let i=0;i<NB;i++){
+const v=vals[i],x=i*bw+bw/2;
+const g=ctx.createLinearGradient(0,H/2-v,0,H/2+v);
+const on=state==="rec";
+g.addColorStop(0,on?"rgba(53,224,200,.85)":"rgba(92,100,120,.5)");
+g.addColorStop(.5,on?"rgba(255,180,84,.75)":"rgba(70,76,94,.4)");
+g.addColorStop(1,on?"rgba(255,77,94,.6)":"rgba(60,66,82,.35)");
+ctx.fillStyle=g;ctx.fillRect(x-1.6,H/2-v,3.2,v*2)}
+requestAnimationFrame(loop)}
+requestAnimationFrame(loop);
+go.onclick=()=>{
+if(state==="idle"){elapsed=0;segments=0;start=performance.now();targs=vals.map(()=>0);setState("rec")}
+else if(state==="rec"){elapsed+=performance.now()-start;setState("pause")}
+else{start=performance.now();setState("rec")}};
+st.onclick=()=>{
+if(state==="idle")return;
+if(!st.classList.contains("confirm")){st.classList.add("confirm");st.textContent="确认停止?";setTimeout(()=>{st.classList.remove("confirm");st.textContent="■ 停止"},2400);return}
+segments++;const [m,s]=fmt(elapsed);
+document.getElementById("sDur").textContent=m+":"+s;
+document.getElementById("sSt").textContent="已完成";
+document.getElementById("sSeg").textContent=segments;
+setState("idle");start=0;time.textContent="00";time2.textContent="00";vals=vals.map(()=>0);targs=targs.map(()=>0);
+document.getElementById("sm").classList.add("show")};
+document.getElementById("okBtn").onclick=()=>document.getElementById("sm").classList.remove("show");
+</script>
+</body>
+</html>
