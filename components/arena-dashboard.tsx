@@ -105,6 +105,9 @@ type ModelScope = "theme" | "all" | "selected";
 export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) {
   const gridRef = useRef<HTMLElement>(null);
   const modelSearchRef = useRef<HTMLInputElement>(null);
+  // Models are initialized once (from the URL or theme defaults); switching the
+  // theme must NOT overwrite the user's hand-picked comparison set.
+  const modelsInitRef = useRef(false);
   const [payload, setPayload] = useState<ApiPayload | null>(null);
   const [error, setError] = useState<string>("");
   const [activeTheme, setActiveTheme] = useState<string>(initialTheme);
@@ -134,32 +137,36 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
 
         setPayload(data);
 
-        setActiveTheme((current) =>
-          data.themes.some((theme) => theme.id === current)
-            ? current
-            : data.themes[0]?.id ?? "clock"
-        );
+        const validTheme = data.themes.some((theme) => theme.id === initialTheme)
+          ? initialTheme
+          : data.themes[0]?.id ?? "clock";
+        setActiveTheme(validTheme);
 
-        const models = sortModels([...new Set(data.submissions.map((item) => item.model))]);
-        const referenceModels = getReferenceModels(models);
-        const initialThemeModels = sortModels([
-          ...new Set(
-            data.submissions
-              .filter((item) => item.theme === initialTheme)
-              .map((item) => item.model)
-          )
-        ]);
-        // Small benchmark sets are more useful when every available result is visible.
-        const defaultModels = initialThemeModels.length > 0
-          && initialThemeModels.length <= referenceModels.length
-          ? initialThemeModels
-          : referenceModels.length ? referenceModels : models;
-        const requestedModels = parseModelSelection(window.location.search);
-        const availableModelSet = new Set(models);
-        const nextModels = requestedModels === null
-          ? defaultModels
-          : sortModels(requestedModels.filter((model) => availableModelSet.has(model)));
-        setSelectedModels(nextModels);
+        // Seed the model selection exactly once. After this, switching the theme
+        // keeps the user's comparison set intact (see the theme-sync effect below).
+        if (!modelsInitRef.current) {
+          modelsInitRef.current = true;
+          const models = sortModels([...new Set(data.submissions.map((item) => item.model))]);
+          const referenceModels = getReferenceModels(models);
+          const seedThemeModels = sortModels([
+            ...new Set(
+              data.submissions
+                .filter((item) => item.theme === validTheme)
+                .map((item) => item.model)
+            )
+          ]);
+          // Small benchmark sets are more useful when every available result is visible.
+          const defaultModels = seedThemeModels.length > 0
+            && seedThemeModels.length <= referenceModels.length
+            ? seedThemeModels
+            : referenceModels.length ? referenceModels : models;
+          const requestedModels = parseModelSelection(window.location.search);
+          const availableModelSet = new Set(models);
+          const nextModels = requestedModels === null
+            ? defaultModels
+            : sortModels(requestedModels.filter((model) => availableModelSet.has(model)));
+          setSelectedModels(nextModels);
+        }
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : "加载失败";
@@ -169,8 +176,13 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
     return () => {
       cancelled = true;
     };
-  }, [initialTheme]);
+    // Fetch + initial seeding run once on mount; initialTheme changes are handled
+    // by the theme-sync effect without refetching or touching selectedModels.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Switching theme (route param) only moves the active theme; it must NOT reset
+  // the model selection, so a chosen A/B comparison survives across subjects.
   useEffect(() => {
     setActiveTheme(initialTheme);
   }, [initialTheme]);
@@ -292,6 +304,13 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
   const effectivePanesPerRow = Math.min(panesPerRow, maxPanesPerRow);
   const currentThemePath = buildThemePath(activeTheme, selectedModels);
 
+  // Selected models that have no submission for the active theme. Their selection
+  // is preserved on theme switch; this just surfaces why fewer panes render.
+  const missingSelectedCount = useMemo(
+    () => selectedModels.filter((model) => !modelsForActiveTheme.has(model)).length,
+    [selectedModels, modelsForActiveTheme]
+  );
+
   const commitSelectedModels = (models: string[]) => {
     const availableModelSet = new Set(availableModels);
     const nextModels = sortModels(
@@ -399,6 +418,18 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
               </Link>
             ))}
           </div>
+          {missingSelectedCount > 0 ? (
+            <span className="theme-missing-note" title="已选模型会随主题保留；以下模型在本主题暂无作品">
+              {missingSelectedCount} 个已选模型缺本主题
+              <button
+                type="button"
+                className="theme-missing-fix"
+                onClick={selectThemeModels}
+              >
+                补齐本主题
+              </button>
+            </span>
+          ) : null}
         </div>
 
         <div className="toolbar-controls">

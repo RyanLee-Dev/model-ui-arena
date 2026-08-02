@@ -115,6 +115,13 @@ export function CompareView() {
   );
   const a = sp.get("a") || modelsForTheme[0] || "";
   const b = sp.get("b") || modelsForTheme[1] || modelsForTheme[0] || "";
+  const modelForThemeSet = useMemo(() => new Set(modelsForTheme), [modelsForTheme]);
+  // Keep the user's chosen A/B selectable even when the active theme has no
+  // submission for them, so switching theme never silently swaps the models.
+  const modelOptions = useMemo(() => {
+    const extra = [a, b].filter((m) => m && !modelForThemeSet.has(m));
+    return [...modelsForTheme, ...extra];
+  }, [modelsForTheme, modelForThemeSet, a, b]);
 
   const subA = subs.find((s) => s.theme === theme && s.model === a);
   const subB = subs.find((s) => s.theme === theme && s.model === b);
@@ -157,7 +164,7 @@ export function CompareView() {
       <section className="panel compare-bar">
         <label className="compare-field">
           <span>主题</span>
-          <select value={theme} onChange={(e) => update({ theme: e.target.value }, true)}>
+          <select value={theme} onChange={(e) => update({ theme: e.target.value })}>
             {themes.map((t) => (
               <option key={t.id} value={t.id}>
                 {t.label}
@@ -168,9 +175,9 @@ export function CompareView() {
         <label className="compare-field">
           <span>模型 A</span>
           <select value={a} onChange={(e) => update({ a: e.target.value })}>
-            {modelsForTheme.map((m) => (
+            {modelOptions.map((m) => (
               <option key={m} value={m}>
-                {m}
+                {m}{modelForThemeSet.has(m) ? "" : "（缺本主题）"}
               </option>
             ))}
           </select>
@@ -178,9 +185,9 @@ export function CompareView() {
         <label className="compare-field">
           <span>模型 B</span>
           <select value={b} onChange={(e) => update({ b: e.target.value })}>
-            {modelsForTheme.map((m) => (
+            {modelOptions.map((m) => (
               <option key={m} value={m}>
-                {m}
+                {m}{modelForThemeSet.has(m) ? "" : "（缺本主题）"}
               </option>
             ))}
           </select>
@@ -189,6 +196,14 @@ export function CompareView() {
           {copied ? "已复制链接" : "复制分享链接"}
         </button>
       </section>
+
+      {!subA || !subB ? (
+        <p className="compare-missing">
+          提示：{[!subA && "A", !subB && "B"].filter(Boolean).join("、")} 所选模型在「{
+            themes.find((t) => t.id === theme)?.label ?? theme
+          }」暂无作品 —— 切换主题不会重置你的模型选择，可在上方下拉框改选本主题可用模型。
+        </p>
+      ) : null}
 
       {subA && subB ? (
         <p className="compare-diff">
