@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>STUDIO REC · 专业录音台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}em{font-style:normal}
+html,body{height:100%}
+body{font-family:-apple-system,"SF Pro Display","PingFang SC",sans-serif;background:#07080d;color:#e9ecf3;display:flex;align-items:center;justify-content:center;overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0;background:radial-gradient(90% 70% at 15% -10%,#141a28 0%,transparent 60%),radial-gradient(75% 65% at 92% 112%,#0e1e24 0%,transparent 55%)}
+body::after{content:"";position:fixed;inset:0;z-index:0;background:radial-gradient(120% 90% at 50% 42%,transparent 55%,rgba(0,0,0,.5));pointer-events:none}
+.glow{position:fixed;width:420px;height:420px;border-radius:50%;filter:blur(100px);pointer-events:none;opacity:.4;transition:opacity 1.2s}
+.g1{left:-130px;top:-150px;background:#43131f}.g2{right:-130px;bottom:-150px;background:#0c2b32}
+body.rec .g1{opacity:.85;animation:br 2.6s ease-in-out infinite}
+@keyframes br{50%{transform:scale(1.18)}}
+.stage{position:relative;z-index:1;width:min(432px,94vw)}
+.panel{background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.09);border-radius:26px;padding:22px 22px 24px;box-shadow:0 40px 90px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)}
+.bar{display:flex;justify-content:space-between;align-items:center}
+.brand{display:flex;gap:11px;align-items:center}
+.brand i{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.brand b{display:block;font-size:13px;letter-spacing:.16em}
+.brand span{font-size:9px;color:#868ca0;letter-spacing:.26em;text-transform:uppercase}
+.badge{display:flex;align-items:center;gap:7px;padding:7px 12px;border-radius:999px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.25);font-size:9px;letter-spacing:.2em;color:#a6abc0}
+.dot{width:8px;height:8px;border-radius:50%;background:#5b6172;transition:.4s}
+body.rec .dot{background:#ff3b4e;box-shadow:0 0 12px #ff3b4e;animation:pu 1.3s infinite}
+body.paused .dot{background:#ffb02e;box-shadow:0 0 10px #ffb02e}
+body.done .dot{background:#35e0c8;box-shadow:0 0 10px #35e0c8}
+@keyframes pu{50%{opacity:.3}}
+.timer{text-align:center;font-size:clamp(58px,17vw,86px);font-weight:150;font-variant-numeric:tabular-nums;margin:16px 0 10px;color:#dfe3ee;transition:color .5s,text-shadow .5s}
+body.rec .timer{color:#fff;text-shadow:0 0 46px rgba(255,70,90,.35)}
+body.paused .timer{color:#ffc76e;text-shadow:0 0 40px rgba(255,176,46,.25)}
+canvas{width:100%;height:118px;display:block;border-radius:15px;background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 6px 24px rgba(0,0,0,.45)}
+.hints{display:flex;justify-content:space-between;font-size:9px;letter-spacing:.18em;color:#787e93;margin:11px 3px 20px;text-transform:uppercase}
+.ctrl{display:flex;gap:10px;justify-content:center;user-select:none;-webkit-user-select:none}
+.btn{display:inline-flex;align-items:center;gap:8px;height:50px;padding:0 21px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#e9ecf3;font-size:14px;font-family:inherit;letter-spacing:.06em;cursor:pointer;transition:transform .18s,border-color .25s,background .3s,opacity .3s,box-shadow .3s}
+.btn:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(255,255,255,.26);background:rgba(255,255,255,.09)}
+.btn:active:not(:disabled){transform:translateY(0) scale(.94)}
+.btn:disabled{opacity:.28;cursor:default}
+.btn svg{width:15px;height:15px;fill:#fff;flex:none}
+.btn.main{background:linear-gradient(145deg,#ff4d5e,#d92638);border-color:rgba(255,130,140,.45);box-shadow:0 10px 30px rgba(255,59,78,.35),inset 0 1px 0 rgba(255,255,255,.28)}
+.btn.main:hover:not(:disabled){background:linear-gradient(145deg,#ff6070,#e52f41);box-shadow:0 14px 38px rgba(255,59,78,.5)}
+.btn.danger:hover:not(:disabled){border-color:rgba(255,95,105,.55);box-shadow:0 8px 24px rgba(255,59,78,.18)}
+.ir{display:none}body.paused .ir{display:block}body.paused .ip{display:none}
+.stopwrap{display:inline-flex;position:relative}
+.confirm{position:absolute;inset:0;display:flex;border-radius:999px;overflow:hidden;border:1px solid rgba(255,90,100,.5);opacity:0;transform:scale(.88);pointer-events:none;transition:.3s cubic-bezier(.2,.9,.3,1.2);box-shadow:0 10px 30px rgba(255,59,78,.3)}
+.confirm button{flex:1;border:0;background:rgba(255,255,255,.04);color:#c9cede;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.05em}
+.confirm button:first-child{background:linear-gradient(145deg,#ff4d5e,#d92638);color:#fff;font-weight:600}
+.confirm button:hover{filter:brightness(1.15)}
+.stopwrap.armed #bStop{opacity:0;transform:scale(.85);pointer-events:none}
+.stopwrap.armed .confirm{opacity:1;transform:scale(1);pointer-events:auto}
+.summary{position:fixed;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;overflow:auto;padding:18px;background:rgba(5,6,10,.55);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);opacity:0;pointer-events:none;transition:opacity .45s}
+.summary.show{opacity:1;pointer-events:auto}
+.scard{width:min(400px,100%);background:linear-gradient(165deg,rgba(255,255,255,.1),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:24px;box-shadow:0 50px 110px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.1);transform:translateY(28px) scale(.94);transition:transform .55s cubic-bezier(.2,.9,.25,1.15)}
+.summary.show .scard{transform:none}
+.shead{display:flex;align-items:center;gap:12px}
+.ok{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(53,224,200,.13);border:1px solid rgba(53,224,200,.35);flex:none}
+.ok svg{width:18px;height:18px;stroke:#35e0c8;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.shead b{display:block;font-size:15px;letter-spacing:.04em}
+.shead span{font-size:10px;color:#868ca0;font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.tag{margin-left:auto;font-size:9px;letter-spacing:.22em;color:#35e0c8;border:1px solid rgba(53,224,200,.35);padding:5px 10px;border-radius:999px}
+.big{text-align:center;font-size:clamp(46px,13vw,62px);font-weight:150;font-variant-numeric:tabular-nums;margin:18px 0 2px}
+.cap{text-align:center;font-size:9px;letter-spacing:.28em;color:#787e93;margin-bottom:18px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:18px}
+.chip{font-size:10px;padding:6px 10px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#c6cbdb;font-variant-numeric:tabular-nums;letter-spacing:.05em;animation:pop .45s backwards}
+.chip b{font-weight:600;color:#fff;margin-left:4px}
+.chip.r{border-color:rgba(255,80,95,.45);color:#ff96a0}.chip.a{border-color:rgba(255,176,46,.45);color:#ffd18d}.chip.c{border-color:rgba(53,224,200,.45);color:#83e9da}
+.arr{color:#565c70;font-size:10px}
+@keyframes pop{from{opacity:0;transform:translateY(7px)}}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px}
+.meta div{background:rgba(0,0,0,.26);border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:11px 13px}
+.meta span{font-size:9px;letter-spacing:.22em;color:#787e93;text-transform:uppercase;display:block;margin-bottom:5px}
+.meta b{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
+.wide{width:100%;justify-content:center;height:52px}
+@media(max-width:396px){.btn{padding:0 15px;font-size:13px;gap:6px}.panel{padding:18px 15px 20px}.badge{padding:6px 9px}}
+</style>
+</head>
+<body>
+<div class="glow g1"></div><div class="glow g2"></div>
+<main class="stage"><section class="panel">
+<header class="bar">
+<div class="brand"><i><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#ff5d6c" stroke-width="1.8" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></i><div><b>STUDIO REC</b><span>Console · Prototype</span></div></div>
+<div class="badge"><i class="dot"></i><em id="badgeTxt">待机 STANDBY</em></div>
+</header>
+<div class="timer" id="timer">00:00</div>
+<canvas id="wave"></canvas>
+<div class="hints"><span>44.1 kHz · 16-bit · Stereo</span><span id="stateTxt">准备就绪</span></div>
+<div class="ctrl">
+<button class="btn main" id="bStart"><svg viewBox="0 0 16 16"><circle cx="8" cy="8" r="5"/></svg><em>开始</em></button>
+<button class="btn" id="bPause" disabled><svg class="ip" viewBox="0 0 16 16"><rect x="3.4" y="2.6" width="3.5" height="10.8" rx="1.2"/><rect x="9.1" y="2.6" width="3.5" height="10.8" rx="1.2"/></svg><svg class="ir" viewBox="0 0 16 16"><path d="M4.6 2.8v10.4L13.4 8z"/></svg><em id="pauseTxt">暂停</em></button>
+<span class="stopwrap" id="stopwrap"><button class="btn danger" id="bStop" disabled><svg viewBox="0 0 16 16"><rect x="3.2" y="3.2" width="9.6" height="9.6" rx="2.2"/></svg><em>停止</em></button>
+<span class="confirm"><button id="bYes">确认停止</button><button id="bNo">取消</button></span></span>
+</div>
+</section></main>
+<section class="summary" id="summary"><div class="scard">
+<header class="shead"><i class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.6 4.6L19 7.4"/></svg></i><div><b>录音完成</b><span id="fname">REC_.wav</span></div><em class="tag">已保存</em></header>
+<div class="big" id="sDur">00:00</div>
+<div class="cap">本 次 录 音 摘 要</div>
+<div class="chips" id="chips"></div>
+<div class="meta">
+<div><span>时长</span><b id="mDur">—</b></div>
+<div><span>文件大小</span><b id="mSize">—</b></div>
+<div><span>保存时间</span><b id="mTime">—</b></div>
+<div><span>状态切换</span><b id="mCount">—</b></div>
+</div>
+<button class="btn main wide" id="bNew"><svg viewBox="0 0 16 16"><path d="M8 2.5v11M2.5 8h11" stroke="#fff" stroke-width="2" stroke-linecap="round" fill="none"/></svg><em>新录音</em></button>
+</div></section>
+<script>
+const $=id=>document.getElementById(id),B=document.body,C=$('wave'),X=C.getContext('2d');
+let st='idle',acc=0,t0=0,ph=0,noise=.4,amps=[],events=[],armT=null,sumT=null;
+const pad=n=>String(n).padStart(2,'0');
+const fmt=s=>{s=Math.max(0,Math.floor(s));return pad(Math.floor(s/60))+':'+pad(s%60)};
+const cur=()=>st==='rec'?acc+(performance.now()-t0)/1000:acc;
+function fit(){const r=C.getBoundingClientRect(),d=devicePixelRatio||1;C.width=Math.round(r.width*d);C.height=Math.round(r.height*d);X.setTransform(d,0,0,d,0,0)}
+addEventListener('resize',fit);fit();
+function draw(ts){
+ requestAnimationFrame(draw);
+ const w=C.clientWidth,h=C.clientHeight,mid=h/2;
+ if(st==='rec'){ph+=.13;noise=Math.max(.14,Math.min(1,noise+(Math.random()-.5)*.28));
+  const env=Math.abs(Math.sin(ph*.61)*.58+Math.sin(ph*1.73+1.2)*.3+Math.sin(ph*3.1)*.12);
+  amps.push(Math.min(1,.09+env*noise))}
+ else if(st==='ease'){for(let i=0;i<amps.length;i++)amps[i]*=.87}
+ const n=Math.max(12,Math.floor((w-22)/6));
+ while(amps.length<n)amps.unshift(0);if(amps.length>n)amps.splice(0,amps.length-n);
+ X.clearRect(0,0,w,h);
+ X.fillStyle='rgba(255,255,255,.05)';X.fillRect(11,mid-.5,w-22,1);
+ const g=X.createLinearGradient(0,0,w,0);
+ g.addColorStop(0,'#2bd8c4');g.addColorStop(.58,'#4f9dff');g.addColorStop(1,'#ff3b4e');
+ X.fillStyle=g;
+ for(let i=0;i<n;i++){
+  let a=amps[i];
+  if(st==='idle')a=.045+.035*(1+Math.sin(ts*.0015+i*.22));
+  const bh=Math.max(1.2,a*(h-18)/2);
+  X.fillRect(11+i*6,mid-bh,3.4,bh*2)}
+ if(st==='rec'){const a=amps[n-1]||0,bh=Math.max(2,a*(h-18)/2);
+  X.shadowColor='#ff3b4e';X.shadowBlur=18;X.fillStyle='#ff707d';
+  X.beginPath();X.arc(12.7+(n-1)*6,mid,3.4,0,7);X.fill();X.shadowBlur=0}
+ const f=fmt(cur());if($('timer').textContent!==f)$('timer').textContent=f;
+}
+requestAnimationFrame(draw);
+const badge=t=>$('badgeTxt').textContent=t,hint=t=>$('stateTxt').textContent=t;
+function log(name,cls){events.push({name,cls,t:cur()})}
+function disarm(){$('stopwrap').classList.remove('armed');clearTimeout(armT)}
+function arm(){if(st!=='rec'&&st!=='paused')return;$('stopwrap').classList.add('armed');clearTimeout(armT);armT=setTimeout(disarm,3000)}
+function reset(){st='idle';acc=0;amps=[];events=[];ph=0;B.className='';badge('待机 STANDBY');hint('准备就绪');$('timer').textContent='00:00';
+ $('bStart').disabled=false;$('bPause').disabled=true;$('bStop').disabled=true;$('pauseTxt').textContent='暂停';
+ $('summary').classList.remove('show');disarm()}
+$('bStart').onclick=()=>{if(st!=='idle')return;events=[];amps=[];acc=0;t0=performance.now();
+ st='rec';B.className='rec';badge('录音中 REC');hint('正在录制输入信号…');log('开始','r');
+ $('bStart').disabled=true;$('bPause').disabled=false;$('bStop').disabled=false;$('summary').classList.remove('show')};
+$('bPause').onclick=()=>{if(st==='rec'){acc=cur();st='paused';B.className='paused';badge('已暂停 PAUSED');hint('已暂停 · 波形已冻结');$('pauseTxt').textContent='继续';log('暂停','a')}
+ else if(st==='paused'){t0=performance.now();st='rec';B.className='rec';badge('录音中 REC');hint('正在录制输入信号…');$('pauseTxt').textContent='暂停';log('恢复','c')}};
+$('bStop').onclick=arm;
+$('bNo').onclick=disarm;
+$('bYes').onclick=()=>{disarm();const e=cur();acc=e;log('停止','c');st='ease';
+ B.className='done';badge('已完成 SAVED');hint('已生成录音摘要');$('bPause').disabled=true;$('bStop').disabled=true;
+ clearTimeout(sumT);sumT=setTimeout(()=>showSummary(e),700)};
+function showSummary(e){
+ const d=new Date();
+ $('sDur').textContent=fmt(e);
+ $('fname').textContent=`REC_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}.wav`;
+ $('mDur').textContent=fmt(e)+'.'+Math.floor(e%1*10);
+ const bytes=e*176400;$('mSize').textContent=bytes>=1048576?(bytes/1048576).toFixed(2)+' MB':Math.max(1,Math.round(bytes/1024))+' KB';
+ $('mTime').textContent=pad(d.getHours())+':'+pad(d.getMinutes())+':'+pad(d.getSeconds());
+ $('mCount').textContent=Math.max(0,events.length-1)+' 次';
+ $('chips').innerHTML=events.map((v,i)=>`<span class="chip ${v.cls}" style="animation-delay:${i*70}ms">${v.name}<b>${fmt(v.t)}</b></span>`).join('<span class="arr">→</span>');
+ $('summary').classList.add('show')}
+$('bNew').onclick=reset;
+</script>
+</body>
+</html>

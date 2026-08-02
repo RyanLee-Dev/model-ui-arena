@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>沪深行情 · STOCK TERMINAL</title>
+<style>
+:root{--up:#ff5b6a;--dn:#1fd08c;--tx:#e9eef7;--mu:#8b96ad;--ln:rgba(148,175,220,.13);--am:#e8b34b}
+*{margin:0;box-sizing:border-box}
+body{font-family:-apple-system,"SF Pro Display","PingFang SC","Helvetica Neue",sans-serif;color:var(--tx);background:#060a13;padding:24px 14px 26px;min-height:100vh;
+background-image:radial-gradient(820px 480px at 88% -8%,rgba(64,128,255,.12),transparent 62%),radial-gradient(640px 400px at -8% 108%,rgba(31,208,140,.06),transparent 60%),radial-gradient(520px 300px at 42% 0,rgba(255,91,106,.05),transparent 60%),repeating-linear-gradient(0deg,rgba(140,170,220,.03) 0 1px,transparent 1px 46px),repeating-linear-gradient(90deg,rgba(140,170,220,.03) 0 1px,transparent 1px 46px)}
+.wrap{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:13px}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum";text-align:right}
+.up{color:var(--up)}.dn{color:var(--dn)}
+.glass{background:linear-gradient(160deg,rgba(20,29,48,.85),rgba(11,17,30,.92));border:1px solid var(--ln);border-radius:14px;box-shadow:0 18px 44px rgba(2,6,16,.55),inset 0 1px 0 rgba(190,210,245,.07);animation:in .6s ease both}
+.glass:nth-of-type(2){animation-delay:.09s}
+@keyframes in{from{opacity:0;transform:translateY(9px)}}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:12px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--up);animation:beat 1.5s infinite}
+@keyframes beat{0%{box-shadow:0 0 0 0 rgba(255,91,106,.45)}70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+h1{font-size:21px;font-weight:700;letter-spacing:.02em}
+h1 em{font-style:normal;font-size:10px;font-weight:600;letter-spacing:.3em;color:var(--mu);margin-left:8px;vertical-align:3px}
+.sub{font-size:10px;color:var(--mu);letter-spacing:.22em;margin-top:3px;text-transform:uppercase}
+.meta{display:flex;align-items:center;gap:10px}
+.chip{font-size:11px;color:#a9c9ff;background:rgba(59,130,246,.1);border:1px solid rgba(96,165,250,.32);border-radius:999px;padding:4px 11px;letter-spacing:.08em}
+.clock{font-size:13px;font-weight:600;color:#c6d2e8;letter-spacing:.06em}
+.hero{padding:16px 18px 12px}
+.hh{display:grid;grid-template-columns:1fr auto auto;gap:18px;align-items:end;margin-bottom:10px}
+.hn{font-size:18px;font-weight:700}
+.hc{font-size:11px;color:var(--mu);letter-spacing:.08em;margin-left:8px}
+.hpx{font-size:30px;font-weight:700;line-height:1}
+.hch b{font-size:13px;display:block}
+.hch span{font-size:11px;opacity:.85;display:block;margin-top:2px}
+.tag{font-style:normal;font-size:9px;color:var(--am);border:1px solid rgba(232,179,75,.45);border-radius:4px;padding:1px 5px;margin-left:7px;letter-spacing:.12em;vertical-align:1px}
+.chart{width:100%;height:auto;display:block}
+.gl{stroke:rgba(148,175,220,.09)}
+.bl{stroke:rgba(200,215,240,.3);stroke-dasharray:3 5}
+.hs{display:flex;gap:20px;flex-wrap:wrap;font-size:11px;color:var(--mu);border-top:1px solid var(--ln);margin-top:8px;padding-top:9px}
+.hs b{font-weight:600;margin-left:6px;color:var(--tx)}
+.hs b.up{color:var(--up)}.hs b.dn{color:var(--dn)}
+.wrn{color:var(--am);letter-spacing:.08em}
+.cols,.row{display:grid;grid-template-columns:1.3fr 92px 84px 94px;gap:10px;align-items:center}
+.cols{padding:11px 16px;font-size:10px;letter-spacing:.18em;color:var(--mu);border-bottom:1px solid var(--ln);text-transform:uppercase}
+.row{padding:11px 16px;cursor:pointer;transition:background .25s}
+.row+.row{border-top:1px solid rgba(148,175,220,.07)}
+.row:hover{background:rgba(96,140,220,.06)}
+.row.act{background:rgba(96,140,220,.09);box-shadow:inset 3px 0 0 rgba(122,168,255,.85)}
+.id b{font-size:14px;font-weight:600;display:block}
+.id span{font-size:10.5px;color:var(--mu);letter-spacing:.06em}
+.sp{width:92px;height:30px;display:block}
+.pr{font-size:15.5px;font-weight:700;padding:2px 7px;border-radius:6px}
+.ch b{font-size:12.5px;font-weight:600;display:block}
+.ch span{font-size:10.5px;opacity:.82;display:block}
+.fu{animation:pu .9s ease-out}.fd{animation:pd .9s ease-out}
+@keyframes pu{0%{background:rgba(255,91,106,.3)}100%{background:transparent}}
+@keyframes pd{0%{background:rgba(31,208,140,.28)}100%{background:transparent}}
+footer{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--mu);letter-spacing:.05em;padding:2px 6px}
+footer .rt{margin-left:auto;font-size:9.5px;letter-spacing:.24em;color:rgba(139,150,173,.7);text-transform:uppercase}
+@media(max-width:430px){
+body{padding:16px 10px 20px}
+.cols,.row{grid-template-columns:1fr 60px 72px 84px;gap:8px;padding:10px 12px}
+.sp{width:60px}
+h1{font-size:18px}
+.hpx{font-size:24px}
+.hh{gap:10px}
+.pr{font-size:13.5px}
+.hs{gap:12px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+ <div class="brand"><span class="dot"></span><div><h1>沪深行情<em>STOCK TERMINAL</em></h1><div class="sub">Simulated Market Feed</div></div></div>
+ <div class="meta"><span class="chip">交易中 · 模拟数据</span><span class="clock num" id="clock">--:--:--</span></div>
+</header>
+<section class="glass hero" id="hero"></section>
+<section class="glass">
+ <div class="cols"><span>名称 / 代码</span><span>走势</span><span class="num">最新价</span><span class="num">涨跌 / 幅度</span></div>
+ <div id="list"></div>
+</section>
+<footer>
+ <svg viewBox="0 0 20 18" width="15" height="14" fill="none"><path d="M10 2.2Q10.3 1.6 10.6 2.2L18.4 15.7Q18.7 16.3 18 16.3L2 16.2Q1.3 16.2 1.6 15.6Z" stroke="#e8b34b" stroke-width="1.5" stroke-linejoin="round"/><path d="M10 7.2v4.1" stroke="#e8b34b" stroke-width="1.5" stroke-linecap="round"/><circle cx="10" cy="13.9" r=".9" fill="#e8b34b"/></svg>
+ <span>行情为模拟数据，不构成投资建议 · 注意波动风险</span><span class="rt">Sim Feed · CN A-Shares</span>
+</footer>
+</div>
+<script>
+const $=s=>document.querySelector(s),R=(a,b)=>a+Math.random()*(b-a),UP='#ff5b6a',DN='#1fd08c',f2=v=>v.toFixed(2),sg=v=>v>=0?'+':'';
+const S=[
+{n:'贵州茅台',c:'600519.SH',pv:1652.00,vol:.005},
+{n:'宁德时代',c:'300750.SZ',pv:208.40,vol:.011,tag:'高波动'},
+{n:'中芯国际',c:'688981.SH',pv:76.85,vol:.008},
+{n:'比亚迪',c:'002594.SZ',pv:262.10,vol:.0045},
+{n:'中国平安',c:'601318.SH',pv:48.62,vol:.004}];
+const LEN=44;
+S.forEach(s=>{let v=s.pv*(1+R(-.008,.014));s.s=[];for(let i=0;i<LEN;i++){v*=1+R(-1,1)*s.vol*.7;s.s.push(v)}s.p=s.s[LEN-1];s.hi=Math.max(...s.s);s.lo=Math.min(...s.s)});
+const map=(a,w,h,x)=>{const all=x?a.concat(x):a,mn=Math.min(...all),mx=Math.max(...all),rg=mx-mn||1,y=v=>h-4-(v-mn)/rg*(h-8);
+return{p:a.map((v,i)=>[i/(a.length-1)*w,y(v)]),y}};
+const line=p=>'M'+p.map(q=>q[0].toFixed(1)+' '+q[1].toFixed(1)).join(' L');
+const spark=(s,i)=>{const c=s.p>=s.pv?UP:DN,p=map(s.s,92,30).p;
+return `<svg class="sp" viewBox="0 0 92 30"><defs><linearGradient id="g${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".3"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs><path d="${line(p)} L92 30 L0 30Z" fill="url(#g${i})"/><path d="${line(p)}" fill="none" stroke="${c}" stroke-width="1.3" stroke-linejoin="round"/></svg>`};
+const heroEl=$('#hero'),list=$('#list');let sel=0;
+list.innerHTML=S.map((s,i)=>`<div class="row" data-i="${i}"><div class="id"><b>${s.n}${s.tag?`<i class="tag">${s.tag}</i>`:''}</b><span>${s.c}</span></div><div class="sc">${spark(s,i)}</div><div class="num pr"></div><div class="num ch"></div></div>`).join('');
+const refs=[...list.children].map(r=>({row:r,sc:r.querySelector('.sc'),pr:r.querySelector('.pr'),ch:r.querySelector('.ch')}));
+function hero(){const s=S[sel],d=s.p-s.pv,up=d>=0,c=up?UP:DN,pc=d/s.pv*100,m=map(s.s,640,170,[s.pv]),p=m.p,L=p[p.length-1],amp=(s.hi-s.lo)/s.pv*100;
+heroEl.innerHTML=`<div class="hh"><div><span class="hn">${s.n}</span><span class="hc">${s.c}</span>${s.tag?`<i class="tag">${s.tag}</i>`:''}</div><div class="num hpx" style="color:${c}">${f2(s.p)}</div><div class="num hch" style="color:${c}"><b>${up?'▲':'▼'} ${sg(d)}${f2(d)}</b><span>${sg(pc)}${pc.toFixed(2)}%</span></div></div><svg viewBox="0 0 640 170" class="chart"><defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${c}" stop-opacity=".28"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>${[.25,.5,.75].map(t=>`<line class="gl" x1="0" x2="640" y1="${170*t}" y2="${170*t}"/>`).join('')}<line class="bl" x1="0" x2="640" y1="${m.y(s.pv)}" y2="${m.y(s.pv)}"/><path d="${line(p)} L640 170 L0 170Z" fill="url(#hg)"/><path d="${line(p)}" fill="none" stroke="${c}" stroke-width="1.8" stroke-linejoin="round"/><circle cx="${L[0]}" cy="${L[1]}" r="7" fill="${c}" opacity=".18"/><circle cx="${L[0]}" cy="${L[1]}" r="3.2" fill="${c}"/></svg><div class="hs"><span>最高<b class="up">${f2(s.hi)}</b></span><span>最低<b class="dn">${f2(s.lo)}</b></span><span>振幅<b>${amp.toFixed(2)}%</b></span><span>昨收<b>${f2(s.pv)}</b></span>${amp>2.5?'<span class="wrn">· 波动风险偏高</span>':''}</div>`}
+function paint(i,dir){const s=S[i],r=refs[i],d=s.p-s.pv,up=d>=0,pc=d/s.pv*100,ar=up?'▲':'▼',cc=up?'up':'dn';
+r.row.classList.toggle('act',i===sel);
+r.pr.textContent=f2(s.p);r.pr.className='num pr '+cc;
+r.ch.innerHTML=`<b>${ar} ${sg(d)}${f2(d)}</b><span>${sg(pc)}${pc.toFixed(2)}%</span>`;r.ch.className='num ch '+cc;
+r.sc.innerHTML=spark(s,i);
+if(dir){r.pr.classList.remove('fu','fd');void r.pr.offsetWidth;r.pr.classList.add(dir>0?'fu':'fd')}
+if(i===sel)hero()}
+list.onclick=e=>{const r=e.target.closest('.row');if(!r)return;sel=+r.dataset.i;S.forEach((_,j)=>paint(j,0))};
+setInterval(()=>{const k=1+(Math.random()*2|0),pick=new Set();while(pick.size<k)pick.add(Math.random()*S.length|0);
+pick.forEach(i=>{const s=S[i],o=s.p;s.p=+(s.p*(1+R(-1,1)*s.vol)).toFixed(2);s.s.push(s.p);s.s.shift();s.hi=Math.max(s.hi,s.p);s.lo=Math.min(s.lo,s.p);paint(i,Math.sign(s.p-o))})},1400);
+const ck=$('#clock'),tt=()=>ck.textContent=new Date().toLocaleTimeString('zh-CN',{hour12:false});tt();setInterval(tt,1000);
+S.forEach((_,i)=>paint(i,0));
+</script>
+</body>
+</html>

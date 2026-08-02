@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FINAL · 绝杀夺冠 — 猎豹托举大力神杯冲刺</title>
+<style>
+  :root{
+    --gold:#e8c15f; --gold-deep:#b9924a; --amber:#ffb43a; --ink:#05070d;
+    --display:"Haettenschweiler","Arial Narrow","Impact","Franklin Gothic Medium",sans-serif;
+    --serif:Georgia,"Times New Roman","Songti SC","SimSun",serif;
+    --mono:"Courier New","Menlo","Consolas",monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--ink)}
+  body{
+    min-height:100vh;
+    padding:34px 14px 48px;
+    background-color:#05070d;
+    background-image:
+      radial-gradient(1200px 620px at 50% -12%, rgba(216,168,60,.11), transparent 62%),
+      radial-gradient(900px 540px at 88% 108%, rgba(14,92,52,.14), transparent 60%),
+      radial-gradient(760px 460px at 4% 78%, rgba(44,66,116,.16), transparent 60%),
+      radial-gradient(rgba(255,255,255,.022) 1px, transparent 1px);
+    background-size:auto,auto,auto,22px 22px;
+    font-family:var(--serif);
+    color:#c7cede;
+  }
+  .stage{max-width:780px;margin:0 auto}
+
+  /* ---- masthead strip ---- */
+  .masthead{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+    padding:0 6px 14px;flex-wrap:wrap;
+  }
+  .masthead .overline{
+    display:block;font-family:var(--mono);font-size:10px;letter-spacing:.42em;
+    color:#8b94a8;text-transform:uppercase;margin-bottom:6px;
+  }
+  .masthead h1{
+    font-family:var(--display);font-weight:400;
+    font-size:clamp(26px,5.6vw,34px);letter-spacing:.06em;line-height:1;
+    color:var(--gold);text-shadow:0 0 22px rgba(232,193,95,.28);
+  }
+  .masthead h1 i{font-style:normal;color:#5d6780;margin:0 .18em}
+  .masthead .zh{font-family:var(--serif);font-size:.72em;letter-spacing:.34em;color:#f0d489;margin-left:.3em}
+  .chip{
+    font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:#ffd479;
+    border:1px solid rgba(232,193,95,.42);border-radius:3px;padding:5px 10px;
+    background:rgba(232,193,95,.06);white-space:nowrap;
+  }
+
+  /* ---- poster card + frame ---- */
+  .card{
+    background:#0b1220;border:1px solid rgba(212,175,90,.42);border-radius:6px;
+    padding:12px;
+    box-shadow:0 30px 80px rgba(0,0,0,.66),0 4px 18px rgba(0,0,0,.5),0 0 60px rgba(190,140,50,.07);
+    transition:transform .35s ease,box-shadow .35s ease;
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 40px 96px rgba(0,0,0,.7),0 6px 22px rgba(0,0,0,.55),0 0 80px rgba(210,160,60,.12);
+  }
+  .frame{border:1px solid rgba(212,175,90,.26);border-radius:3px;background:#070d18;padding:8px}
+  svg{display:block;width:100%;height:auto;border-radius:2px}
+
+  /* ---- caption strip ---- */
+  .caption{
+    display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;
+    padding:13px 6px 0;
+  }
+  .caption .l{font-size:12.5px;letter-spacing:.12em;color:#98a2b8}
+  .caption .l b{color:#d9b968;font-weight:400}
+  .caption .r{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--amber)}
+
+  /* ---- CSS motion (opacity/color only; transforms use SMIL) ---- */
+  @keyframes shimmer{from{opacity:.42}to{opacity:.85}}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:.12}}
+  @keyframes pulse{0%,100%{opacity:.95}50%{opacity:.35}}
+  @keyframes tw{from{opacity:.14}to{opacity:.8}}
+  @keyframes driftA{0%{transform:translateY(-26px);opacity:0}12%{opacity:.95}78%{opacity:.9}100%{transform:translateY(168px);opacity:0}}
+  @keyframes driftB{0%{transform:translateY(-40px);opacity:0}14%{opacity:.85}80%{opacity:.8}100%{transform:translateY(132px);opacity:0}}
+  @keyframes driftC{0%{transform:translateY(-18px);opacity:0}10%{opacity:.9}75%{opacity:.85}100%{transform:translateY(196px);opacity:0}}
+  #speed-lines{animation:shimmer 4.6s ease-in-out infinite alternate}
+  .blink{animation:blink 1s steps(1) infinite}
+  .livedot{animation:pulse 1.6s ease-in-out infinite}
+  .tw{animation:tw 3.2s ease-in-out infinite alternate}
+  .dA{animation:driftA 7s linear infinite}
+  .dB{animation:driftB 9.4s linear infinite}
+  .dC{animation:driftC 11.5s linear infinite}
+
+  @media (max-width:430px){
+    body{padding:20px 8px 32px}
+    .card{padding:8px}.frame{padding:5px}
+    .masthead h1{letter-spacing:.04em}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <header class="masthead">
+    <div>
+      <span class="overline">Model Capability Arena · SVG Poster</span>
+      <h1>FINAL <i>·</i> <span class="zh">绝杀夺冠</span></h1>
+    </div>
+    <span class="chip">qwen3.8-max</span>
+  </header>
+
+  <div class="card"><div class="frame">
+
+<svg viewBox="0 0 1200 1560" role="img" aria-labelledby="pt pd" xmlns="http://www.w3.org/2000/svg">
+  <title id="pt">FINAL 绝杀夺冠 — 猎豹托举大力神杯冲刺</title>
+  <desc id="pd">Anthropomorphic cheetah sprinting across a night-stadium pitch, hoisting a golden world trophy overhead; scoreboard reads 90+7 minutes, 3:2.</desc>
+
+  <!-- ================= DEFS ================= -->
+  <defs>
+    <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#04070e"/><stop offset=".45" stop-color="#0a1120"/><stop offset="1" stop-color="#0d1626"/>
+    </linearGradient>
+    <linearGradient id="standShade" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#05090f" stop-opacity=".9"/><stop offset=".5" stop-color="#0a1322" stop-opacity=".25"/><stop offset="1" stop-color="#060b14" stop-opacity=".85"/>
+    </linearGradient>
+    <pattern id="crowd" width="26" height="22" patternUnits="userSpaceOnUse">
+      <rect width="26" height="22" fill="#0c1424"/>
+      <circle cx="5" cy="5" r="2.6" fill="#22304a"/><circle cx="17" cy="3" r="2.2" fill="#2c3d5c"/>
+      <circle cx="11" cy="12" r="2.4" fill="#1a2438"/><circle cx="22" cy="14" r="2.7" fill="#263650"/>
+      <circle cx="3" cy="18" r="2.1" fill="#1e2c44"/><circle cx="15" cy="19" r="2.5" fill="#223148"/>
+    </pattern>
+    <linearGradient id="pitchGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2a8f52"/><stop offset=".55" stop-color="#1b6e3d"/><stop offset="1" stop-color="#0c4526"/>
+    </linearGradient>
+    <linearGradient id="beamGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffedb8" stop-opacity=".62"/><stop offset=".55" stop-color="#ffe2a0" stop-opacity=".2"/><stop offset="1" stop-color="#ffdf9a" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="bulbGlow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#fff7dc" stop-opacity=".95"/><stop offset=".4" stop-color="#ffe9ad" stop-opacity=".5"/><stop offset="1" stop-color="#ffe9ad" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowGoldRad" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffd97a" stop-opacity=".55"/><stop offset=".55" stop-color="#f5c34f" stop-opacity=".18"/><stop offset="1" stop-color="#f5c34f" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="rayGrad" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ffd97a" stop-opacity=".28"/><stop offset="1" stop-color="#ffd97a" stop-opacity="0"/>
+    </linearGradient>
+    <!-- fur / kit -->
+    <linearGradient id="furGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f2c877"/><stop offset=".55" stop-color="#d99a3e"/><stop offset="1" stop-color="#a86f28"/>
+    </linearGradient>
+    <linearGradient id="furFar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c8913e"/><stop offset="1" stop-color="#82561f"/>
+    </linearGradient>
+    <linearGradient id="jerseyGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d23b34"/><stop offset=".6" stop-color="#a72626"/><stop offset="1" stop-color="#7d1a1f"/>
+    </linearGradient>
+    <linearGradient id="shortsGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7f4ea"/><stop offset="1" stop-color="#c9c4b6"/>
+    </linearGradient>
+    <!-- trophy -->
+    <linearGradient id="goldMetal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8a5a12"/><stop offset=".22" stop-color="#f7d778"/><stop offset=".45" stop-color="#fff3c0"/>
+      <stop offset=".62" stop-color="#e9b93b"/><stop offset=".85" stop-color="#a06c14"/><stop offset="1" stop-color="#6f4a0e"/>
+    </linearGradient>
+    <linearGradient id="goldDeep" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c89a3a"/><stop offset=".5" stop-color="#8a5c14"/><stop offset="1" stop-color="#5f3d0c"/>
+    </linearGradient>
+    <radialGradient id="globeGrad" cx=".36" cy=".3" r=".85">
+      <stop offset="0" stop-color="#fff6d8"/><stop offset=".38" stop-color="#f2c859"/><stop offset=".75" stop-color="#c08a1e"/><stop offset="1" stop-color="#7c520e"/>
+    </radialGradient>
+    <linearGradient id="malachite" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a8f5e"/><stop offset=".5" stop-color="#0f6b46"/><stop offset="1" stop-color="#083f29"/>
+    </linearGradient>
+    <pattern id="malBands" width="14" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(18)">
+      <rect width="14" height="10" fill="#0f6b46"/>
+      <path d="M0 2 Q7 0 14 2" stroke="#0a4d33" stroke-width="2.4" fill="none"/>
+      <path d="M0 7 Q7 5 14 7" stroke="#178455" stroke-width="1.6" fill="none"/>
+    </pattern>
+    <linearGradient id="glintGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0"/><stop offset=".5" stop-color="#fffbe8" stop-opacity=".85"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <!-- board / ball / misc -->
+    <linearGradient id="boardGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b212d"/><stop offset="1" stop-color="#0b0e15"/>
+    </linearGradient>
+    <radialGradient id="ballGrad" cx=".38" cy=".32" r=".8">
+      <stop offset="0" stop-color="#ffffff"/><stop offset=".62" stop-color="#e8ecee"/><stop offset="1" stop-color="#aeb8bd"/>
+    </radialGradient>
+    <linearGradient id="streakW" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#fff4d6" stop-opacity=".9"/><stop offset="1" stop-color="#fff4d6" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="streakG" x1="1" y1="0" x2="0" y2="0">
+      <stop offset="0" stop-color="#f5c860" stop-opacity=".8"/><stop offset="1" stop-color="#f5c860" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="dustRad" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#8a6a42" stop-opacity=".32"/><stop offset="1" stop-color="#8a6a42" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="vigRad" cx=".5" cy=".46" r=".72">
+      <stop offset="0" stop-color="#02040a" stop-opacity="0"/><stop offset=".74" stop-color="#02040a" stop-opacity="0"/><stop offset="1" stop-color="#02040a" stop-opacity=".62"/>
+    </radialGradient>
+    <linearGradient id="titleGold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe7a6"/><stop offset=".5" stop-color="#e8c15f"/><stop offset="1" stop-color="#a97f2c"/>
+    </linearGradient>
+
+    <filter id="fSoft" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="fLed" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="fBlur8" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8"/></filter>
+
+    <clipPath id="pitchClip"><rect x="0" y="1150" width="1200" height="290"/></clipPath>
+    <clipPath id="globeClip"><circle cx="664" cy="326" r="84"/></clipPath>
+    <clipPath id="baseClip"><rect x="584" y="488" width="160" height="66" rx="8"/></clipPath>
+    <clipPath id="ballClip"><circle cx="940" cy="1206" r="44"/></clipPath>
+
+    <!-- cheetah spot cluster (reusable) -->
+    <g id="spotCluster" fill="#241708">
+      <ellipse cx="0" cy="0" rx="5" ry="4"/><ellipse cx="14" cy="6" rx="4" ry="3.4"/>
+      <ellipse cx="-11" cy="9" rx="3.6" ry="3"/><ellipse cx="6" cy="15" rx="3.2" ry="2.8"/>
+      <ellipse cx="20" cy="-4" rx="3.4" ry="2.8"/><ellipse cx="-4" cy="-11" rx="3" ry="2.5"/>
+      <ellipse cx="12" cy="-13" rx="2.6" ry="2.2"/>
+    </g>
+    <!-- classic ball pentagon -->
+    <path id="pent" d="M0 -17 L16.2 -5.3 L10 13.8 L-10 13.8 L-16.2 -5.3 Z"/>
+    <!-- pose silhouette for speed afterimages -->
+    <path id="heroSil" d="
+      M706 588 C742 584 768 606 770 634 C800 640 818 658 816 674 C812 694 786 706 758 706
+      C748 740 742 780 730 812 C714 856 680 894 640 918 C600 940 562 936 552 908
+      C540 872 552 820 572 776 C588 740 606 712 622 694 C600 660 592 616 598 588
+      C606 552 626 524 654 512 L640 560 C636 596 644 630 660 652 C674 616 688 596 706 588 Z
+      M640 660 C620 610 610 560 616 512 L648 500 C646 552 652 600 664 640 Z
+      M716 700 C744 660 762 620 766 584 L736 570 C728 614 714 656 700 688 Z
+      M590 902 C480 962 368 946 304 872 C270 828 266 780 288 738 L312 754
+      C296 790 302 828 330 862 C386 922 486 934 584 884 Z
+      M588 900 C540 950 480 1000 430 1046 C400 1076 378 1110 362 1148
+      C330 1190 296 1236 262 1272 L292 1288 C322 1250 352 1208 382 1168
+      C402 1132 428 1100 462 1072 C512 1030 560 986 596 942 Z
+      M618 900 C660 930 696 966 714 1004 C700 1044 676 1080 656 1108
+      C676 1136 700 1164 730 1188 L756 1168 C726 1142 702 1116 688 1092
+      C712 1062 730 1030 738 1000 C720 956 684 920 646 894 Z"/>
+  </defs>
+
+  <!-- ================= BG: night + stands ================= -->
+  <g id="bg-night">
+    <rect x="0" y="0" width="1200" height="1560" fill="url(#skyGrad)"/>
+    <rect x="0" y="70" width="1200" height="70" fill="#0b1322"/>
+    <!-- stadium roof rig lights -->
+    <g id="roof-rig">
+      <g fill="url(#bulbGlow)">
+        <circle cx="90" cy="106" r="16"/><circle cx="210" cy="106" r="16"/><circle cx="330" cy="106" r="16"/>
+        <circle cx="450" cy="106" r="16"/><circle cx="570" cy="106" r="16"/><circle cx="690" cy="106" r="16"/>
+        <circle cx="810" cy="106" r="16"/><circle cx="930" cy="106" r="16"/><circle cx="1050" cy="106" r="16"/>
+        <circle cx="1150" cy="106" r="16"/>
+      </g>
+      <g fill="#fff3cf">
+        <circle cx="90" cy="106" r="4"/><circle cx="210" cy="106" r="4"/><circle cx="330" cy="106" r="4"/>
+        <circle cx="450" cy="106" r="4"/><circle cx="570" cy="106" r="4"/><circle cx="690" cy="106" r="4"/>
+        <circle cx="810" cy="106" r="4"/><circle cx="930" cy="106" r="4"/><circle cx="1050" cy="106" r="4"/>
+        <circle cx="1150" cy="106" r="4"/>
+      </g>
+      <rect x="0" y="132" width="1200" height="8" fill="#060b14"/>
+    </g>
+  </g>
+
+  <g id="bg-stands">
+    <rect x="0" y="140" width="1200" height="968" fill="url(#crowd)"/>
+    <!-- tier rails -->
+    <g stroke="#101a2c" stroke-width="3" opacity=".9">
+      <line x1="0" y1="300" x2="1200" y2="300"/><line x1="0" y1="470" x2="1200" y2="470"/>
+      <line x1="0" y1="660" x2="1200" y2="660"/><line x1="0" y1="860" x2="1200" y2="860"/>
+      <line x1="0" y1="1040" x2="1200" y2="1040"/>
+    </g>
+    <!-- aisles -->
+    <g fill="#0a1220" opacity=".85">
+      <rect x="188" y="140" width="26" height="968"/><rect x="588" y="140" width="26" height="968"/><rect x="988" y="140" width="26" height="968"/>
+    </g>
+    <!-- phone lights in the crowd -->
+    <g id="phone-lights">
+      <circle class="tw" cx="120" cy="220" r="3" fill="#ffe9ad" style="animation-delay:-.4s"/>
+      <circle class="tw" cx="300" cy="352" r="2.6" fill="#dfe8ff" style="animation-delay:-1.6s"/>
+      <circle class="tw" cx="470" cy="262" r="3" fill="#ffe9ad" style="animation-delay:-2.5s"/>
+      <circle class="tw" cx="760" cy="230" r="2.6" fill="#dfe8ff" style="animation-delay:-.9s"/>
+      <circle class="tw" cx="908" cy="330" r="3" fill="#ffe9ad" style="animation-delay:-2s"/>
+      <circle class="tw" cx="1080" cy="252" r="2.6" fill="#dfe8ff" style="animation-delay:-1.2s"/>
+      <circle class="tw" cx="1010" cy="560" r="2.6" fill="#ffe9ad" style="animation-delay:-3s"/>
+      <circle class="tw" cx="140" cy="520" r="2.6" fill="#dfe8ff" style="animation-delay:-2.2s"/>
+      <circle class="tw" cx="330" cy="980" r="2.6" fill="#ffe9ad" style="animation-delay:-.7s"/>
+      <circle class="tw" cx="1060" cy="900" r="3" fill="#ffe9ad" style="animation-delay:-1.8s"/>
+      <circle class="tw" cx="80" cy="880" r="2.4" fill="#dfe8ff" style="animation-delay:-2.8s"/>
+      <circle class="tw" cx="520" cy="180" r="2.4" fill="#ffe9ad" style="animation-delay:-3.4s"/>
+    </g>
+    <rect x="0" y="140" width="1200" height="968" fill="url(#standShade)"/>
+    <!-- hoarding wall -->
+    <rect x="0" y="1108" width="1200" height="42" fill="#0a101d"/>
+    <rect x="0" y="1108" width="1200" height="2.5" fill="#b9924a" opacity=".55"/>
+    <g font-family="Georgia,serif" font-size="16" letter-spacing="3" fill="#6f7a90">
+      <text x="60" y="1136">SAVANNA CUP · FINAL</text>
+      <text x="470" y="1136">SAVANNA CUP · FINAL</text>
+      <text x="880" y="1136">SAVANNA CUP · FINAL</text>
+    </g>
+  </g>
+
+  <!-- ================= SPOTLIGHTS ================= -->
+  <g id="spotlights" style="mix-blend-mode:screen">
+    <circle cx="150" cy="150" r="60" fill="url(#bulbGlow)" opacity=".8"/>
+    <circle cx="1050" cy="150" r="60" fill="url(#bulbGlow)" opacity=".8"/>
+    <g id="beam-left">
+      <path d="M150 148 L-80 1080 L420 1080 Z" fill="url(#beamGrad)" opacity=".55"/>
+      <animateTransform attributeName="transform" type="rotate" values="-2.5 150 148;2.5 150 148;-2.5 150 148" dur="13s" repeatCount="indefinite"/>
+    </g>
+    <g id="beam-right">
+      <path d="M1050 148 L780 1080 L1290 1080 Z" fill="url(#beamGrad)" opacity=".55"/>
+      <animateTransform attributeName="transform" type="rotate" values="2.5 1050 148;-2.5 1050 148;2.5 1050 148" dur="13s" repeatCount="indefinite"/>
+    </g>
+    <path id="beam-center" d="M585 140 L745 140 L880 640 L468 640 Z" fill="url(#beamGrad)" opacity=".22"/>
+    <g stroke="#fff7dc" stroke-width="2" opacity=".55">
+      <line x1="118" y1="150" x2="182" y2="150"/><line x1="150" y1="118" x2="150" y2="182"/>
+      <line x1="1018" y1="150" x2="1082" y2="150"/><line x1="1050" y1="118" x2="1050" y2="182"/>
+    </g>
+  </g>
+
+  <!-- ================= PITCH ================= -->
+  <g id="pitch">
+    <g clip-path="url(#pitchClip)">
+      <rect x="0" y="1150" width="1200" height="290" fill="url(#pitchGrad)"/>
+      <!-- mow stripes -->
+      <g fill="#2f9a5a" opacity=".3">
+        <rect x="-60" y="1150" width="150" height="290"/><rect x="240" y="1150" width="150" height="290"/>
+        <rect x="540" y="1150" width="150" height="290"/><rect x="840" y="1150" width="150" height="290"/>
+        <rect x="1140" y="1150" width="150" height="290"/>
+      </g>
+      <!-- white markings -->
+      <rect x="0" y="1156" width="1200" height="5" fill="#f4f6f2" opacity=".92"/>
+      <rect x="-80" y="1204" width="330" height="190" fill="none" stroke="#f4f6f2" stroke-width="5" opacity=".55"/>
+      <ellipse cx="600" cy="1512" rx="440" ry="168" fill="none" stroke="#f4f6f2" stroke-width="6" opacity=".85"/>
+      <circle cx="600" cy="1352" r="7" fill="#f4f6f2" opacity=".8"/>
+    </g>
+  </g>
+
+  <!-- ================= SPEED LINES + AFTERIMAGES ================= -->
+  <g id="speed-lines">
+    <rect x="60" y="700" width="300" height="6" rx="3" fill="url(#streakW)"/>
+    <rect x="120" y="762" width="380" height="5" rx="2.5" fill="url(#streakG)"/>
+    <rect x="40" y="830" width="260" height="7" rx="3.5" fill="url(#streakW)" opacity=".7"/>
+    <rect x="150" y="902" width="420" height="6" rx="3" fill="url(#streakG)"/>
+    <rect x="80" y="970" width="300" height="5" rx="2.5" fill="url(#streakW)" opacity=".65"/>
+    <rect x="180" y="1042" width="360" height="6" rx="3" fill="url(#streakG)"/>
+    <rect x="60" y="1112" width="280" height="5" rx="2.5" fill="url(#streakW)" opacity=".6"/>
+    <rect x="240" y="1182" width="300" height="6" rx="3" fill="url(#streakG)"/>
+    <rect x="320" y="1232" width="240" height="5" rx="2.5" fill="url(#streakW)" opacity=".55"/>
+    <rect x="820" y="742" width="230" height="5" rx="2.5" fill="url(#streakG)" opacity=".5" transform="rotate(180 935 744)"/>
+    <rect x="840" y="1010" width="250" height="5" rx="2.5" fill="url(#streakG)" opacity=".45" transform="rotate(180 965 1012)"/>
+  </g>
+
+  <g id="afterimages" fill="#f0c46a">
+    <use href="#heroSil" opacity=".09" transform="translate(-360,26) scale(.97)"/>
+    <use href="#heroSil" opacity=".16" transform="translate(-230,16) scale(.985)"/>
+    <use href="#heroSil" opacity=".27" transform="translate(-110,8)"/>
+  </g>
+
+  <!-- ================= TROPHY (drawn before cheetah so paws grip its base) ================= -->
+  <g id="trophy">
+    <circle cx="664" cy="380" r="250" fill="url(#glowGoldRad)" style="mix-blend-mode:screen"/>
+    <g id="glory-rays" opacity=".8" transform="translate(664,336)">
+      <g fill="url(#rayGrad)">
+        <path d="M0 0 L-7 -238 L7 -238 Z"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(26)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(52)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(78)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(104)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(130)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(156)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(182)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(208)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(234)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(260)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(286)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(312)"/>
+        <path d="M0 0 L-7 -238 L7 -238 Z" transform="rotate(338)"/>
+      </g>
+      <animateTransform attributeName="transform" type="rotate" from="0 664 336" to="360 664 336" dur="80s" repeatCount="indefinite" additive="sum"/>
+    </g>
+    <g stroke="#e8c15f" fill="none" opacity=".3">
+      <path d="M564 326 A100 100 0 0 1 620 239" stroke-width="3"/>
+      <path d="M764 326 A100 100 0 0 1 708 413" stroke-width="3"/>
+    </g>
+
+    <!-- malachite base -->
+    <g id="trophy-base">
+      <rect x="584" y="520" width="160" height="34" rx="6" fill="url(#malachite)"/>
+      <rect x="584" y="520" width="160" height="34" rx="6" fill="url(#malBands)" opacity=".8"/>
+      <rect x="584" y="520" width="160" height="5" rx="2.5" fill="#2fae6a" opacity=".7"/>
+      <rect x="598" y="496" width="132" height="26" rx="5" fill="url(#malachite)"/>
+      <rect x="598" y="496" width="132" height="26" rx="5" fill="url(#malBands)" opacity=".65"/>
+      <rect x="598" y="496" width="132" height="4" rx="2" fill="#3cbf7c" opacity=".6"/>
+      <rect x="590" y="488" width="148" height="10" rx="4" fill="url(#goldMetal)"/>
+    </g>
+
+    <!-- two supporting figures -->
+    <g id="trophy-figures" fill="url(#goldDeep)" stroke="#5f3d0c" stroke-width="1.5">
+      <!-- left figure: arched back, arm raised to globe -->
+      <path d="M636 496 C626 474 622 452 628 432 C620 428 616 418 620 410
+               C624 400 636 396 644 402 C650 396 658 398 660 406
+               C668 398 676 392 682 386 L688 394 C680 402 672 410 666 418
+               C670 430 668 444 660 456 C668 470 672 484 672 496 L656 496
+               C654 482 650 470 644 460 C640 472 640 484 642 496 Z"/>
+      <circle cx="640" cy="404" r="9.5"/>
+      <!-- right figure mirrored -->
+      <path d="M692 496 C702 474 706 452 700 432 C708 428 712 418 708 410
+               C704 400 692 396 684 402 C678 396 670 398 668 406
+               C660 398 652 392 646 386 L640 394 C648 402 656 410 662 418
+               C658 430 660 444 668 456 C660 470 656 484 656 496 L672 496
+               C674 482 678 470 684 460 C688 472 688 484 686 496 Z"/>
+      <circle cx="688" cy="404" r="9.5"/>
+      <rect x="654" y="410" width="20" height="16" rx="4" fill="url(#goldMetal)" stroke="none"/>
+    </g>
+
+    <!-- globe -->
+    <g id="trophy-globe">
+      <circle cx="664" cy="326" r="84" fill="url(#globeGrad)" stroke="#7c520e" stroke-width="2"/>
+      <g clip-path="url(#globeClip)">
+        <!-- continent hints -->
+        <g fill="#8a5c14" opacity=".5">
+          <path d="M612 292 C624 280 646 278 658 288 C668 296 664 310 650 314 C634 318 616 312 612 292 Z"/>
+          <path d="M676 268 C692 262 712 268 718 282 C722 294 712 302 698 300 C684 298 672 282 676 268 Z"/>
+          <path d="M688 340 C704 334 722 342 726 356 C728 368 716 378 700 374 C686 370 682 352 688 340 Z"/>
+          <path d="M620 350 C632 344 646 350 648 362 C649 372 638 380 626 376 C615 372 613 358 620 350 Z"/>
+        </g>
+        <g stroke="#a97f2c" stroke-width="1.6" fill="none" opacity=".55">
+          <path d="M580 326 A84 84 0 0 1 748 326"/>
+          <path d="M588 296 Q664 268 740 296"/>
+          <path d="M588 356 Q664 384 740 356"/>
+          <path d="M630 246 Q612 326 630 406"/>
+          <path d="M698 246 Q716 326 698 406"/>
+        </g>
+        <!-- specular + moving sheen -->
+        <ellipse cx="628" cy="288" rx="30" ry="18" fill="#fff8e0" opacity=".75" transform="rotate(-28 628 288)"/>
+        <ellipse cx="622" cy="284" rx="14" ry="7" fill="#ffffff" opacity=".9" transform="rotate(-28 622 284)"/>
+        <g>
+          <rect x="644" y="200" width="40" height="260" fill="url(#glintGrad)" opacity=".55" transform="rotate(24 664 326)">
+            <animateTransform attributeName="transform" type="translate" values="-190 0;210 0;210 0" keyTimes="0;.42;1" dur="5.5s" repeatCount="indefinite" additive="sum"/>
+          </rect>
+        </g>
+      </g>
+      <path d="M592 268 A84 84 0 0 1 664 242" stroke="#fff3c0" stroke-width="4" fill="none" opacity=".7" stroke-linecap="round"/>
+    </g>
+
+    <!-- base sheen sweep -->
+    <g clip-path="url(#baseClip)">
+      <rect x="620" y="470" width="34" height="110" fill="url(#glintGrad)" opacity=".5" transform="rotate(20 664 522)">
+        <animateTransform attributeName="transform" type="translate" values="-160 0;180 0;180 0" keyTimes="0;.5;1" dur="7s" begin="1.2s" repeatCount="indefinite" additive="sum"/>
+      </rect>
+    </g>
+
+    <!-- star glints -->
+    <g id="trophy-glints" fill="#ffffff" filter="url(#fSoft)">
+      <g transform="translate(600,282)">
+        <path d="M0 -13 L3.4 -3.4 L13 0 L3.4 3.4 L0 13 L-3.4 3.4 L-13 0 L-3.4 -3.4 Z">
+          <animateTransform attributeName="transform" type="scale" values=".35;1;.35" dur="2.8s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".25;1;.25" dur="2.8s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      <g transform="translate(736,532)">
+        <path d="M0 -10 L2.6 -2.6 L10 0 L2.6 2.6 L0 10 L-2.6 2.6 L-10 0 L-2.6 -2.6 Z">
+          <animateTransform attributeName="transform" type="scale" values="1;.3;1" dur="3.4s" begin="1s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="1;.2;1" dur="3.4s" begin="1s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      <g transform="translate(700,258)">
+        <path d="M0 -8 L2 -2 L8 0 L2 2 L0 8 L-2 2 L-8 0 L-2 -2 Z">
+          <animateTransform attributeName="transform" type="scale" values=".4;1;.4" dur="4s" begin="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values=".2;.9;.2" dur="4s" begin="2s" repeatCount="indefinite"/>
+        </path>
+      </g>
+    </g>
+  </g>
+
+  <!-- ================= CHEETAH ================= -->
+  <g id="cheetah" stroke-linecap="round">
+
+    <!-- tail: long, swept back in a dynamic arc -->
+    <g id="tail">
+      <path d="M590 905 C470 965 360 945 300 870 C265 822 262 775 285 735"
+            fill="none" stroke="url(#furGrad)" stroke-width="27"/>
+      <path d="M297 762 C289 752 286 743 285 735" fill="none" stroke="#241709" stroke-width="27"/>
+      <g fill="#241708">
+        <ellipse cx="520" cy="930" rx="5" ry="4"/><ellipse cx="460" cy="938" rx="4.5" ry="3.6"/>
+        <ellipse cx="400" cy="926" rx="4.5" ry="3.6"/><ellipse cx="348" cy="898" rx="4" ry="3.2"/>
+        <ellipse cx="316" cy="858" rx="3.6" ry="3"/><ellipse cx="298" cy="812" rx="3.4" ry="2.8"/>
+      </g>
+      <path d="M560 928 C480 958 400 950 340 906" fill="none" stroke="#f6d795" stroke-width="4" opacity=".4"/>
+    </g>
+
+    <!-- far hind leg: knee driving high -->
+    <g id="leg-far">
+      <path d="M600 905 L700 1002" stroke="url(#furFar)" stroke-width="38"/>
+      <path d="M700 1002 L652 1106" stroke="url(#furFar)" stroke-width="21"/>
+      <path d="M652 1106 C676 1128 702 1152 728 1172 C740 1181 750 1187 754 1183 C758 1177 751 1166 739 1156 C716 1136 692 1114 672 1096 Z" fill="url(#furFar)"/>
+      <g fill="#1c1206">
+        <ellipse cx="662" cy="940" rx="4.5" ry="3.6"/><ellipse cx="688" cy="972" rx="4" ry="3.2"/>
+        <ellipse cx="676" cy="1044" rx="3.6" ry="3"/><ellipse cx="664" cy="1078" rx="3.2" ry="2.6"/>
+      </g>
+    </g>
+
+    <!-- far arm raised to trophy -->
+    <g id="arm-far">
+      <path d="M640 688 L596 578" stroke="url(#furFar)" stroke-width="29"/>
+      <path d="M596 578 L612 512" stroke="url(#furFar)" stroke-width="22"/>
+      <path d="M592 512 C596 498 610 490 626 492 C640 494 648 504 644 516 C640 526 626 532 610 530 C598 528 590 522 592 512 Z" fill="url(#furFar)"/>
+      <g fill="#1c1206"><ellipse cx="618" cy="600" rx="3.4" ry="2.8"/><ellipse cx="606" cy="632" rx="3.2" ry="2.6"/></g>
+    </g>
+
+    <!-- neck -->
+    <path d="M700 664 C690 690 686 712 690 734" stroke="url(#furGrad)" stroke-width="42"/>
+
+    <!-- torso -->
+    <g id="torso">
+      <path d="M700 690 C728 730 730 780 712 815 C690 860 650 900 610 925 C570 945 545 930 545 900 C545 850 570 780 600 730 C620 700 650 680 700 690 Z" fill="url(#furGrad)"/>
+      <!-- spine nape ticks -->
+      <g stroke="#3a2a16" stroke-width="4" opacity=".8">
+        <line x1="618" y1="702" x2="606" y2="714"/><line x1="600" y1="736" x2="588" y2="750"/>
+        <line x1="584" y1="776" x2="572" y2="792"/><line x1="570" y1="818" x2="560" y2="834"/>
+      </g>
+      <!-- belly / chest light panel -->
+      <path d="M690 722 C705 760 700 800 680 836 C660 872 630 902 606 916 C632 872 656 822 666 776 C673 746 679 730 690 722 Z" fill="#f2d593" opacity=".85"/>
+      <path d="M612 736 C590 790 574 844 572 892" fill="none" stroke="#9c6b28" stroke-width="6" opacity=".5"/>
+    </g>
+
+    <!-- shorts -->
+    <g id="shorts">
+      <path d="M543 878 C585 858 642 854 678 872 C692 902 692 938 676 964 C652 982 616 990 596 986 C568 974 549 944 543 912 Z" fill="url(#shortsGrad)"/>
+      <path d="M543 878 C560 870 580 864 600 862 L596 986 C572 976 551 946 543 912 Z" fill="#b3242a" opacity=".9"/>
+      <path d="M548 884 C588 866 640 862 674 878" fill="none" stroke="#a72626" stroke-width="5" opacity=".8"/>
+    </g>
+
+    <!-- jersey (plain fictional kit, number 9) -->
+    <g id="jersey">
+      <path d="M640 660 C668 652 700 656 716 672 C740 690 752 726 748 764 C744 800 728 838 706 856 C662 868 606 866 566 848 C556 812 560 764 578 722 C590 694 612 670 640 660 Z" fill="url(#jerseyGrad)"/>
+      <path d="M578 722 C590 694 612 670 640 660 L652 672 C630 686 612 708 600 736 C590 762 584 792 584 820 L566 848 C556 812 560 764 578 722 Z" fill="#7d1a1f" opacity=".75"/>
+      <!-- gold trim: neckline, armholes, hem -->
+      <g fill="none" stroke="#e9b93b" stroke-width="5">
+        <path d="M646 662 C668 656 694 660 712 674"/>
+        <path d="M578 722 C588 700 604 682 622 670"/>
+        <path d="M716 672 C738 690 750 722 748 756"/>
+        <path d="M568 846 C608 864 662 866 704 854"/>
+      </g>
+      <text x="672" y="806" transform="rotate(-10 672 806)" text-anchor="middle"
+            font-family="Haettenschweiler,'Arial Narrow',Impact,sans-serif" font-size="92"
+            fill="#f6f3ea" stroke="#5f0f13" stroke-width="2.5">9</text>
+    </g>
+
+    <!-- near hind leg: driving off the ground -->
+    <g id="leg-near">
+      <!-- haunch muscle mass -->
+      <path d="M552 862 C604 852 652 884 668 936 C676 968 664 1002 636 1020 C600 1040 556 1028 534 992 C516 958 520 902 552 862 Z" fill="url(#furGrad)"/>
+      <path d="M560 878 C600 872 638 896 650 934" fill="none" stroke="#f6d795" stroke-width="6" opacity=".55"/>
+      <path d="M540 968 C556 1000 592 1014 626 1006" fill="none" stroke="#8a5a20" stroke-width="6" opacity=".5"/>
+      <path d="M560 905 L468 1036" stroke="url(#furGrad)" stroke-width="40"/>
+      <path d="M468 1036 L382 1150" stroke="url(#furGrad)" stroke-width="24"/>
+      <!-- extended paw, toes digging into turf -->
+      <path d="M378 1146 C346 1190 312 1230 278 1260 C266 1270 258 1278 262 1285 L302 1288 C320 1266 344 1230 368 1194 C378 1178 384 1160 378 1146 Z" fill="url(#furGrad)"/>
+      <path d="M300 1286 L318 1268 M282 1282 L298 1264" stroke="#8a5a20" stroke-width="3" opacity=".6"/>
+      <g fill="#241708">
+        <ellipse cx="520" cy="900" rx="5" ry="4.2"/><ellipse cx="494" cy="952" rx="4.6" ry="3.8"/>
+        <ellipse cx="534" cy="966" rx="4.2" ry="3.4"/><ellipse cx="470" cy="1002" rx="4" ry="3.2"/>
+        <ellipse cx="430" cy="1078" rx="3.6" ry="3"/><ellipse cx="404" cy="1118" rx="3.4" ry="2.8"/>
+        <ellipse cx="350" cy="1200" rx="3" ry="2.5"/><ellipse cx="322" cy="1234" rx="2.8" ry="2.3"/>
+      </g>
+    </g>
+
+    <!-- near arm raised, shoulder tensed -->
+    <g id="arm-near">
+      <ellipse cx="712" cy="712" rx="42" ry="54" fill="url(#furGrad)" transform="rotate(-14 712 712)"/>
+      <path d="M694 676 C706 690 712 710 710 730" fill="none" stroke="#f6d795" stroke-width="5" opacity=".5"/>
+      <path d="M716 700 L770 590" stroke="url(#furGrad)" stroke-width="31"/>
+      <path d="M770 590 L718 512" stroke="url(#furGrad)" stroke-width="23"/>
+      <path d="M734 662 C748 640 756 618 758 598" fill="none" stroke="#f6d795" stroke-width="4.5" opacity=".55"/>
+      <!-- paw gripping the trophy base, claws over the edge -->
+      <path d="M694 514 C696 498 712 488 730 490 C746 492 756 504 752 517 C748 528 732 535 714 532 C700 530 692 524 694 514 Z" fill="url(#furGrad)"/>
+      <path d="M708 492 L706 504 M722 489 L722 502 M736 492 L738 504" stroke="#8a5a20" stroke-width="3"/>
+      <path d="M704 492 l-3 -9 l8 5 Z M720 488 l-1 -10 l7 7 Z M736 491 l2 -9 l5 8 Z" fill="#efe9da"/>
+      <g fill="#241708">
+        <ellipse cx="742" cy="632" rx="3.6" ry="3"/><ellipse cx="754" cy="600" rx="3.2" ry="2.7"/>
+        <ellipse cx="748" cy="566" rx="3" ry="2.5"/><ellipse cx="730" cy="540" rx="2.8" ry="2.4"/>
+      </g>
+    </g>
+
+    <!-- feline head -->
+    <g id="head">
+      <!-- ears -->
+      <path d="M668 598 C660 574 674 556 694 562 C702 576 698 594 686 604 Z" fill="url(#furFar)"/>
+      <path d="M674 594 C670 580 678 568 690 570 C695 580 692 592 684 599 Z" fill="#4a3418"/>
+      <path d="M742 584 C744 558 764 548 780 560 C784 576 774 592 758 596 Z" fill="url(#furGrad)"/>
+      <path d="M750 582 C752 566 764 560 774 566 C776 576 770 587 758 590 Z" fill="#4a3418"/>
+      <!-- skull + muzzle -->
+      <path d="M668 632 C668 598 694 578 726 580 C760 582 782 604 784 636 C786 650 794 658 806 666 C814 671 816 678 812 684 C806 694 790 702 768 704 C736 708 700 696 682 674 C672 662 668 648 668 632 Z" fill="url(#furGrad)"/>
+      <path d="M784 640 C790 652 798 660 806 666" fill="none" stroke="#f6d795" stroke-width="4" opacity=".5"/>
+      <!-- muzzle light panel -->
+      <path d="M760 664 C776 660 794 666 802 676 C796 690 778 698 762 696 C752 690 752 674 760 664 Z" fill="#f6e2b0" opacity=".9"/>
+      <!-- eyes: determined, angled -->
+      <path d="M736 620 C746 610 766 610 774 622 C766 632 746 632 736 620 Z" fill="#fdf6e6"/>
+      <circle cx="757" cy="621" r="7" fill="#d78a1e"/><circle cx="758" cy="621" r="3.2" fill="#161006"/>
+      <circle cx="754" cy="618" r="1.7" fill="#ffffff"/>
+      <path d="M732 616 C744 606 768 606 778 618" fill="none" stroke="#241708" stroke-width="4.5"/>
+      <path d="M706 626 C712 620 722 619 728 624" fill="none" stroke="#241708" stroke-width="4" opacity=".85"/>
+      <!-- iconic black tear marks: inner eye to jaw -->
+      <path d="M748 632 C752 652 762 666 774 676 C780 682 786 688 788 695 L779 699 C769 691 756 679 748 665 C742 653 742 641 745 634 Z" fill="#120c06"/>
+      <path d="M712 630 C715 646 711 662 704 673 C700 679 696 683 692 685 L688 678 C694 672 700 660 703 646 C705 638 706 632 707 629 Z" fill="#120c06" opacity=".92"/>
+      <!-- nose + mouth -->
+      <path d="M800 664 C810 661 819 667 817 676 C815 685 804 687 798 681 C793 675 794 668 800 664 Z" fill="#17100a"/>
+      <path d="M806 684 C798 694 784 700 770 700" fill="none" stroke="#3a2410" stroke-width="3.5"/>
+      <path d="M788 691 C783 700 772 704 762 701 C769 695 779 691 788 691 Z" fill="#5a1712"/>
+      <!-- whisker dots -->
+      <g fill="#cdb98c"><circle cx="772" cy="676" r="1.4"/><circle cx="780" cy="682" r="1.4"/><circle cx="766" cy="684" r="1.4"/><circle cx="776" cy="690" r="1.4"/></g>
+      <!-- face + ear spots -->
+      <g fill="#241708">
+        <ellipse cx="700" cy="608" rx="2.6" ry="2.2"/><ellipse cx="716" cy="600" rx="2.4" ry="2"/>
+        <ellipse cx="734" cy="596" rx="2.4" ry="2"/><ellipse cx="742" cy="668" rx="2.2" ry="1.9"/>
+        <ellipse cx="694" cy="648" rx="2.2" ry="1.9"/><ellipse cx="722" cy="652" rx="2" ry="1.7"/>
+      </g>
+    </g>
+
+    <!-- body spot field -->
+    <g id="spots">
+      <use href="#spotCluster" transform="translate(600,742) scale(1.05)"/>
+      <use href="#spotCluster" transform="translate(636,782) rotate(24)"/>
+      <use href="#spotCluster" transform="translate(596,820) rotate(-18) scale(.95)"/>
+      <use href="#spotCluster" transform="translate(640,846) rotate(40) scale(.9)"/>
+      <use href="#spotCluster" transform="translate(676,730) rotate(12) scale(.8)"/>
+      <use href="#spotCluster" transform="translate(566,878) rotate(-30) scale(.9)"/>
+      <use href="#spotCluster" transform="translate(700,712) rotate(60) scale(.7)"/>
+      <use href="#spotCluster" transform="translate(628,700) rotate(-45) scale(.75)"/>
+      <g fill="#241708">
+        <ellipse cx="668" cy="760" rx="4.2" ry="3.5"/><ellipse cx="612" cy="792" rx="4.6" ry="3.8"/>
+        <ellipse cx="652" cy="816" rx="4" ry="3.3"/><ellipse cx="584" cy="846" rx="3.8" ry="3.1"/>
+        <ellipse cx="700" cy="780" rx="3.6" ry="3"/><ellipse cx="676" cy="842" rx="3.4" ry="2.8"/>
+        <ellipse cx="556" cy="906" rx="4" ry="3.3"/><ellipse cx="616" cy="872" rx="3.6" ry="3"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- ================= BALL + TURF SCARS + DEBRIS ================= -->
+  <g id="ball">
+    <ellipse cx="940" cy="1252" rx="42" ry="9" fill="#04170c" opacity=".45"/>
+    <!-- rolling motion arcs -->
+    <g fill="none" stroke="#fff4d6" stroke-linecap="round">
+      <path d="M826 1146 C856 1158 868 1180 870 1202" stroke-width="4" opacity=".4"/>
+      <path d="M800 1168 C826 1180 838 1198 840 1216" stroke-width="3" opacity=".28"/>
+      <path d="M848 1236 L900 1236" stroke-width="4" opacity=".35"/>
+    </g>
+    <circle cx="940" cy="1206" r="44" fill="url(#ballGrad)"/>
+    <g clip-path="url(#ballClip)">
+      <g transform="translate(940,1206)">
+        <g fill="#17181c">
+          <use href="#pent"/>
+          <use href="#pent" transform="translate(0,-40) rotate(180)"/>
+          <use href="#pent" transform="translate(38.04,-12.36) rotate(252)"/>
+          <use href="#pent" transform="translate(23.51,32.36) rotate(324)"/>
+          <use href="#pent" transform="translate(-23.51,32.36) rotate(36)"/>
+          <use href="#pent" transform="translate(-38.04,-12.36) rotate(108)"/>
+          <g stroke="#17181c" stroke-width="3">
+            <line x1="0" y1="-17" x2="0" y2="-23"/><line x1="16.2" y1="-5.3" x2="21.9" y2="-7.1"/>
+            <line x1="10" y1="13.8" x2="13.5" y2="18.6"/><line x1="-10" y1="13.8" x2="-13.5" y2="18.6"/>
+            <line x1="-16.2" y1="-5.3" x2="-21.9" y2="-7.1"/>
+          </g>
+        </g>
+        <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="3s" repeatCount="indefinite"/>
+      </g>
+      <ellipse cx="926" cy="1190" rx="16" ry="9" fill="#ffffff" opacity=".55" transform="rotate(-24 926 1190)"/>
+      <path d="M900 1230 A44 44 0 0 0 980 1230 L980 1252 L900 1252 Z" fill="#5c6b72" opacity=".3"/>
+    </g>
+  </g>
+
+  <g id="turf-scars">
+    <!-- torn ground at the push-off paw -->
+    <ellipse cx="300" cy="1262" rx="86" ry="34" fill="url(#dustRad)"/>
+    <g fill="#06301a">
+      <path d="M250 1282 L296 1258 L318 1274 L282 1292 Z"/>
+      <path d="M304 1268 L340 1252 L352 1268 L318 1282 Z"/>
+      <path d="M226 1272 L258 1260 L266 1274 L236 1284 Z"/>
+    </g>
+    <!-- kicked-up grass blades -->
+    <g stroke="#3fbd6e" stroke-width="4" stroke-linecap="round">
+      <line x1="262" y1="1252" x2="238" y2="1216"/>
+      <line x1="290" y1="1246" x2="272" y2="1204"/>
+      <line x1="232" y1="1258" x2="202" y2="1232"/>
+      <line x1="318" y1="1250" x2="306" y2="1210"/>
+      <line x1="206" y1="1240" x2="178" y2="1216" opacity=".7"/>
+    </g>
+    <!-- dirt specks on the kick arc -->
+    <g fill="#7a5330">
+      <circle cx="230" cy="1240" r="4"/><circle cx="200" cy="1210" r="3.4"/><circle cx="260" cy="1202" r="3"/>
+      <circle cx="180" cy="1182" r="2.6"/><circle cx="306" cy="1192" r="2.6"/><circle cx="152" cy="1206" r="2.2" opacity=".7"/>
+    </g>
+    <!-- scars under the rolling ball -->
+    <g fill="#06301a" opacity=".85">
+      <path d="M880 1244 L912 1236 L918 1246 L888 1252 Z"/>
+      <path d="M1000 1240 L1030 1234 L1036 1244 L1006 1250 Z"/>
+    </g>
+  </g>
+
+  <!-- ================= CONFETTI (static field guarantees frame-one poster) ================= -->
+  <g id="confetti">
+    <g id="confetti-static">
+      <rect x="120" y="200" width="14" height="8" fill="#f7d778" transform="rotate(24 127 204)"/>
+      <rect x="210" y="300" width="12" height="7" fill="#e9b93b" transform="rotate(-38 216 303)"/>
+      <rect x="330" y="180" width="16" height="9" fill="#fff3c8" transform="rotate(58 338 184)"/>
+      <rect x="420" y="330" width="12" height="7" fill="#d9a53f" transform="rotate(-15 426 333)"/>
+      <rect x="520" y="170" width="14" height="8" fill="#f7d778" transform="rotate(40 527 174)"/>
+      <rect x="640" y="150" width="12" height="7" fill="#fff3c8" transform="rotate(-52 646 153)"/>
+      <rect x="780" y="190" width="16" height="9" fill="#e9b93b" transform="rotate(18 788 194)"/>
+      <rect x="900" y="300" width="12" height="7" fill="#f7d778" transform="rotate(-30 906 303)"/>
+      <rect x="1010" y="210" width="14" height="8" fill="#d9a53f" transform="rotate(64 1017 214)"/>
+      <rect x="1090" y="360" width="12" height="7" fill="#fff3c8" transform="rotate(-20 1096 363)"/>
+      <rect x="160" y="460" width="14" height="8" fill="#e9b93b" transform="rotate(48 167 464)"/>
+      <rect x="280" y="540" width="12" height="7" fill="#f7d778" transform="rotate(-58 286 543)"/>
+      <rect x="390" y="470" width="12" height="7" fill="#2fae6a" transform="rotate(30 396 473)"/>
+      <rect x="480" y="560" width="14" height="8" fill="#fff3c8" transform="rotate(-24 487 564)"/>
+      <rect x="560" y="470" width="12" height="7" fill="#e9b93b" transform="rotate(70 566 473)"/>
+      <rect x="760" y="470" width="12" height="7" fill="#d9a53f" transform="rotate(-44 766 473)"/>
+      <rect x="860" y="540" width="14" height="8" fill="#f7d778" transform="rotate(26 867 544)"/>
+      <rect x="980" y="470" width="12" height="7" fill="#d64541" transform="rotate(-60 986 473)"/>
+      <rect x="1080" y="560" width="14" height="8" fill="#e9b93b" transform="rotate(36 1087 564)"/>
+      <rect x="100" y="660" width="12" height="7" fill="#fff3c8" transform="rotate(-18 106 663)"/>
+      <rect x="240" y="720" width="14" height="8" fill="#f7d778" transform="rotate(54 247 724)"/>
+      <rect x="360" y="640" width="12" height="7" fill="#e9b93b" transform="rotate(-36 366 643)"/>
+      <rect x="900" y="680" width="12" height="7" fill="#2fae6a" transform="rotate(22 906 683)"/>
+      <rect x="1020" y="740" width="14" height="8" fill="#fff3c8" transform="rotate(-48 1027 744)"/>
+      <rect x="1120" y="640" width="12" height="7" fill="#f7d778" transform="rotate(60 1126 643)"/>
+      <rect x="80" y="820" width="14" height="8" fill="#d9a53f" transform="rotate(-28 87 824)"/>
+      <rect x="180" y="920" width="12" height="7" fill="#e9b93b" transform="rotate(42 186 923)"/>
+      <rect x="960" y="860" width="14" height="8" fill="#f7d778" transform="rotate(-56 967 864)"/>
+      <rect x="1080" y="940" width="12" height="7" fill="#fff3c8" transform="rotate(32 1086 943)"/>
+      <rect x="140" y="1040" width="12" height="7" fill="#f7d778" transform="rotate(-40 146 1043)"/>
+      <rect x="1010" y="1040" width="12" height="7" fill="#e9b93b" transform="rotate(50 1016 1043)"/>
+      <rect x="500" y="240" width="10" height="6" fill="#d64541" transform="rotate(12 505 243)"/>
+      <rect x="720" y="540" width="10" height="6" fill="#fff3c8" transform="rotate(-66 725 543)"/>
+      <rect x="320" y="400" width="10" height="6" fill="#f7d778" transform="rotate(76 325 403)"/>
+      <rect x="940" y="420" width="10" height="6" fill="#e9b93b" transform="rotate(-12 945 423)"/>
+    </g>
+    <g id="confetti-drift">
+      <g class="dA" style="animation-delay:-1s"><rect x="200" y="260" width="13" height="8" fill="#f7d778" transform="rotate(30 206 264)"/></g>
+      <g class="dB" style="animation-delay:-4s"><rect x="450" y="200" width="12" height="7" fill="#fff3c8" transform="rotate(-42 456 203)"/></g>
+      <g class="dC" style="animation-delay:-7s"><rect x="700" y="180" width="13" height="8" fill="#e9b93b" transform="rotate(56 706 184)"/></g>
+      <g class="dA" style="animation-delay:-3.2s"><rect x="940" y="240" width="12" height="7" fill="#f7d778" transform="rotate(-26 946 243)"/></g>
+      <g class="dB" style="animation-delay:-6.4s"><rect x="1080" y="300" width="13" height="8" fill="#d9a53f" transform="rotate(38 1086 304)"/></g>
+      <g class="dC" style="animation-delay:-2.4s"><rect x="120" y="380" width="12" height="7" fill="#e9b93b" transform="rotate(-54 126 383)"/></g>
+      <g class="dA" style="animation-delay:-5.6s"><rect x="340" y="340" width="12" height="7" fill="#2fae6a" transform="rotate(20 346 343)"/></g>
+      <g class="dB" style="animation-delay:-1.8s"><rect x="580" y="300" width="13" height="8" fill="#fff3c8" transform="rotate(-34 586 304)"/></g>
+      <g class="dC" style="animation-delay:-8.8s"><rect x="820" y="360" width="12" height="7" fill="#f7d778" transform="rotate(46 826 363)"/></g>
+      <g class="dA" style="animation-delay:-6.8s"><rect x="1030" y="480" width="12" height="7" fill="#e9b93b" transform="rotate(-18 1036 483)"/></g>
+      <g class="dB" style="animation-delay:-8s"><rect x="160" y="560" width="12" height="7" fill="#fff3c8" transform="rotate(62 166 563)"/></g>
+      <g class="dC" style="animation-delay:-4.6s"><rect x="900" y="600" width="12" height="7" fill="#d64541" transform="rotate(-48 906 603)"/></g>
+      <g class="dA" style="animation-delay:-2.2s"><rect x="60" y="740" width="12" height="7" fill="#f7d778" transform="rotate(34 66 743)"/></g>
+      <g class="dB" style="animation-delay:-5s"><rect x="1120" y="760" width="12" height="7" fill="#e9b93b" transform="rotate(-22 1126 763)"/></g>
+      <g class="dC" style="animation-delay:-9.6s"><rect x="240" y="860" width="12" height="7" fill="#fff3c8" transform="rotate(44 246 863)"/></g>
+      <g class="dA" style="animation-delay:-4.4s"><rect x="1000" y="900" width="12" height="7" fill="#f7d778" transform="rotate(-58 1006 903)"/></g>
+    </g>
+    <g id="confetti-dyn"></g>
+  </g>
+
+  <!-- ================= VIGNETTE + FRAME ================= -->
+  <g id="vignette">
+    <rect x="0" y="0" width="1200" height="1560" fill="url(#vigRad)"/>
+    <rect x="0" y="0" width="1200" height="120" fill="url(#skyGrad)" opacity=".35"/>
+  </g>
+
+  <g id="frame">
+    <rect x="26" y="26" width="1148" height="1508" fill="none" stroke="#b9924a" stroke-width="2" opacity=".55"/>
+    <g stroke="#e8c15f" stroke-width="5" fill="none" opacity=".85">
+      <path d="M26 70 L26 26 L70 26"/><path d="M1130 26 L1174 26 L1174 70"/>
+      <path d="M1174 1490 L1174 1534 L1130 1534"/><path d="M70 1534 L26 1534 L26 1490"/>
+    </g>
+  </g>
+
+  <!-- ================= TOP STRIP + CAPTION STRIP ================= -->
+  <g id="top-strip">
+    <rect x="26" y="26" width="1148" height="52" fill="#070c16" opacity=".9"/>
+    <rect x="26" y="76" width="1148" height="2" fill="#b9924a" opacity=".5"/>
+    <text x="600" y="61" text-anchor="middle" font-family="Georgia,serif" font-size="21" letter-spacing="8" fill="#c9a554">SAVANNA CUP — GRAND FINAL</text>
+    <g fill="#c9a554"><circle cx="330" cy="54" r="3"/><circle cx="870" cy="54" r="3"/></g>
+  </g>
+
+  <g id="caption-strip">
+    <rect x="26" y="1440" width="1148" height="94" fill="#070c16" opacity=".96"/>
+    <rect x="26" y="1440" width="1148" height="2" fill="#b9924a" opacity=".5"/>
+    <text x="66" y="1512" font-family="Haettenschweiler,'Arial Narrow',Impact,sans-serif" font-size="86" fill="url(#titleGold)" stroke="#3a2a08" stroke-width="1.5">FINAL</text>
+    <text x="330" y="1508" font-family="Georgia,'Songti SC','SimSun',serif" font-size="42" letter-spacing="14" fill="#e8c15f">绝杀夺冠</text>
+    <text x="1132" y="1482" text-anchor="end" font-family="Georgia,serif" font-size="19" letter-spacing="2" fill="#c7cede">STOPTIME WINNER · 补时绝杀</text>
+    <text x="1132" y="1516" text-anchor="end" font-family="'Courier New',monospace" font-size="23" letter-spacing="3" fill="#ffb43a">HOM 3<tspan class="blink">:</tspan>2 AWY · 90+7'</text>
+  </g>
+</svg>
+
+  </div></div>
+
+  <footer class="caption">
+    <span class="l"><b>猎豹托举大力神杯冲刺</b> · cheetah hoists the cup — sprint to glory</span>
+    <span class="r">90+7' · 3:2</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var svg = document.querySelector('svg');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduced){ if (svg && svg.pauseAnimations) svg.pauseAnimations(); return; }
+
+  /* gentle additive golden drift — SVG layer stays a complete poster without it */
+  var host = document.getElementById('confetti-dyn');
+  if (!host) return;
+  var NS = 'http://www.w3.org/2000/svg';
+  var palette = ['#f7d778','#e9b93b','#fff3c8','#d9a53f','#2fae6a','#d64541'];
+  var classes = ['dA','dB','dC'];
+  for (var i = 0; i < 22; i++){
+    var g = document.createElementNS(NS,'g');
+    g.setAttribute('class', classes[i % 3]);
+    g.style.animationDelay = (-(Math.random()*11)).toFixed(2)+'s';
+    var r = document.createElementNS(NS,'rect');
+    var x = 60 + Math.random()*1080, y = 160 + Math.random()*950;
+    var w = 9 + Math.random()*6, h = 5 + Math.random()*4;
+    r.setAttribute('x', x.toFixed(0)); r.setAttribute('y', y.toFixed(0));
+    r.setAttribute('width', w.toFixed(1)); r.setAttribute('height', h.toFixed(1));
+    r.setAttribute('fill', palette[i % palette.length]);
+    r.setAttribute('transform','rotate('+((Math.random()*140-70)|0)+' '+(x+w/2).toFixed(0)+' '+(y+h/2).toFixed(0)+')');
+    g.appendChild(r); host.appendChild(g);
+  }
+})();
+</script>
+</body>
+</html>

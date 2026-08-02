@@ -289,6 +289,23 @@
     "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
+    "id": "clock:qwen3.8-max",
+    "theme": "clock",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/clock/qwen3.8-max/",
+    "publicPath": "/submissions/clock/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 109,
+    "linesCss": 48,
+    "linesJs": 15,
+    "sizeBytes": 10595,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:37:20.661Z"
+  },
+  {
     "id": "clock:qwen3.8-max-pre",
     "theme": "clock",
     "model": "qwen3.8-max-pre",
@@ -967,6 +984,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.625Z"
+  },
+  {
+    "id": "recorder:qwen3.8-max",
+    "theme": "recorder",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/recorder/qwen3.8-max/",
+    "publicPath": "/submissions/recorder/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 172,
+    "linesCss": 68,
+    "linesJs": 60,
+    "sizeBytes": 14493,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:37:47.872Z"
   },
   {
     "id": "recorder:qwen3.8-max-pre",
@@ -1649,6 +1683,23 @@
     "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
+    "id": "weather-card:qwen3.8-max",
+    "theme": "weather-card",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/qwen3.8-max/",
+    "publicPath": "/submissions/weather-card/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 133,
+    "linesCss": 57,
+    "linesJs": 48,
+    "sizeBytes": 14763,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:38:31.600Z"
+  },
+  {
     "id": "weather-card:qwen3.8-max-pre",
     "theme": "weather-card",
     "model": "qwen3.8-max-pre",
@@ -2327,6 +2378,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.628Z"
+  },
+  {
+    "id": "stock-panel:qwen3.8-max",
+    "theme": "stock-panel",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/qwen3.8-max/",
+    "publicPath": "/submissions/stock-panel/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 123,
+    "linesCss": 62,
+    "linesJs": 31,
+    "sizeBytes": 10221,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:37:44.438Z"
   },
   {
     "id": "stock-panel:qwen3.8-max-pre",
@@ -3009,6 +3077,23 @@
     "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
+    "id": "click-fireworks:qwen3.8-max",
+    "theme": "click-fireworks",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/qwen3.8-max/",
+    "publicPath": "/submissions/click-fireworks/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 148,
+    "linesCss": 29,
+    "linesJs": 90,
+    "sizeBytes": 10457,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:45:15.459Z"
+  },
+  {
     "id": "click-fireworks:qwen3.8-max-pre",
     "theme": "click-fireworks",
     "model": "qwen3.8-max-pre",
@@ -3502,6 +3587,23 @@
     "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
+    "id": "neon-countdown:qwen3.8-max",
+    "theme": "neon-countdown",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/qwen3.8-max/",
+    "publicPath": "/submissions/neon-countdown/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 156,
+    "linesCss": 63,
+    "linesJs": 50,
+    "sizeBytes": 10554,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:37:55.222Z"
+  },
+  {
     "id": "neon-countdown:qwen3.8-max-pre",
     "theme": "neon-countdown",
     "model": "qwen3.8-max-pre",
@@ -3721,6 +3823,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-08T06:30:31.827Z"
+  },
+  {
+    "id": "particle-gravity:qwen3.8-max",
+    "theme": "particle-gravity",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/qwen3.8-max/",
+    "publicPath": "/submissions/particle-gravity/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 117,
+    "linesCss": 22,
+    "linesJs": 71,
+    "sizeBytes": 11010,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:47:20.484Z"
   },
   {
     "id": "particle-gravity:qwen3.8-max-pre",
@@ -3944,6 +4063,23 @@
     "updatedAt": "2026-06-08T06:30:31.824Z"
   },
   {
+    "id": "cheetah-trophy-run:qwen3.8-max",
+    "theme": "cheetah-trophy-run",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/qwen3.8-max/",
+    "publicPath": "/submissions/cheetah-trophy-run/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 835,
+    "linesCss": 92,
+    "linesJs": 25,
+    "sizeBytes": 51310,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:46:31.925Z"
+  },
+  {
     "id": "cheetah-trophy-run:qwen3.8-max-pre",
     "theme": "cheetah-trophy-run",
     "model": "qwen3.8-max-pre",
@@ -4165,6 +4301,23 @@
     "updatedAt": "2026-06-08T06:30:31.826Z"
   },
   {
+    "id": "dslr-camera:qwen3.8-max",
+    "theme": "dslr-camera",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/qwen3.8-max/",
+    "publicPath": "/submissions/dslr-camera/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 931,
+    "linesCss": 115,
+    "linesJs": 89,
+    "sizeBytes": 53409,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T08:03:44.702Z"
+  },
+  {
     "id": "dslr-camera:qwen3.8-max-pre",
     "theme": "dslr-camera",
     "model": "qwen3.8-max-pre",
@@ -4333,6 +4486,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-07-18T12:11:31.756Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:qwen3.8-max",
+    "theme": "schwarzschild-black-hole",
+    "model": "qwen3.8-max",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/qwen3.8-max/",
+    "publicPath": "/submissions/schwarzschild-black-hole/qwen3.8-max/index.html",
+    "renderKind": "html",
+    "linesTotal": 1128,
+    "linesCss": 181,
+    "linesJs": 848,
+    "sizeBytes": 50843,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:46:37.148Z"
   },
   {
     "id": "schwarzschild-black-hole:qwen3.8-max-pre",
@@ -4707,6 +4877,25 @@
     "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：开车过去\n理由1：距离虽近但洗车目标是清洗车辆，走过去无法将车辆送达洗车位。\n理由2：洗车通常包含内饰清理，开车过去方便店员直接上车操作。\n理由3：50米距离极短，开车仅需不到1分钟，相比步行后再折返回家取车更高效。\n建议：直接发动汽车，一分钟内即可到达洗车店开始服务。"
+  },
+  {
+    "id": "carwash-decision:qwen3.8-max",
+    "theme": "carwash-decision",
+    "model": "qwen3.8-max",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/qwen3.8-max/response.md",
+    "publicPath": "/submissions/carwash-decision/qwen3.8-max/response.md",
+    "renderKind": "text",
+    "linesTotal": 7,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 913,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T07:29:10.598Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "1. 结论：开车过去。\n2. 理由1：洗的对象是车，不是你。洗车店再近，车不到店就无法开工，所以\"怎么去\"的主语必须是车——人走过去而车留在家里，洗车根本不会发生。\n3. 理由2：50 米开车几乎零成本。怠速挪车十几秒即到，不费油、不堵车、不用找车位，到店门口直接交接，比纠结\"开还是走\"花的时间还短。\n4. 理由3：走过去反而是双倍麻烦。人到店后还得再回家把车开过去，等于多跑一趟折返；万一店里有空位能立即洗，车却不在，白白浪费时间。\n5. 理由4：车到店后主动权在你。交钥匙后可以步行 50 米回家等，洗完溜达着取；遇排队也能先把车留下占位，人不用干等。\n6. 建议：直接把车开过去交钥匙，然后步行 50 米回家喝茶等候，取车时再走过去——全程最省力、最省时。"
   },
   {
     "id": "carwash-decision:qwen3.8-max-pre",
