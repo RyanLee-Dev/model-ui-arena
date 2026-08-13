@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>天气卡片 · Atmos</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;padding:18px;font-family:ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+  background:linear-gradient(180deg,#5b7db8 0%,#8aa8d8 48%,#c7d8ef 100%);transition:background 1s ease}
+body.night{background:linear-gradient(180deg,#0b1026 0%,#171d3d 55%,#2a2f55 100%)}
+.card{width:min(94vw,390px);border-radius:28px;padding:20px 18px 18px;position:relative;overflow:hidden;color:#fff;
+  background:linear-gradient(165deg,rgba(26,44,84,.88),rgba(14,22,48,.92));box-shadow:0 34px 80px rgba(8,14,34,.5);
+  border:1px solid rgba(255,255,255,.14);transition:background 1s ease}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap}
+.tabs button{border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.08);color:#cdd9f2;font-family:inherit;
+  font-size:12px;padding:6px 11px;border-radius:999px;cursor:pointer;transition:.3s;letter-spacing:.04em}
+.tabs button.on{background:#fff;color:#16244c;border-color:#fff;font-weight:700}
+.unit{border:1px solid rgba(255,255,255,.2);background:transparent;color:#cdd9f2;font-family:inherit;font-size:12px;
+  padding:6px 10px;border-radius:999px;cursor:pointer;transition:.3s}
+.unit:hover{background:rgba(255,255,255,.12)}
+.scene{position:relative;height:190px;border-radius:20px;overflow:hidden;margin-bottom:12px;
+  background:linear-gradient(180deg,rgba(96,132,190,.5),rgba(30,48,96,.55));transition:background 1.2s ease}
+body.night .scene{background:linear-gradient(180deg,rgba(16,22,52,.62),rgba(8,11,28,.7))}
+.scene.rain{background:linear-gradient(180deg,#47586f,#2c3a52)}
+.scene.snow{background:linear-gradient(180deg,#7c8ea8,#4c5f7d)}
+.scene.storm{background:linear-gradient(180deg,#3a3f5c,#20233d)}
+body.night .scene.rain,body.night .scene.snow,body.night .scene.storm{filter:brightness(.82)}
+.fx{position:absolute;inset:0;overflow:hidden}
+.flash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+.scene.storm .flash{animation:bolt 5.5s infinite}
+@keyframes bolt{0%,86%,100%{opacity:0}87%{opacity:.85}89%{opacity:.1}91%{opacity:.55}93%{opacity:0}}
+.sun-disc{position:absolute;right:24px;top:18px;width:74px;height:74px;border-radius:50%;display:none;
+  background:radial-gradient(circle at 38% 34%,#fff8d8,#ffd75e 58%,#ffab2e);box-shadow:0 0 44px rgba(255,214,92,.85);
+  animation:sunPulse 3.4s ease-in-out infinite}
+@keyframes sunPulse{0%,100%{transform:scale(1);box-shadow:0 0 36px rgba(255,214,92,.7)}50%{transform:scale(1.08);box-shadow:0 0 60px rgba(255,214,92,.95)}}
+.scene.sun .sun-disc{display:block}
+.ray{position:absolute;left:50%;top:50%;width:110px;height:110px;margin:-55px;pointer-events:none;
+  background:repeating-conic-gradient(rgba(255,224,130,.35) 0 6deg,transparent 6deg 24deg);
+  -webkit-mask:radial-gradient(circle,transparent 30%,#000 34%);mask:radial-gradient(circle,transparent 30%,#000 34%);
+  animation:spin 24s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.drop{position:absolute;top:-8%;width:2px;height:16px;border-radius:2px;background:linear-gradient(180deg,rgba(178,215,255,.05),rgba(178,215,255,.95));
+  animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(1180%)translateX(-18px)}}
+.flake{position:absolute;top:-6%;width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.95);
+  box-shadow:0 0 8px rgba(255,255,255,.8);animation:drift linear infinite}
+@keyframes drift{to{transform:translateY(1200%)translateX(24px);opacity:.5}}
+.cur{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;padding:14px 16px;transition:.35s ease}
+.cur.swap{opacity:0;transform:translateY(10px)}
+.loc{font-size:13px;letter-spacing:.12em;color:rgba(255,255,255,.85);display:flex;align-items:center;gap:7px}
+.loc i{width:7px;height:7px;border-radius:50%;background:#7dffb0;box-shadow:0 0 10px #7dffb0}
+.temprow{display:flex;align-items:baseline;gap:12px}
+.temprow b{font-size:64px;font-weight:700;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums;
+  text-shadow:0 4px 22px rgba(0,0,0,.28)}
+.desc{font-size:15px;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.16);backdrop-filter:blur(6px)}
+.stats{display:flex;gap:10px}
+.stat{flex:1;display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.9);
+  padding:8px 10px;border-radius:12px;background:rgba(10,18,40,.32);backdrop-filter:blur(6px)}
+.stat i{font-style:normal;font-size:13px}
+.chart{width:100%;height:52px;display:block;margin-bottom:2px}
+.forecast{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.fcol{text-align:center;padding:9px 2px 10px;border-radius:14px;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.09);transition:.3s}
+.fcol .d{font-size:11px;color:#aebde0;margin-bottom:5px}
+.fcol .ic{font-size:17px;line-height:1;margin-bottom:6px}
+.fcol .hi{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.fcol .lo{font-size:11px;color:#8fa1c9;margin-top:3px;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<main class="card" id="card">
+  <header class="top">
+    <nav class="tabs" id="tabs"></nav>
+    <button class="unit" id="unit" title="切换温度单位">°C / °F</button>
+  </header>
+  <div class="scene" id="scene">
+    <div class="sun-disc"><i class="ray"></i></div>
+    <div class="fx" id="fx"></div>
+    <div class="flash"></div>
+    <section class="cur" id="cur">
+      <div class="loc"><i></i><span id="loc">上海 · 现在</span></div>
+      <div class="temprow"><b id="temp">17°</b><span class="desc" id="desc">中雨</span></div>
+      <div class="stats">
+        <div class="stat"><i>🌀</i><span id="wind">东南风 4级</span></div>
+        <div class="stat"><i>💧</i><span id="humi">湿度 88%</span></div>
+      </div>
+    </section>
+  </div>
+  <svg class="chart" id="chart" viewBox="0 0 320 52" preserveAspectRatio="none" aria-hidden="true">
+    <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="rgba(125,255,176,.34)"/><stop offset="100%" stop-color="rgba(125,255,176,0)"/>
+    </linearGradient></defs>
+    <path id="area" fill="url(#fill)"></path>
+    <polyline id="line" fill="none" stroke="#7dffb0" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline>
+  </svg>
+  <section class="forecast" id="forecast"></section>
+</main>
+<script>
+const C={
+ sh:{n:'上海',d:'中雨',ic:'rain',t:17,hi:[17,19,21,22,23],lo:[12,13,15,16,17],w:'东南风 4级',h:88},
+ bj:{n:'北京',d:'晴',ic:'sun',t:24,hi:[24,26,25,27,28],lo:[11,12,14,13,15],w:'西北风 2级',h:31},
+ hb:{n:'哈尔滨',d:'小雪',ic:'snow',t:-6,hi:[-6,-4,-2,-3,1],lo:[-15,-13,-10,-12,-8],w:'北风 5级',h:72},
+ gz:{n:'广州',d:'雷阵雨',ic:'storm',t:29,hi:[29,30,31,30,28],lo:[23,24,25,24,22],w:'南风 3级',h:91}
+};
+const ICONS={rain:'🌧',sun:'☀️',snow:'❄️',storm:'⛈️'};
+const tabs=document.getElementById('tabs'),scene=document.getElementById('scene'),fx=document.getElementById('fx');
+const cur=document.getElementById('cur');
+let city=C.sh,unit='C',currentKey='sh';
+Object.entries(C).forEach(([k,v])=>{
+  const b=document.createElement('button');b.textContent=v.n;b.dataset.k=k;b.className=k==='sh'?'on':'';
+  b.onclick=()=>select(k);tabs.appendChild(b);
+});
+const cvt=x=>unit==='C'?x:Math.round(x*9/5+32);
+function select(k){
+  if(k===currentKey)return;
+  currentKey=k;city=C[k];tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  cur.classList.add('swap');scene.className='scene '+city.ic;
+  setTimeout(()=>{
+    render();cur.classList.remove('swap');
+  },330);
+}
+function countUp(el,to){
+  const from=parseInt(el.textContent)||0,st=performance.now();
+  function step(t){
+    const q=Math.min(1,(t-st)/520),e=1-Math.pow(1-q,3);
+    el.textContent=Math.round(from+(to-from)*e)+'°';
+    if(q<1)requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function render(){
+  document.getElementById('loc').textContent=city.n+' · 现在';
+  document.getElementById('desc').textContent=city.d;
+  document.getElementById('wind').textContent=city.w;
+  document.getElementById('humi').textContent='湿度 '+city.h+'%';
+  countUp(document.getElementById('temp'),cvt(city.t));
+  spawnFx(city.ic);
+  const days=['日','一','二','三','四','五','六'];
+  const today=new Date(),f=document.getElementById('forecast');f.innerHTML='';
+  const hi=city.hi.map(cvt),lo=city.lo.map(cvt);
+  const min=Math.min(...lo),max=Math.max(...hi),span=Math.max(1,max-min);
+  const X=i=>28+i*66,Y=v=>46-(v-min)/span*38;
+  document.getElementById('line').setAttribute('points',hi.map((v,i)=>`${X(i)},${Y(v)}`).join(' '));
+  document.getElementById('area').setAttribute('d',`M${X(0)},${Y(hi[0])}`+hi.map((v,i)=>`L${X(i)},${Y(v)}`).join(' ')+`L${X(4)},46 L${X(0)},46 Z`);
+  for(let i=0;i<5;i++){
+    const d=new Date(today.getTime()+(i+1)*864e5);
+    const col=document.createElement('div');col.className='fcol';
+    col.innerHTML=`<div class="d">${i===0?'明天':'周'+days[d.getDay()]}</div><div class="ic">${ICONS[city.ic]}</div>
+      <div class="hi">${hi[i]}°</div><div class="lo">${lo[i]}°</div>`;
+    f.appendChild(col);
+  }
+}
+function spawnFx(ic){
+  fx.innerHTML='';
+  if(ic==='rain'||ic==='storm'){
+    for(let i=0;i<36;i++){
+      const d=document.createElement('i');d.className='drop';
+      d.style.left=Math.random()*100+'%';
+      d.style.animationDuration=(.75+Math.random()*.7)+'s';
+      d.style.animationDelay=(-Math.random()*1.5)+'s';
+      d.style.opacity=.4+Math.random()*.6;fx.appendChild(d);
+    }
+  }else if(ic==='snow'){
+    for(let i=0;i<28;i++){
+      const s=document.createElement('i');s.className='flake';
+      s.style.left=Math.random()*100+'%';
+      s.style.animationDuration=(2.2+Math.random()*2.2)+'s';
+      s.style.animationDelay=(-Math.random()*4)+'s';
+      fx.appendChild(s);
+    }
+  }else if(ic==='sun'){
+    for(let i=0;i<7;i++){
+      const p=document.createElement('i');p.className='drop';
+      p.style.cssText='background:rgba(255,230,150,.9);width:3px;height:3px;border-radius:50%;'+
+        `left:${Math.random()*100}%;top:${Math.random()*30}%;animation:fall ${2+Math.random()*3}s linear infinite`;
+      fx.appendChild(p);
+    }
+  }
+}
+document.getElementById('unit').onclick=()=>{unit=unit==='C'?'F':'C';render();};
+function syncNight(){
+  const h=new Date().getHours();
+  document.body.classList.toggle('night',h<6||h>=18);
+}
+syncNight();setInterval(syncNight,60e3);
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>最炫倒计时</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%}
+body{display:grid;place-items:center;background:#060608;color:#f6f0e6;font-family:"Iowan Old Style","Palatino Linotype","Songti SC",serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%}
+.glow{position:fixed;inset:0;background:radial-gradient(circle at 50% 46%,#4a2e18 0 8%,transparent 42%);opacity:.75;pointer-events:none;transition:background .4s}
+.late .glow{background:radial-gradient(circle at 50% 46%,#6a1820 0 12%,transparent 46%)}
+.done .glow{background:radial-gradient(circle at 50% 46%,#7a5a28 0 16%,transparent 52%)}
+.stage{position:relative;z-index:1;width:min(390px,94vw);text-align:center}
+label{display:block;font-family:ui-sans-serif,system-ui,sans-serif;letter-spacing:.5em;font-size:10px;opacity:.48}
+.num{position:relative;margin:8px 0 2px;font-size:150px;font-weight:400;letter-spacing:-.05em;line-height:.86;
+  text-shadow:0 0 30px #c4a57477,0 0 80px #c4a57433}
+.num:before,.num:after{content:attr(data-n);position:absolute;left:0;right:0;top:0;pointer-events:none}
+.num:before{color:#7ec8ff;transform:translate(-2px,1px);opacity:.28;mix-blend-mode:screen}
+.num:after{color:#ff8a7a;transform:translate(2px,-1px);opacity:.22;mix-blend-mode:screen}
+.late .num{color:#ffc4c0;text-shadow:0 0 26px #ff5a5a88}
+.done .num{font-size:58px;letter-spacing:.22em;text-shadow:0 0 40px #ffe3a8}
+svg{width:188px;height:188px;margin:6px auto 14px;display:block;filter:drop-shadow(0 0 10px #c4a57455)}
+circle{fill:none;stroke-linecap:round}
+.track{stroke:#241e16;stroke-width:2}
+.prog{stroke:#c4a574;stroke-width:3.4;stroke-dasharray:465;transform:rotate(-90deg);transform-origin:50% 50%;transition:stroke-dashoffset .28s cubic-bezier(.16,.84,.24,1)}
+.late .prog{stroke:#ff8a86}
+.msg{font-family:ui-sans-serif,system-ui,sans-serif;font-size:12px;letter-spacing:.22em;opacity:.5;min-height:22px}
+button{margin-top:22px;border:1px solid #c4a57477;border-radius:999px;padding:12px 28px;background:transparent;color:#f6f0e6;font:650 11px/1 ui-sans-serif,system-ui,sans-serif;letter-spacing:.3em;cursor:pointer}
+.flash{position:fixed;inset:0;pointer-events:none;background:#fff4e4;opacity:0}
+.pulse .flash{animation:flash .3s ease}
+@keyframes flash{from{opacity:.32}to{opacity:0}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="glow"></div>
+<div class="flash" id="flash"></div>
+<div class="stage">
+  <label>IGNITION</label>
+  <div class="num" id="n" data-n="10">10</div>
+  <svg viewBox="0 0 168 168"><circle class="track" cx="84" cy="84" r="74"/><circle class="prog" id="ring" cx="84" cy="84" r="74"/></svg>
+  <div class="msg" id="msg">自动点火 · 10 秒</div>
+  <button id="btn" hidden>RESTART</button>
+</div>
+<script>
+const TOTAL=10;let left=TOTAL,timer=null,sparks=[];
+const ring=document.getElementById("ring"),C=2*Math.PI*74;
+const cv=document.getElementById("c"),x=cv.getContext("2d");
+let W,H;
+function size(){const d=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*d;cv.height=H*d;x.setTransform(d,0,0,d,0,0)}
+addEventListener("resize",size);size();
+function setRing(v){ring.style.strokeDashoffset=C*(1-v)}
+function pulse(){document.body.classList.add("pulse");flash.offsetWidth;setTimeout(()=>document.body.classList.remove("pulse"),300)}
+function burst(n,power){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*6.28,s=(1+Math.random()*power);
+    sparks.push({x:W/2,y:H*.46,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:1,h:28+Math.random()*18});
+  }
+}
+function show(v){
+  n.textContent=v===0?"完成":v;n.dataset.n=n.textContent;
+  setRing(v/TOTAL);pulse();burst(v===0?90:v<=3?18:8,v===0?9:v<=3?3.2:1.6);
+  document.body.classList.toggle("late",v>0&&v<=3);
+  msg.textContent=v===0?"完成 · 爆发":v<=3?"最后窗口":"节奏锁定";
+}
+function tick(){
+  left-=1;
+  if(left>0){show(left);return}
+  clearInterval(timer);timer=null;show(0);document.body.classList.add("done");btn.hidden=false;
+}
+function start(){
+  clearInterval(timer);left=TOTAL;btn.hidden=true;document.body.classList.remove("done","late");show(10);
+  timer=setInterval(tick,1000);
+}
+function loop(){
+  x.fillStyle="rgba(6,6,8,.22)";x.fillRect(0,0,W,H);
+  x.globalCompositeOperation="lighter";
+  for(let i=sparks.length-1;i>=0;i--){
+    const p=sparks[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.04;p.vx*=.99;p.life-=.016;
+    if(p.life<=0){sparks.splice(i,1);continue}
+    x.fillStyle=`hsla(${p.h},80%,70%,${p.life})`;x.beginPath();x.arc(p.x,p.y,2.2*p.life,0,6.28);x.fill();
+  }
+  x.globalCompositeOperation="source-over";
+  requestAnimationFrame(loop);
+}
+btn.onclick=start;start();loop();
+</script>
+</body>
+</html>

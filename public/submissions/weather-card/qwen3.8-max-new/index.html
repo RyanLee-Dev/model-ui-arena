@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATLAS · 天气卡片</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#0a0f1e;
+    font-family:"Avenir Next",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#fff}
+  .bg{position:fixed;inset:0;transition:opacity 1s ease;opacity:0}
+  .bg.on{opacity:1}
+  #night{position:fixed;inset:0;background:radial-gradient(120% 90% at 50% 0%,rgba(4,8,24,.55),rgba(2,4,14,.72));opacity:0;transition:opacity 1.2s;pointer-events:none}
+  #fx{position:fixed;inset:0;pointer-events:none}
+  #sun{position:fixed;top:9%;right:14%;width:150px;height:150px;border-radius:50%;opacity:0;transition:opacity 1s;
+    background:radial-gradient(circle,#fff7d9 0%,rgba(255,214,130,.85) 30%,rgba(255,180,80,0) 70%);
+    animation:halo 5s ease-in-out infinite}
+  @keyframes halo{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+  .card{position:relative;z-index:2;width:min(94vw,400px);border-radius:26px;padding:26px 24px 20px;
+    background:linear-gradient(160deg,rgba(255,255,255,.16),rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.24);backdrop-filter:blur(14px);
+    box-shadow:0 30px 70px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28)}
+  header{display:flex;justify-content:space-between;align-items:flex-start}
+  h1{font-size:24px;font-weight:600;letter-spacing:.06em}
+  .en{font-size:10px;letter-spacing:.32em;color:rgba(255,255,255,.66);margin-top:5px;text-transform:uppercase}
+  #unit{border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.12);color:#fff;border-radius:99px;
+    padding:6px 13px;font-size:12px;letter-spacing:.1em;cursor:pointer;transition:.25s}
+  #unit:hover{background:rgba(255,255,255,.26)}
+  #dots{display:flex;gap:8px;margin:18px 0 4px}
+  .dot{width:26px;height:5px;border-radius:99px;background:rgba(255,255,255,.28);cursor:pointer;transition:.3s;border:none}
+  .dot.on{width:44px;background:#fff}
+  .now{display:flex;align-items:flex-end;gap:14px;margin:12px 0 6px;transition:opacity .3s,transform .3s}
+  #temp{font-size:74px;font-weight:200;line-height:1;text-shadow:0 4px 24px rgba(0,0,0,.25);font-variant-numeric:tabular-nums}
+  .sub{padding-bottom:10px}
+  #desc{font-size:14px;font-weight:600;letter-spacing:.08em}
+  #meta{font-size:11px;color:rgba(255,255,255,.75);margin-top:6px;letter-spacing:.05em}
+  .week{margin-top:14px;border-radius:16px;background:rgba(0,0,0,.14);border:1px solid rgba(255,255,255,.12);padding:10px 8px 6px;transition:opacity .3s,transform .3s}
+  .fading{opacity:0;transform:translateY(8px)}
+  .week svg{display:block;width:100%;height:auto}
+  .fl{fill:none;stroke:#ffd98a;stroke-width:2;stroke-linecap:round;filter:drop-shadow(0 2px 6px rgba(255,200,110,.5))}
+  .fa{fill:url(#fGrad)}
+  .fb{fill:rgba(255,255,255,.32)}
+  .fc{fill:#ffd98a}
+  .ft{fill:#fff;font-size:9px;text-anchor:middle;font-weight:600}
+  .fd{fill:rgba(255,255,255,.72);font-size:8.4px;text-anchor:middle}
+  .fw{fill:rgba(255,255,255,.86);font-size:8.8px;text-anchor:middle}
+</style>
+</head>
+<body>
+  <div class="bg" id="bgA"></div><div class="bg" id="bgB"></div>
+  <div id="night"></div><canvas id="fx"></canvas><div id="sun"></div>
+  <main class="card">
+    <header><div><h1 id="city">—</h1><p class="en" id="en">—</p></div><button id="unit">°C</button></header>
+    <nav id="dots"></nav>
+    <section class="now" id="now"><p id="temp">0°</p>
+      <div class="sub"><p id="desc">—</p><p id="meta">—</p></div></section>
+    <section class="week" id="week"></section>
+  </main>
+<script>
+  const C = [
+    { n:"三亚", en:"SANYA · HAINAN", t:"sun", temp:31, d:"晴 · 海风轻拂", w:12, h:58, days:[["晴",32,26],["晴",33,27],["多云",31,26],["阵雨",30,25],["晴",32,26]] },
+    { n:"杭州", en:"HANGZHOU · ZHEJIANG", t:"rain", temp:22, d:"中雨 · 烟雨西湖", w:18, h:88, days:[["雨",23,18],["小雨",22,17],["阴",24,18],["多云",26,19],["晴",27,20]] },
+    { n:"哈尔滨", en:"HARBIN · HEILONGJIANG", t:"snow", temp:-8, d:"小雪 · 冰城雾凇", w:22, h:74, days:[["雪",-6,-14],["雪",-9,-16],["多云",-7,-15],["晴",-5,-13],["晴",-4,-12]] },
+    { n:"北京", en:"BEIJING · CAPITAL", t:"cloud", temp:19, d:"多云 · 微风", w:9, h:42, days:[["多云",20,12],["阴",19,13],["晴",23,14],["晴",24,15],["多云",22,14]] }
+  ];
+  const $ = (id) => document.getElementById(id);
+  const cv = $("fx"), ctx = cv.getContext("2d");
+  const W = () => innerWidth, H = () => innerHeight, R = Math.random;
+  let cur = -1, unit = "C", P = [], flip = true;
+  const night = () => { const hr = new Date().getHours(); return hr < 6 || hr >= 18; };
+  const SKY = {
+    sun:["linear-gradient(180deg,#2e7cc7,#8fc3ef 52%,#ffdfae)","linear-gradient(180deg,#0a1a3a,#1c3763 55%,#614979)"],
+    rain:["linear-gradient(180deg,#46586e,#68798f 55%,#94a4b6)","linear-gradient(180deg,#0d1119,#222b3c 58%,#3a465b)"],
+    snow:["linear-gradient(180deg,#8aa4c2,#c8d7e7 55%,#eff4fa)","linear-gradient(180deg,#131c30,#2b3a55 58%,#5d6f8d)"],
+    cloud:["linear-gradient(180deg,#78879c,#a4b1c1 55%,#d2d9e2)","linear-gradient(180deg,#11151e,#293040 58%,#495161)"]
+  };
+  function size(){ cv.width = W() * devicePixelRatio; cv.height = H() * devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
+  size(); addEventListener("resize", size);
+  const conv = (v) => unit === "C" ? Math.round(v) : Math.round(v * 9 / 5 + 32);
+  function mkPt(init){
+    const t = C[cur].t;
+    if (t === "rain") return { x:R()*W(), y:init?R()*H():-20, vy:9+R()*7, vx:-1.8, len:13+R()*11 };
+    if (t === "snow") return { x:R()*W(), y:init?R()*H():-8, vy:.7+R()*1.3, r:1+R()*2.4, ph:R()*6.28 };
+    if (t === "sun") return { x:R()*W(), y:init?R()*H():H()+8, vy:-(.15+R()*.4), r:1+R()*2.4, a:.25+R()*.5, ph:R()*6.28 };
+    return { x:init?R()*W():-180, y:H()*(.08+R()*.34), w:110+R()*150, h:30+R()*30, v:.14+R()*.26, a:.13+R()*.13 };
+  }
+  function seed(){ P = []; const n = { sun:38, rain:120, snow:90, cloud:7 }[C[cur].t]; for (let i=0;i<n;i++) P.push(mkPt(true)); }
+  function fx(t){
+    ctx.clearRect(0,0,W(),H());
+    for (const p of P) {
+      if (C[cur].t === "rain") { p.y+=p.vy; p.x+=p.vx; if(p.y>H()+20) Object.assign(p,mkPt(false));
+        ctx.strokeStyle="rgba(210,230,255,.55)"; ctx.lineWidth=1.1; ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p.x-p.vx*1.6,p.y-p.len); ctx.stroke(); }
+      else if (C[cur].t === "snow") { p.y+=p.vy; p.x+=Math.sin(t/900+p.ph)*.5; if(p.y>H()+8) Object.assign(p,mkPt(false));
+        ctx.fillStyle="rgba(255,255,255,.85)"; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.29); ctx.fill(); }
+      else if (C[cur].t === "sun") { p.y+=p.vy; p.x+=Math.sin(t/1400+p.ph)*.2; if(p.y<-10) Object.assign(p,mkPt(false));
+        ctx.fillStyle="rgba(255,236,180,"+(p.a*(0.7+0.3*Math.sin(t/500+p.ph)))+")"; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,6.29); ctx.fill(); }
+      else { p.x+=p.v; if(p.x>W()+200) Object.assign(p,mkPt(false));
+        ctx.fillStyle="rgba(255,255,255,"+p.a+")"; ctx.beginPath(); ctx.ellipse(p.x,p.y,p.w,p.h,0,0,6.29); ctx.fill(); }
+    }
+    requestAnimationFrame(fx);
+  }
+  requestAnimationFrame(fx);
+  function chart(c){
+    const days=c.days, vw=340, mx=Math.max(...days.map(d=>d[1])), mn=Math.min(...days.map(d=>d[2]));
+    const x=i=>26+i*(vw-52)/4, y=v=>10+(mx-v)/(mx-mn||1)*40;
+    let bars="",line=days.map((d,i)=>x(i).toFixed(1)+","+y(d[1]).toFixed(1)).join(" "),area="",dots="",txt="";
+    const wk=i=>"周"+"日一二三四五六"[(new Date().getDay()+i+1)%7];
+    days.forEach((d,i)=>{ const X=x(i), y1=y(d[1]), y2=y(d[2]);
+      bars+=`<rect class="fb" x="${(X-2.4).toFixed(1)}" y="${y1.toFixed(1)}" width="4.8" rx="2.4" height="${(y2-y1).toFixed(1)}"/>`;
+      dots+=`<circle class="fc" cx="${X.toFixed(1)}" cy="${y1.toFixed(1)}" r="2.6"/>`;
+      txt+=`<text class="ft" x="${X.toFixed(1)}" y="${(y1-7).toFixed(1)}">${conv(d[1])}°</text>`;
+      txt+=`<text class="fd" x="${X.toFixed(1)}" y="${(y2+12).toFixed(1)}">${conv(d[2])}°</text>`;
+      txt+=`<text class="fw" x="${X.toFixed(1)}" y="76">${wk(i)} ${d[0]}</text>`; });
+    area=`M${x(0)},${y(days[0][1])} L${line.replace(/ /g," L")} L${x(4)},60 L${x(0)},60 Z`;
+    return `<svg viewBox="0 0 ${vw} 84"><defs><linearGradient id="fGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(255,217,138,.4)"/><stop offset="1" stop-color="rgba(255,217,138,0)"/></linearGradient></defs>
+      ${bars}<path class="fa" d="${area}"/><polyline class="fl" points="${line}"/>${dots}${txt}</svg>`;
+  }
+  let shown = 0;
+  function countUp(target){
+    const from = shown, t0 = performance.now();
+    (function step(t){ const k = Math.min(1,(t-t0)/650), e = 1-Math.pow(1-k,3);
+      shown = Math.round(from+(target-from)*e);
+      $("temp").textContent = conv(shown)+"°";
+      if (k<1) requestAnimationFrame(step); })(t0);
+  }
+  function apply(i){
+    if (i === cur) return;
+    cur = i; const c = C[i], sky = SKY[c.t][night()?1:0];
+    flip = !flip; const b = $(flip?"bgB":"bgA"), o = $(flip?"bgA":"bgB");
+    b.style.background = sky; b.classList.add("on"); o.classList.remove("on");
+    $("night").style.opacity = night() ? 1 : 0;
+    $("sun").style.opacity = c.t==="sun" ? (night()?0.25:0.95) : 0;
+    $("city").textContent = c.n; $("en").textContent = c.en;
+    $("desc").textContent = c.d; $("meta").textContent = `风 ${c.w} km/h · 湿度 ${c.h}%`;
+    $("dots").querySelectorAll(".dot").forEach((d,k)=>d.classList.toggle("on",k===i));
+    seed(); countUp(c.temp);
+    $("now").classList.add("fading"); $("week").classList.add("fading");
+    setTimeout(()=>{ $("week").innerHTML = chart(c); $("now").classList.remove("fading"); $("week").classList.remove("fading"); },300);
+  }
+  C.forEach((c,i)=>{ const b=document.createElement("button"); b.className="dot"; b.title=c.n; b.onclick=()=>apply(i); $("dots").appendChild(b); });
+  $("unit").onclick = ()=>{ unit = unit==="C"?"F":"C"; $("unit").textContent = "°"+unit; const c=C[cur];
+    $("temp").textContent = conv(shown)+"°"; $("week").innerHTML = chart(c); };
+  setInterval(()=>{ const sky=SKY[C[cur].t][night()?1:0]; $(flip?"bgB":"bgA").style.background = sky;
+    $("night").style.opacity = night()?1:0; }, 60000);
+  apply(0);
+</script>
+</body>
+</html>

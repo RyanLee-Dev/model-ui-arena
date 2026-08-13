@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>拟物单反</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{min-height:100%}
+body{min-height:100vh;display:grid;place-items:center;font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif;
+  background:radial-gradient(55% 42% at 50% 18%,#4a4034,transparent 58%),#0c0b0a}
+.stage{width:min(390px,94vw)}
+svg{width:100%;height:auto;display:block;filter:drop-shadow(0 32px 48px #000a)}
+.hint{text-align:center;margin-top:16px;font-size:11px;color:#b8ad9c;letter-spacing:.24em}
+.shine{animation:flow 5.2s ease-in-out infinite}
+@keyframes flow{50%{opacity:.28}}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg viewBox="0 0 1000 720" role="img" aria-label="三四分视角手绘单反相机">
+  <defs>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2a2520"/>
+      <stop offset="58%" stop-color="#141210"/>
+      <stop offset="100%" stop-color="#090807"/>
+    </linearGradient>
+    <radialGradient id="lamp" cx="32%" cy="8%" r="55%">
+      <stop offset="0%" stop-color="#fff3d2" stop-opacity=".28"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bodyF" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#4a4e54"/>
+      <stop offset="38%" stop-color="#2c3036"/>
+      <stop offset="100%" stop-color="#14161a"/>
+    </linearGradient>
+    <linearGradient id="bodyS" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#1c1e22"/>
+      <stop offset="100%" stop-color="#090a0c"/>
+    </linearGradient>
+    <linearGradient id="bodyT" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0%" stop-color="#2e3238"/>
+      <stop offset="100%" stop-color="#5a6068"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f2ece0"/>
+      <stop offset="32%" stop-color="#bdb7aa"/>
+      <stop offset="68%" stop-color="#7a756c"/>
+      <stop offset="100%" stop-color="#ddd6c8"/>
+    </linearGradient>
+    <linearGradient id="metalDark" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#76726c"/>
+      <stop offset="48%" stop-color="#2a2825"/>
+      <stop offset="100%" stop-color="#4e4a44"/>
+    </linearGradient>
+    <radialGradient id="glass" cx="36%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#e8f2ff"/>
+      <stop offset="16%" stop-color="#6e96cc"/>
+      <stop offset="40%" stop-color="#152338"/>
+      <stop offset="68%" stop-color="#070c12"/>
+      <stop offset="100%" stop-color="#1a2430"/>
+    </radialGradient>
+    <linearGradient id="redring" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6a1010"/>
+      <stop offset="46%" stop-color="#e03434"/>
+      <stop offset="100%" stop-color="#3a0707"/>
+    </linearGradient>
+    <linearGradient id="grip" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#30343a"/>
+      <stop offset="100%" stop-color="#101114"/>
+    </linearGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="ao"><feGaussianBlur stdDeviation="2.4"/></filter>
+  </defs>
+
+  <rect width="1000" height="720" fill="url(#desk)"/>
+  <rect width="1000" height="720" fill="url(#lamp)"/>
+  <ellipse cx="520" cy="604" rx="340" ry="42" fill="#000" opacity=".62" filter="url(#soft)"/>
+
+  <g id="camera">
+    <path d="M694 246 L820 294 L806 516 L682 460 Z" fill="url(#bodyS)"/>
+    <path d="M704 304 L810 344 L802 506 L694 458 Z" fill="#050607" opacity=".4"/>
+    <path d="M262 260 L694 246 L682 460 L256 470 Z" fill="url(#bodyF)"/>
+    <path d="M276 278 L680 264 L670 446 L272 454 Z" fill="none" stroke="#6a7078" stroke-width="1.1" opacity=".28"/>
+    <path d="M262 260 L694 246 L682 268 L256 280 Z" fill="#fff" opacity=".06"/>
+    <path d="M262 260 L694 246 L820 294 L396 314 Z" fill="url(#bodyT)"/>
+    <path d="M300 268 L664 256 L768 288 L388 302 Z" fill="#fff" opacity=".06"/>
+
+    <path d="M598 288 C642 284 706 300 714 332 C724 386 716 436 694 454 C662 464 608 458 588 434 C574 400 572 338 598 288 Z" fill="url(#grip)"/>
+    <g fill="#050607" opacity=".58">
+      <ellipse cx="636" cy="328" rx="19" ry="4.2" transform="rotate(-8 636 328)"/>
+      <ellipse cx="640" cy="348" rx="19" ry="4.2" transform="rotate(-8 640 348)"/>
+      <ellipse cx="642" cy="368" rx="18" ry="4" transform="rotate(-7 642 368)"/>
+      <ellipse cx="640" cy="388" rx="17" ry="4" transform="rotate(-6 640 388)"/>
+      <ellipse cx="634" cy="406" rx="15" ry="3.6" transform="rotate(-5 634 406)"/>
+      <ellipse cx="624" cy="422" rx="13" ry="3.2" transform="rotate(-4 624 422)"/>
+    </g>
+
+    <path d="M426 178 L596 168 L650 246 L396 258 Z" fill="#353a40"/>
+    <path d="M596 168 L676 210 L650 246 Z" fill="#17191c"/>
+    <path d="M426 178 L596 168 L676 210 L506 222 Z" fill="#555b64"/>
+    <rect x="486" y="156" width="92" height="18" rx="2" fill="url(#metalDark)"/>
+    <rect x="504" y="148" width="56" height="10" rx="1.5" fill="#222428"/>
+    <rect x="516" y="142" width="32" height="8" rx="1" fill="url(#metal)"/>
+    <rect x="522" y="136" width="42" height="8" rx="1" fill="#141416"/>
+    <rect x="528" y="134" width="30" height="3" fill="url(#metal)"/>
+
+    <g id="mode-dial" style="transform-origin:352px 232px">
+      <ellipse cx="352" cy="236" rx="38" ry="17" fill="#14161a"/>
+      <ellipse cx="352" cy="230" rx="34" ry="14" fill="url(#metalDark)"/>
+      <g stroke="#efe8d8" stroke-width="1.5">
+        <path d="M334 222 L338 217"/><path d="M352 218 L352 212"/><path d="M370 222 L374 217"/>
+        <path d="M328 230 L323 228"/><path d="M376 230 L381 228"/>
+      </g>
+      <ellipse cx="352" cy="228" rx="13" ry="5.5" fill="#0c0c0e"/>
+      <text x="344" y="224" fill="#e8c15a" font-size="9" font-family="ui-sans-serif,sans-serif">M</text>
+    </g>
+    <ellipse cx="624" cy="226" rx="17" ry="8.5" fill="#101114"/>
+    <ellipse cx="624" cy="223" rx="13" ry="6" fill="url(#metal)"/>
+    <ellipse cx="621" cy="221" rx="5" ry="2.4" fill="#fff" opacity=".38"/>
+
+    <text x="428" y="318" fill="#ddd6c8" font-size="21" font-family="ui-sans-serif,sans-serif" font-weight="700" letter-spacing="3.2">LUMEN</text>
+    <text x="430" y="338" fill="#8e877c" font-size="10" font-family="ui-sans-serif,sans-serif" letter-spacing="2.2">LX-7  ·  NOCTURNE</text>
+
+    <ellipse cx="208" cy="552" rx="100" ry="18" fill="#000" opacity=".22" filter="url(#ao)"/>
+    <ellipse cx="232" cy="368" rx="100" ry="146" fill="url(#metalDark)"/>
+    <ellipse cx="236" cy="368" rx="90" ry="132" fill="#16181c"/>
+    <ellipse cx="242" cy="368" rx="82" ry="120" fill="none" stroke="#454850" stroke-width="3"/>
+    <ellipse cx="250" cy="368" rx="74" ry="108" fill="none" stroke="#2c2e32" stroke-width="3"/>
+    <ellipse cx="258" cy="368" rx="68" ry="100" fill="url(#metalDark)"/>
+    <g stroke="#070708" stroke-width="2">
+      <path d="M206 316 H310"/><path d="M202 348 H314"/><path d="M200 368 H316"/>
+      <path d="M202 388 H314"/><path d="M206 420 H310"/>
+    </g>
+    <text x="220" y="296" fill="#d4cdc0" font-size="9" font-family="ui-sans-serif,sans-serif">1.2 · 2 · 3 · 5 · 7m</text>
+    <ellipse cx="276" cy="368" rx="54" ry="82" fill="url(#redring)"/>
+    <ellipse cx="280" cy="368" rx="48" ry="74" fill="url(#metal)"/>
+    <ellipse cx="284" cy="368" rx="42" ry="66" fill="#0c0c0e"/>
+    <ellipse cx="288" cy="368" rx="36" ry="58" fill="url(#glass)"/>
+    <ellipse cx="288" cy="368" rx="26" ry="40" fill="none" stroke="#9ec0ea" stroke-width="1.3" opacity=".5"/>
+    <ellipse cx="288" cy="368" rx="15" ry="24" fill="none" stroke="#d8e8ff" stroke-width="1" opacity=".35"/>
+    <ellipse class="shine" cx="272" cy="342" rx="12" ry="16" fill="#fff" opacity=".58" transform="rotate(-16 272 342)"/>
+    <path class="shine" d="M302 400 C316 386 322 410 308 420" fill="none" stroke="#9cf" stroke-width="3" opacity=".32"/>
+
+    <ellipse cx="794" cy="358" rx="20" ry="30" fill="#1a1c20"/>
+    <ellipse cx="796" cy="358" rx="11" ry="18" fill="#08090b"/>
+    <ellipse cx="792" cy="348" rx="5" ry="7" fill="#fff" opacity=".12"/>
+    <rect x="244" y="248" width="11" height="16" rx="2" fill="#2c3036"/>
+    <rect x="690" y="236" width="13" height="15" rx="2" fill="#2c3036"/>
+    <g fill="none" stroke="#000" stroke-width="1.4" opacity=".32">
+      <path d="M396 258 L650 246"/><path d="M256 360 L600 348"/><path d="M682 328 L806 374"/>
+    </g>
+  </g>
+</svg>
+<p class="hint">点按模式转盘</p>
+</div>
+<script>
+const dial=document.getElementById("mode-dial");
+const marks=["M","A","S","P","Auto"];
+let i=0;
+dial.style.cursor="pointer";
+dial.addEventListener("click",()=>{
+  i=(i+1)%marks.length;
+  dial.style.transform=`rotate(${i*18}deg)`;
+  dial.querySelector("text").textContent=marks[i]==="Auto"?"A":marks[i];
+});
+</script>
+</body>
+</html>

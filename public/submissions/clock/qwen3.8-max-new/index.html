@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA · 时间仪表</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--ease:cubic-bezier(.45,0,.25,1)}
+  html,body{height:100%}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Avenir Next",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:radial-gradient(130% 110% at 50% -10%,var(--bg2),var(--bg1) 70%);
+    color:var(--ink);overflow:hidden;
+    transition:background 1.4s var(--ease),color 1.4s var(--ease);
+  }
+  body.night{
+    --bg1:#05070f;--bg2:#101a3d;--ink:#eceef7;--sub:#8f97b4;--accent:#e7c98d;
+    --dial:#0b1226;--rimA:#39415f;--rimB:#060a18;--tick:#57628a;--glass:rgba(255,255,255,.05);
+  }
+  body.day{
+    --bg1:#f7f3e9;--bg2:#e7ddc5;--ink:#23262f;--sub:#857c64;--accent:#a8802f;
+    --dial:#fcfaf4;--rimA:#ffffff;--rimB:#cfc4a8;--tick:#b7ab86;--glass:rgba(255,255,255,.5);
+  }
+  .halo{
+    position:fixed;left:50%;top:50%;width:70vmin;height:70vmin;transform:translate(-50%,-50%);
+    border-radius:50%;pointer-events:none;filter:blur(10px);
+    background:radial-gradient(circle,var(--glass) 0%,transparent 62%);
+    animation:breathe 7s var(--ease) infinite;
+  }
+  @keyframes breathe{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.85}50%{transform:translate(-50%,-50%) scale(1.06);opacity:1}}
+  .stage{width:min(92vw,430px);text-align:center;position:relative;z-index:1}
+  .brand{font-size:11px;letter-spacing:.55em;color:var(--sub);text-transform:uppercase;margin-bottom:22px}
+  .dial-wrap{position:relative;width:min(78vw,330px);margin:0 auto;filter:drop-shadow(0 24px 44px rgba(0,0,0,.35))}
+  svg{display:block;width:100%;height:auto}
+  #face{fill:var(--dial);transition:fill 1.4s var(--ease)}
+  #rimA{stroke:var(--rimA)}#rimB{stroke:var(--rimB)}
+  .tk{stroke:var(--tick);stroke-width:1;animation:tickGlow 4.2s ease-in-out infinite}
+  .tkM{stroke:var(--accent);stroke-width:2.4;stroke-linecap:round}
+  @keyframes tickGlow{0%,100%{opacity:.55}50%{opacity:1}}
+  #num{fill:var(--ink);font-size:13px;font-weight:600;letter-spacing:.08em;transition:fill 1.4s var(--ease)}
+  .hand{stroke-linecap:round}
+  #hh{stroke:var(--ink);stroke-width:5.5;filter:drop-shadow(0 2px 3px rgba(0,0,0,.35))}
+  #mh{stroke:var(--ink);stroke-width:3.4;filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+  #sh{stroke:var(--accent);stroke-width:1.6}
+  .capA{fill:var(--accent)}.capB{fill:var(--dial)}
+  .glass{fill:url(#glassGrad);pointer-events:none}
+  .digital{margin-top:26px}
+  #time{font-size:clamp(34px,9vw,46px);font-weight:200;letter-spacing:.14em;font-variant-numeric:tabular-nums}
+  #sec{color:var(--accent);font-weight:400}
+  .meta{display:flex;justify-content:center;gap:14px;margin-top:10px;font-size:12px;color:var(--sub);letter-spacing:.18em}
+  .mode{
+    cursor:pointer;user-select:none;border:1px solid var(--tick);border-radius:99px;
+    padding:3px 12px;letter-spacing:.12em;transition:all .5s var(--ease);
+  }
+  .mode:hover{border-color:var(--accent);color:var(--accent)}
+  .pulse{position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px;border-radius:50%;background:var(--accent);opacity:0;pointer-events:none}
+  .pulse.on{animation:ping 1s var(--ease)}
+  @keyframes ping{0%{opacity:.9;box-shadow:0 0 0 0 var(--accent)}100%{opacity:0;box-shadow:0 0 0 60px transparent}}
+</style>
+</head>
+<body class="night">
+  <div class="halo"></div>
+  <main class="stage">
+    <p class="brand">Aura · Observatory</p>
+    <div class="dial-wrap">
+      <svg viewBox="0 0 200 200" aria-label="模拟时钟">
+        <defs>
+          <radialGradient id="glassGrad" cx="34%" cy="28%" r="80%">
+            <stop offset="0%" stop-color="#fff" stop-opacity=".16"/>
+            <stop offset="42%" stop-color="#fff" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle id="rimB" cx="100" cy="100" r="99" fill="none" stroke-width="2"/>
+        <circle id="rimA" cx="100" cy="100" r="96" fill="none" stroke-width="1.2" opacity=".8"/>
+        <circle id="face" cx="100" cy="100" r="94"/>
+        <g id="ticks"></g>
+        <g id="num">
+          <text x="100" y="27" text-anchor="middle">12</text>
+          <text x="175" y="105" text-anchor="middle">3</text>
+          <text x="100" y="181" text-anchor="middle">6</text>
+          <text x="25" y="105" text-anchor="middle">9</text>
+        </g>
+        <g id="hh" class="hand"><line x1="100" y1="106" x2="100" y2="55"/></g>
+        <g id="mh" class="hand"><line x1="100" y1="108" x2="100" y2="34"/></g>
+        <g id="sh" class="hand"><line x1="100" y1="118" x2="100" y2="24"/><circle class="capA" cx="100" cy="112" r="3" stroke="none"/></g>
+        <circle class="capA" cx="100" cy="100" r="4.6"/>
+        <circle class="capB" cx="100" cy="100" r="1.8"/>
+        <circle class="glass" cx="100" cy="100" r="94"/>
+      </svg>
+      <div class="pulse" id="pulse"></div>
+    </div>
+    <section class="digital">
+      <p id="time">00:00<span id="sec">:00</span></p>
+      <p class="meta"><span id="date">—</span><span class="mode" id="mode">夜间</span></p>
+    </section>
+  </main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const NS = "http://www.w3.org/2000/svg";
+  // 生成 60 格刻度：5 的倍数为主刻度（金色），其余为呼吸次刻度
+  const ticks = $("ticks");
+  for (let i = 0; i < 60; i++) {
+    const major = i % 5 === 0, a = (i * 6 * Math.PI) / 180, r1 = major ? 80 : 85, r2 = 90;
+    const l = document.createElementNS(NS, "line");
+    l.setAttribute("x1", (100 + r1 * Math.sin(a)).toFixed(2));
+    l.setAttribute("y1", (100 - r1 * Math.cos(a)).toFixed(2));
+    l.setAttribute("x2", (100 + r2 * Math.sin(a)).toFixed(2));
+    l.setAttribute("y2", (100 - r2 * Math.cos(a)).toFixed(2));
+    l.setAttribute("class", major ? "tkM" : "tk");
+    l.style.animationDelay = (i * 0.07).toFixed(2) + "s";
+    ticks.appendChild(l);
+  }
+  const pad = (n) => String(n).padStart(2, "0");
+  // rAF 驱动扫秒（非跳秒），指针仅更新 transform，性能稳定
+  function frame() {
+    const d = new Date(), s = d.getSeconds() + d.getMilliseconds() / 1000;
+    const m = d.getMinutes() + s / 60, h = (d.getHours() % 12) + m / 60;
+    $("hh").setAttribute("transform", "rotate(" + (h * 30).toFixed(2) + " 100 100)");
+    $("mh").setAttribute("transform", "rotate(" + (m * 6).toFixed(2) + " 100 100)");
+    $("sh").setAttribute("transform", "rotate(" + (s * 6).toFixed(2) + " 100 100)");
+    $("time").firstChild.textContent = pad(d.getHours()) + ":" + pad(d.getMinutes());
+    $("sec").textContent = ":" + pad(d.getSeconds());
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  // 昼夜主题：6-18 点日间，其余夜间；点击徽章可手动切换
+  let override = null;
+  function applyTheme() {
+    const auto = new Date().getHours() >= 6 && new Date().getHours() < 18;
+    const day = override === null ? auto : override;
+    document.body.classList.toggle("day", day);
+    document.body.classList.toggle("night", !day);
+    $("mode").textContent = day ? "日间" : "夜间";
+    const d = new Date(), wk = "日一二三四五六"[d.getDay()];
+    $("date").textContent = d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日 · 周" + wk;
+  }
+  $("mode").addEventListener("click", () => {
+    const auto = new Date().getHours() >= 6 && new Date().getHours() < 18;
+    override = !(override === null ? auto : override);
+    applyTheme();
+    const p = $("pulse"); p.classList.remove("on"); void p.offsetWidth; p.classList.add("on");
+  });
+  applyTheme();
+  setInterval(applyTheme, 30000);
+</script>
+</body>
+</html>

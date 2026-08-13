@@ -34,21 +34,21 @@
     "updatedAt": "2026-07-09T23:43:24.121Z"
   },
   {
-    "id": "clock:grok-4.5",
+    "id": "clock:grok-4.6",
     "theme": "clock",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/clock/grok-4.5/",
-    "publicPath": "/submissions/clock/grok-4.5/index.html",
+    "path": "/submissions/clock/grok-4.6/",
+    "publicPath": "/submissions/clock/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 101,
-    "linesCss": 46,
-    "linesJs": 27,
-    "sizeBytes": 4742,
+    "linesTotal": 116,
+    "linesCss": 41,
+    "linesJs": 43,
+    "sizeBytes": 6729,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:30:26.888Z"
+    "updatedAt": "2026-08-13T10:09:00.039Z"
   },
   {
     "id": "clock:kimi-k3",
@@ -289,6 +289,23 @@
     "updatedAt": "2026-05-20T00:00:26.623Z"
   },
   {
+    "id": "clock:qwen3.8-max-new",
+    "theme": "clock",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/clock/qwen3.8-max-new/",
+    "publicPath": "/submissions/clock/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 150,
+    "linesCss": 53,
+    "linesJs": 47,
+    "sizeBytes": 7720,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T12:54:53.067Z"
+  },
+  {
     "id": "clock:qwen3.8-max",
     "theme": "clock",
     "model": "qwen3.8-max",
@@ -459,21 +476,21 @@
     "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
-    "id": "clock:deepseek-v4-pro",
+    "id": "clock:deepseek-v4-pro-GA",
     "theme": "clock",
-    "model": "deepseek-v4-pro",
+    "model": "deepseek-v4-pro-GA",
     "filename": "index.html",
-    "path": "/submissions/clock/deepseek-v4-pro/",
-    "publicPath": "/submissions/clock/deepseek-v4-pro/index.html",
+    "path": "/submissions/clock/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/clock/deepseek-v4-pro-GA/index.html",
     "renderKind": "html",
-    "linesTotal": 172,
-    "linesCss": 97,
-    "linesJs": 47,
-    "sizeBytes": 5290,
+    "linesTotal": 112,
+    "linesCss": 30,
+    "linesJs": 28,
+    "sizeBytes": 5798,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-20T00:00:26.623Z"
+    "updatedAt": "2026-08-13T12:33:39.600Z"
   },
   {
     "id": "clock:deepseek-v4-flash",
@@ -576,6 +593,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.623Z"
+  },
+  {
+    "id": "clock:grok-4.5",
+    "theme": "clock",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/clock/grok-4.5/",
+    "publicPath": "/submissions/clock/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 101,
+    "linesCss": 46,
+    "linesJs": 27,
+    "sizeBytes": 4742,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "clock:grok-4.3",
@@ -731,21 +765,21 @@
     "updatedAt": "2026-07-09T23:28:21.063Z"
   },
   {
-    "id": "recorder:grok-4.5",
+    "id": "recorder:grok-4.6",
     "theme": "recorder",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/recorder/grok-4.5/",
-    "publicPath": "/submissions/recorder/grok-4.5/index.html",
+    "path": "/submissions/recorder/grok-4.6/",
+    "publicPath": "/submissions/recorder/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 146,
-    "linesCss": 61,
-    "linesJs": 51,
-    "sizeBytes": 6878,
+    "linesTotal": 105,
+    "linesCss": 31,
+    "linesJs": 42,
+    "sizeBytes": 6623,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:30:26.888Z"
+    "updatedAt": "2026-08-13T10:10:22.072Z"
   },
   {
     "id": "recorder:kimi-k3",
@@ -986,6 +1020,23 @@
     "updatedAt": "2026-05-20T00:00:26.625Z"
   },
   {
+    "id": "recorder:qwen3.8-max-new",
+    "theme": "recorder",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/recorder/qwen3.8-max-new/",
+    "publicPath": "/submissions/recorder/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 154,
+    "linesCss": 59,
+    "linesJs": 55,
+    "sizeBytes": 9326,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T12:55:50.681Z"
+  },
+  {
     "id": "recorder:qwen3.8-max",
     "theme": "recorder",
     "model": "qwen3.8-max",
@@ -1156,21 +1207,21 @@
     "updatedAt": "2026-05-20T00:00:26.627Z"
   },
   {
-    "id": "recorder:deepseek-v4-pro",
+    "id": "recorder:deepseek-v4-pro-GA",
     "theme": "recorder",
-    "model": "deepseek-v4-pro",
+    "model": "deepseek-v4-pro-GA",
     "filename": "index.html",
-    "path": "/submissions/recorder/deepseek-v4-pro/",
-    "publicPath": "/submissions/recorder/deepseek-v4-pro/index.html",
+    "path": "/submissions/recorder/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/recorder/deepseek-v4-pro-GA/index.html",
     "renderKind": "html",
-    "linesTotal": 224,
-    "linesCss": 94,
-    "linesJs": 88,
-    "sizeBytes": 7682,
-    "withinLineLimit": false,
+    "linesTotal": 146,
+    "linesCss": 56,
+    "linesJs": 56,
+    "sizeBytes": 7835,
+    "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-20T00:00:26.625Z"
+    "updatedAt": "2026-08-13T12:50:08.937Z"
   },
   {
     "id": "recorder:deepseek-v4-flash",
@@ -1273,6 +1324,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.626Z"
+  },
+  {
+    "id": "recorder:grok-4.5",
+    "theme": "recorder",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/recorder/grok-4.5/",
+    "publicPath": "/submissions/recorder/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 146,
+    "linesCss": 61,
+    "linesJs": 51,
+    "sizeBytes": 6878,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "recorder:grok-4.3",
@@ -1428,21 +1496,21 @@
     "updatedAt": "2026-07-10T00:03:55.815Z"
   },
   {
-    "id": "weather-card:grok-4.5",
+    "id": "weather-card:grok-4.6",
     "theme": "weather-card",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/weather-card/grok-4.5/",
-    "publicPath": "/submissions/weather-card/grok-4.5/index.html",
+    "path": "/submissions/weather-card/grok-4.6/",
+    "publicPath": "/submissions/weather-card/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 171,
-    "linesCss": 53,
-    "linesJs": 80,
-    "sizeBytes": 8369,
+    "linesTotal": 128,
+    "linesCss": 32,
+    "linesJs": 63,
+    "sizeBytes": 7298,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:30:26.888Z"
+    "updatedAt": "2026-08-13T10:10:22.070Z"
   },
   {
     "id": "weather-card:kimi-k3",
@@ -1683,6 +1751,23 @@
     "updatedAt": "2026-05-20T00:00:26.631Z"
   },
   {
+    "id": "weather-card:qwen3.8-max-new",
+    "theme": "weather-card",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/qwen3.8-max-new/",
+    "publicPath": "/submissions/weather-card/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 150,
+    "linesCss": 39,
+    "linesJs": 87,
+    "sizeBytes": 10377,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T12:57:19.714Z"
+  },
+  {
     "id": "weather-card:qwen3.8-max",
     "theme": "weather-card",
     "model": "qwen3.8-max",
@@ -1853,21 +1938,21 @@
     "updatedAt": "2026-05-20T00:00:26.633Z"
   },
   {
-    "id": "weather-card:deepseek-v4-pro",
+    "id": "weather-card:deepseek-v4-pro-GA",
     "theme": "weather-card",
-    "model": "deepseek-v4-pro",
+    "model": "deepseek-v4-pro-GA",
     "filename": "index.html",
-    "path": "/submissions/weather-card/deepseek-v4-pro/",
-    "publicPath": "/submissions/weather-card/deepseek-v4-pro/index.html",
+    "path": "/submissions/weather-card/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/weather-card/deepseek-v4-pro-GA/index.html",
     "renderKind": "html",
-    "linesTotal": 168,
-    "linesCss": 78,
-    "linesJs": 57,
-    "sizeBytes": 6364,
+    "linesTotal": 192,
+    "linesCss": 62,
+    "linesJs": 88,
+    "sizeBytes": 10773,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-20T00:00:26.630Z"
+    "updatedAt": "2026-08-13T12:35:25.808Z"
   },
   {
     "id": "weather-card:deepseek-v4-flash",
@@ -1970,6 +2055,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.631Z"
+  },
+  {
+    "id": "weather-card:grok-4.5",
+    "theme": "weather-card",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/grok-4.5/",
+    "publicPath": "/submissions/weather-card/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 171,
+    "linesCss": 53,
+    "linesJs": 80,
+    "sizeBytes": 8369,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "weather-card:grok-4.3",
@@ -2125,21 +2227,21 @@
     "updatedAt": "2026-07-09T23:28:21.063Z"
   },
   {
-    "id": "stock-panel:grok-4.5",
+    "id": "stock-panel:grok-4.6",
     "theme": "stock-panel",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/stock-panel/grok-4.5/",
-    "publicPath": "/submissions/stock-panel/grok-4.5/index.html",
+    "path": "/submissions/stock-panel/grok-4.6/",
+    "publicPath": "/submissions/stock-panel/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 103,
-    "linesCss": 38,
-    "linesJs": 41,
-    "sizeBytes": 4547,
+    "linesTotal": 80,
+    "linesCss": 20,
+    "linesJs": 34,
+    "sizeBytes": 4654,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:30:26.888Z"
+    "updatedAt": "2026-08-13T10:10:22.075Z"
   },
   {
     "id": "stock-panel:kimi-k3",
@@ -2380,6 +2482,23 @@
     "updatedAt": "2026-05-20T00:00:26.628Z"
   },
   {
+    "id": "stock-panel:qwen3.8-max-new",
+    "theme": "stock-panel",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/qwen3.8-max-new/",
+    "publicPath": "/submissions/stock-panel/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 131,
+    "linesCss": 42,
+    "linesJs": 67,
+    "sizeBytes": 8025,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T12:58:18.136Z"
+  },
+  {
     "id": "stock-panel:qwen3.8-max",
     "theme": "stock-panel",
     "model": "qwen3.8-max",
@@ -2550,21 +2669,21 @@
     "updatedAt": "2026-05-20T00:00:26.630Z"
   },
   {
-    "id": "stock-panel:deepseek-v4-pro",
+    "id": "stock-panel:deepseek-v4-pro-GA",
     "theme": "stock-panel",
-    "model": "deepseek-v4-pro",
+    "model": "deepseek-v4-pro-GA",
     "filename": "index.html",
-    "path": "/submissions/stock-panel/deepseek-v4-pro/",
-    "publicPath": "/submissions/stock-panel/deepseek-v4-pro/index.html",
+    "path": "/submissions/stock-panel/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/stock-panel/deepseek-v4-pro-GA/index.html",
     "renderKind": "html",
-    "linesTotal": 168,
-    "linesCss": 72,
-    "linesJs": 72,
-    "sizeBytes": 6068,
+    "linesTotal": 152,
+    "linesCss": 39,
+    "linesJs": 78,
+    "sizeBytes": 8464,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-20T00:00:26.628Z"
+    "updatedAt": "2026-08-13T12:36:12.186Z"
   },
   {
     "id": "stock-panel:deepseek-v4-flash",
@@ -2667,6 +2786,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.628Z"
+  },
+  {
+    "id": "stock-panel:grok-4.5",
+    "theme": "stock-panel",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/grok-4.5/",
+    "publicPath": "/submissions/stock-panel/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 103,
+    "linesCss": 38,
+    "linesJs": 41,
+    "sizeBytes": 4547,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:30:26.888Z"
   },
   {
     "id": "stock-panel:grok-4.3",
@@ -2822,21 +2958,21 @@
     "updatedAt": "2026-07-10T00:03:39.966Z"
   },
   {
-    "id": "click-fireworks:grok-4.5",
+    "id": "click-fireworks:grok-4.6",
     "theme": "click-fireworks",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/click-fireworks/grok-4.5/",
-    "publicPath": "/submissions/click-fireworks/grok-4.5/index.html",
+    "path": "/submissions/click-fireworks/grok-4.6/",
+    "publicPath": "/submissions/click-fireworks/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 114,
-    "linesCss": 23,
-    "linesJs": 73,
-    "sizeBytes": 4379,
+    "linesTotal": 93,
+    "linesCss": 7,
+    "linesJs": 69,
+    "sizeBytes": 4565,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:31:07.719Z"
+    "updatedAt": "2026-08-13T10:11:30.721Z"
   },
   {
     "id": "click-fireworks:kimi-k3",
@@ -3077,6 +3213,23 @@
     "updatedAt": "2026-05-20T00:00:26.620Z"
   },
   {
+    "id": "click-fireworks:qwen3.8-max-new",
+    "theme": "click-fireworks",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/qwen3.8-max-new/",
+    "publicPath": "/submissions/click-fireworks/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 138,
+    "linesCss": 14,
+    "linesJs": 105,
+    "sizeBytes": 7610,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T12:59:09.891Z"
+  },
+  {
     "id": "click-fireworks:qwen3.8-max",
     "theme": "click-fireworks",
     "model": "qwen3.8-max",
@@ -3247,21 +3400,21 @@
     "updatedAt": "2026-05-20T00:00:26.622Z"
   },
   {
-    "id": "click-fireworks:deepseek-v4-pro",
+    "id": "click-fireworks:deepseek-v4-pro-GA",
     "theme": "click-fireworks",
-    "model": "deepseek-v4-pro",
+    "model": "deepseek-v4-pro-GA",
     "filename": "index.html",
-    "path": "/submissions/click-fireworks/deepseek-v4-pro/",
-    "publicPath": "/submissions/click-fireworks/deepseek-v4-pro/index.html",
+    "path": "/submissions/click-fireworks/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/click-fireworks/deepseek-v4-pro-GA/index.html",
     "renderKind": "html",
-    "linesTotal": 170,
-    "linesCss": 21,
-    "linesJs": 131,
-    "sizeBytes": 4840,
+    "linesTotal": 108,
+    "linesCss": 7,
+    "linesJs": 84,
+    "sizeBytes": 4515,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-20T00:00:26.620Z"
+    "updatedAt": "2026-08-13T12:36:43.799Z"
   },
   {
     "id": "click-fireworks:deepseek-v4-flash",
@@ -3364,6 +3517,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-05-20T00:00:26.620Z"
+  },
+  {
+    "id": "click-fireworks:grok-4.5",
+    "theme": "click-fireworks",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/grok-4.5/",
+    "publicPath": "/submissions/click-fireworks/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 114,
+    "linesCss": 23,
+    "linesJs": 73,
+    "sizeBytes": 4379,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:31:07.719Z"
   },
   {
     "id": "click-fireworks:grok-4.3",
@@ -3519,21 +3689,21 @@
     "updatedAt": "2026-07-09T23:28:21.064Z"
   },
   {
-    "id": "neon-countdown:grok-4.5",
+    "id": "neon-countdown:grok-4.6",
     "theme": "neon-countdown",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/neon-countdown/grok-4.5/",
-    "publicPath": "/submissions/neon-countdown/grok-4.5/index.html",
+    "path": "/submissions/neon-countdown/grok-4.6/",
+    "publicPath": "/submissions/neon-countdown/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 124,
-    "linesCss": 53,
-    "linesJs": 36,
-    "sizeBytes": 5260,
+    "linesTotal": 92,
+    "linesCss": 26,
+    "linesJs": 41,
+    "sizeBytes": 4770,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:31:07.719Z"
+    "updatedAt": "2026-08-13T10:11:30.722Z"
   },
   {
     "id": "neon-countdown:kimi-k3",
@@ -3587,6 +3757,23 @@
     "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
+    "id": "neon-countdown:qwen3.8-max-new",
+    "theme": "neon-countdown",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/qwen3.8-max-new/",
+    "publicPath": "/submissions/neon-countdown/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 161,
+    "linesCss": 48,
+    "linesJs": 79,
+    "sizeBytes": 8923,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T12:59:53.321Z"
+  },
+  {
     "id": "neon-countdown:qwen3.8-max",
     "theme": "neon-countdown",
     "model": "qwen3.8-max",
@@ -3638,6 +3825,23 @@
     "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
+    "id": "neon-countdown:deepseek-v4-pro-GA",
+    "theme": "neon-countdown",
+    "model": "deepseek-v4-pro-GA",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/neon-countdown/deepseek-v4-pro-GA/index.html",
+    "renderKind": "html",
+    "linesTotal": 125,
+    "linesCss": 45,
+    "linesJs": 49,
+    "sizeBytes": 6388,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T12:37:23.125Z"
+  },
+  {
     "id": "neon-countdown:deepseek-v4-flash",
     "theme": "neon-countdown",
     "model": "deepseek-v4-flash",
@@ -3687,6 +3891,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-17T04:01:15.968Z"
+  },
+  {
+    "id": "neon-countdown:grok-4.5",
+    "theme": "neon-countdown",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/grok-4.5/",
+    "publicPath": "/submissions/neon-countdown/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 124,
+    "linesCss": 53,
+    "linesJs": 36,
+    "sizeBytes": 5260,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:31:07.719Z"
   },
   {
     "id": "neon-countdown:grok-4.3",
@@ -3757,21 +3978,21 @@
     "updatedAt": "2026-07-09T23:28:21.064Z"
   },
   {
-    "id": "particle-gravity:grok-4.5",
+    "id": "particle-gravity:grok-4.6",
     "theme": "particle-gravity",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/particle-gravity/grok-4.5/",
-    "publicPath": "/submissions/particle-gravity/grok-4.5/index.html",
+    "path": "/submissions/particle-gravity/grok-4.6/",
+    "publicPath": "/submissions/particle-gravity/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 143,
-    "linesCss": 18,
-    "linesJs": 102,
-    "sizeBytes": 5702,
+    "linesTotal": 75,
+    "linesCss": 5,
+    "linesJs": 53,
+    "sizeBytes": 3690,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:31:07.719Z"
+    "updatedAt": "2026-08-13T10:11:30.722Z"
   },
   {
     "id": "particle-gravity:kimi-k3",
@@ -3825,6 +4046,23 @@
     "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
+    "id": "particle-gravity:qwen3.8-max-new",
+    "theme": "particle-gravity",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/qwen3.8-max-new/",
+    "publicPath": "/submissions/particle-gravity/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 149,
+    "linesCss": 24,
+    "linesJs": 100,
+    "sizeBytes": 8073,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T13:01:09.855Z"
+  },
+  {
     "id": "particle-gravity:qwen3.8-max",
     "theme": "particle-gravity",
     "model": "qwen3.8-max",
@@ -3876,6 +4114,23 @@
     "updatedAt": "2026-06-08T06:30:31.827Z"
   },
   {
+    "id": "particle-gravity:deepseek-v4-pro-GA",
+    "theme": "particle-gravity",
+    "model": "deepseek-v4-pro-GA",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/particle-gravity/deepseek-v4-pro-GA/index.html",
+    "renderKind": "html",
+    "linesTotal": 137,
+    "linesCss": 11,
+    "linesJs": 103,
+    "sizeBytes": 5390,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T12:38:02.687Z"
+  },
+  {
     "id": "particle-gravity:deepseek-v4-flash",
     "theme": "particle-gravity",
     "model": "deepseek-v4-flash",
@@ -3925,6 +4180,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-06-17T04:07:32.369Z"
+  },
+  {
+    "id": "particle-gravity:grok-4.5",
+    "theme": "particle-gravity",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/grok-4.5/",
+    "publicPath": "/submissions/particle-gravity/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 143,
+    "linesCss": 18,
+    "linesJs": 102,
+    "sizeBytes": 5702,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:31:07.719Z"
   },
   {
     "id": "particle-gravity:grok-4.3",
@@ -3995,21 +4267,21 @@
     "updatedAt": "2026-07-10T00:06:17.810Z"
   },
   {
-    "id": "cheetah-trophy-run:grok-4.5",
+    "id": "cheetah-trophy-run:grok-4.6",
     "theme": "cheetah-trophy-run",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/cheetah-trophy-run/grok-4.5/",
-    "publicPath": "/submissions/cheetah-trophy-run/grok-4.5/index.html",
+    "path": "/submissions/cheetah-trophy-run/grok-4.6/",
+    "publicPath": "/submissions/cheetah-trophy-run/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 271,
-    "linesCss": 19,
+    "linesTotal": 217,
+    "linesCss": 7,
     "linesJs": 0,
-    "sizeBytes": 15329,
+    "sizeBytes": 13288,
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:32:24.272Z"
+    "updatedAt": "2026-08-13T10:12:41.853Z"
   },
   {
     "id": "cheetah-trophy-run:kimi-k3",
@@ -4063,6 +4335,23 @@
     "updatedAt": "2026-06-08T06:30:31.824Z"
   },
   {
+    "id": "cheetah-trophy-run:qwen3.8-max-new",
+    "theme": "cheetah-trophy-run",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/qwen3.8-max-new/",
+    "publicPath": "/submissions/cheetah-trophy-run/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 403,
+    "linesCss": 29,
+    "linesJs": 53,
+    "sizeBytes": 22664,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T13:03:54.890Z"
+  },
+  {
     "id": "cheetah-trophy-run:qwen3.8-max",
     "theme": "cheetah-trophy-run",
     "model": "qwen3.8-max",
@@ -4114,6 +4403,23 @@
     "updatedAt": "2026-06-08T06:30:31.825Z"
   },
   {
+    "id": "cheetah-trophy-run:deepseek-v4-pro-GA",
+    "theme": "cheetah-trophy-run",
+    "model": "deepseek-v4-pro-GA",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/cheetah-trophy-run/deepseek-v4-pro-GA/index.html",
+    "renderKind": "html",
+    "linesTotal": 295,
+    "linesCss": 12,
+    "linesJs": 38,
+    "sizeBytes": 18903,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T12:53:12.614Z"
+  },
+  {
     "id": "cheetah-trophy-run:deepseek-v4-flash",
     "theme": "cheetah-trophy-run",
     "model": "deepseek-v4-flash",
@@ -4163,6 +4469,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-06-17T04:11:37.349Z"
+  },
+  {
+    "id": "cheetah-trophy-run:grok-4.5",
+    "theme": "cheetah-trophy-run",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/grok-4.5/",
+    "publicPath": "/submissions/cheetah-trophy-run/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 271,
+    "linesCss": 19,
+    "linesJs": 0,
+    "sizeBytes": 15329,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:32:24.272Z"
   },
   {
     "id": "cheetah-trophy-run:grok-4.3",
@@ -4233,21 +4556,21 @@
     "updatedAt": "2026-07-09T23:38:15.733Z"
   },
   {
-    "id": "dslr-camera:grok-4.5",
+    "id": "dslr-camera:grok-4.6",
     "theme": "dslr-camera",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "index.html",
-    "path": "/submissions/dslr-camera/grok-4.5/",
-    "publicPath": "/submissions/dslr-camera/grok-4.5/index.html",
+    "path": "/submissions/dslr-camera/grok-4.6/",
+    "publicPath": "/submissions/dslr-camera/grok-4.6/index.html",
     "renderKind": "html",
-    "linesTotal": 233,
-    "linesCss": 15,
-    "linesJs": 8,
-    "sizeBytes": 11196,
+    "linesTotal": 170,
+    "linesCss": 9,
+    "linesJs": 9,
+    "sizeBytes": 8861,
     "withinLineLimit": true,
     "unlimitedLines": true,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:32:24.272Z"
+    "updatedAt": "2026-08-13T10:13:38.628Z"
   },
   {
     "id": "dslr-camera:kimi-k3",
@@ -4301,6 +4624,23 @@
     "updatedAt": "2026-06-08T06:30:31.826Z"
   },
   {
+    "id": "dslr-camera:qwen3.8-max-new",
+    "theme": "dslr-camera",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/qwen3.8-max-new/",
+    "publicPath": "/submissions/dslr-camera/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 348,
+    "linesCss": 24,
+    "linesJs": 100,
+    "sizeBytes": 18911,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T13:08:08.627Z"
+  },
+  {
     "id": "dslr-camera:qwen3.8-max",
     "theme": "dslr-camera",
     "model": "qwen3.8-max",
@@ -4352,6 +4692,23 @@
     "updatedAt": "2026-06-08T06:30:31.826Z"
   },
   {
+    "id": "dslr-camera:deepseek-v4-pro-GA",
+    "theme": "dslr-camera",
+    "model": "deepseek-v4-pro-GA",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/dslr-camera/deepseek-v4-pro-GA/index.html",
+    "renderKind": "html",
+    "linesTotal": 309,
+    "linesCss": 9,
+    "linesJs": 8,
+    "sizeBytes": 18457,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T12:53:18.053Z"
+  },
+  {
     "id": "dslr-camera:deepseek-v4-flash",
     "theme": "dslr-camera",
     "model": "deepseek-v4-flash",
@@ -4401,6 +4758,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-06-17T04:12:04.985Z"
+  },
+  {
+    "id": "dslr-camera:grok-4.5",
+    "theme": "dslr-camera",
+    "model": "grok-4.5",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/grok-4.5/",
+    "publicPath": "/submissions/dslr-camera/grok-4.5/index.html",
+    "renderKind": "html",
+    "linesTotal": 233,
+    "linesCss": 15,
+    "linesJs": 8,
+    "sizeBytes": 11196,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:32:24.272Z"
   },
   {
     "id": "dslr-camera:grok-4.3",
@@ -4471,6 +4845,23 @@
     "updatedAt": "2026-07-18T02:54:26.433Z"
   },
   {
+    "id": "schwarzschild-black-hole:grok-4.6",
+    "theme": "schwarzschild-black-hole",
+    "model": "grok-4.6",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/grok-4.6/",
+    "publicPath": "/submissions/schwarzschild-black-hole/grok-4.6/index.html",
+    "renderKind": "html",
+    "linesTotal": 439,
+    "linesCss": 24,
+    "linesJs": 384,
+    "sizeBytes": 16250,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T10:01:47.159Z"
+  },
+  {
     "id": "schwarzschild-black-hole:kimi-k3",
     "theme": "schwarzschild-black-hole",
     "model": "kimi-k3",
@@ -4486,6 +4877,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-07-18T12:11:31.756Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:qwen3.8-max-new",
+    "theme": "schwarzschild-black-hole",
+    "model": "qwen3.8-max-new",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/qwen3.8-max-new/",
+    "publicPath": "/submissions/schwarzschild-black-hole/qwen3.8-max-new/index.html",
+    "renderKind": "html",
+    "linesTotal": 586,
+    "linesCss": 76,
+    "linesJs": 455,
+    "sizeBytes": 26734,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T13:12:49.407Z"
   },
   {
     "id": "schwarzschild-black-hole:qwen3.8-max",
@@ -4520,6 +4928,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-07-20T13:58:32.796Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:deepseek-v4-pro-GA",
+    "theme": "schwarzschild-black-hole",
+    "model": "deepseek-v4-pro-GA",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/deepseek-v4-pro-GA/",
+    "publicPath": "/submissions/schwarzschild-black-hole/deepseek-v4-pro-GA/index.html",
+    "renderKind": "html",
+    "linesTotal": 516,
+    "linesCss": 39,
+    "linesJs": 438,
+    "sizeBytes": 21511,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-13T13:26:51.434Z"
   },
   {
     "id": "schwarzschild-black-hole:deepseek-v4-flash",
@@ -4594,23 +5019,23 @@
     "answerText": "结论：开车过去。\n理由1：洗车的目标是清洗车辆，车必须到店，50 米距离不会改变这一前提。\n理由2：先步行过去还要再返回取车，会多走一趟并浪费时间。\n理由3：出发前可先确认店内是否排队，避免车辆堵在门口等待。\n建议：电话确认有空位后，直接把车缓慢开过去。"
   },
   {
-    "id": "carwash-decision:grok-4.5",
+    "id": "carwash-decision:grok-4.6",
     "theme": "carwash-decision",
-    "model": "grok-4.5",
+    "model": "grok-4.6",
     "filename": "response.md",
-    "path": "/submissions/carwash-decision/grok-4.5/response.md",
-    "publicPath": "/submissions/carwash-decision/grok-4.5/response.md",
+    "path": "/submissions/carwash-decision/grok-4.6/response.md",
+    "publicPath": "/submissions/carwash-decision/grok-4.6/response.md",
     "renderKind": "text",
-    "linesTotal": 12,
+    "linesTotal": 7,
     "linesCss": 0,
     "linesJs": 0,
-    "sizeBytes": 694,
+    "sizeBytes": 495,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-07-08T23:32:24.272Z",
+    "updatedAt": "2026-08-13T09:09:35.942Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
-    "answerText": "结论：走过去\n\n理由1：距离只有 50 米，正常步行大约 40–60 秒就能到，几乎不耗时，没必要为了这点路启动车辆。\n\n理由2：开车过去还要点火、挪车、找停车位、熄火下车，整套动作往往比步行更久，还多耗油、多磨损。\n\n理由3：洗车店门口车位通常紧张，50 米内步行最灵活，还能避免进出场排队或临时违停的麻烦。\n\n理由4：步行零排放、零停车成本，还能顺路活动一下身体，对短距离出行更合理。\n\n建议：穿双方便走路的鞋，带好车钥匙和支付方式，直接步行前往；若提着大件洗车用品或天气极端恶劣，再考虑开车。"
+    "answerText": "走过去\n结论：走过去。\n理由1：洗车店距家 50 米，正常步行大约 40 到 60 秒，比任何开车流程都短。\n理由2：开车还要点火、驶出、到店门口再找位置停妥，光是起步停车就超过步行时间，还多耗油、多占一个车位。\n理由3：这么短的距离开车，进出小区或路边更容易剐蹭，也不环保；人到店里反而更灵活。\n建议：换双不怕溅水的鞋走过去，到店直接排队，洗完再走回家。"
   },
   {
     "id": "carwash-decision:kimi-k3",
@@ -4879,6 +5304,25 @@
     "answerText": "结论：开车过去\n理由1：距离虽近但洗车目标是清洗车辆，走过去无法将车辆送达洗车位。\n理由2：洗车通常包含内饰清理，开车过去方便店员直接上车操作。\n理由3：50米距离极短，开车仅需不到1分钟，相比步行后再折返回家取车更高效。\n建议：直接发动汽车，一分钟内即可到达洗车店开始服务。"
   },
   {
+    "id": "carwash-decision:qwen3.8-max-new",
+    "theme": "carwash-decision",
+    "model": "qwen3.8-max-new",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/qwen3.8-max-new/response.md",
+    "publicPath": "/submissions/carwash-decision/qwen3.8-max-new/response.md",
+    "renderKind": "text",
+    "linesTotal": 7,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 818,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-02T13:13:15.449Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去。\n理由1：洗的对象是车而不是人，只有把车开到店里才能洗成；空手走过去，店里没有可洗的车，目的直接落空——这是由洗车这件事的性质决定的，与距离远近无关。\n理由2：50 米极近，开车十几秒就到，油耗与时间成本几乎为零，也不会遇到停车难的问题，开车没有任何额外代价。\n理由3：洗好后车停在店里，若当初走过去，取车时还得再走一趟，等于来回多跑一次；直接开过去一步到位。\n理由4：开车过去可以当场验收清洗质量，发现漏洗或水渍能立刻要求返工，避免走回家才发现没洗干净又折返。\n建议：直接把车开过去交钥匙，然后步行 50 米回家等候，取车时再溜达过去，全程最省力。"
+  },
+  {
     "id": "carwash-decision:qwen3.8-max",
     "theme": "carwash-decision",
     "model": "qwen3.8-max",
@@ -5069,23 +5513,23 @@
     "answerText": "结论：走过去\n\n理由1：距离仅50米，步行约1分钟，非常便捷，避免了寻找停车位和频繁启动车辆的麻烦。\n\n理由2：洗车后车辆表面湿润，若立即驾驶可能导致座椅潮湿，步行可以避免弄湿车内空间。\n\n理由3：环保节能，50米距离完全没必要用车代步，减少碳排放且有益健康。\n\n建议：携带抹布和零钱，步行到店时可顺手擦拭车身，提升洗车效果。"
   },
   {
-    "id": "carwash-decision:deepseek-v4-pro",
+    "id": "carwash-decision:deepseek-v4-pro-GA",
     "theme": "carwash-decision",
-    "model": "deepseek-v4-pro",
+    "model": "deepseek-v4-pro-GA",
     "filename": "response.md",
-    "path": "/submissions/carwash-decision/deepseek-v4-pro/response.md",
-    "publicPath": "/submissions/carwash-decision/deepseek-v4-pro/response.md",
+    "path": "/submissions/carwash-decision/deepseek-v4-pro-GA/response.md",
+    "publicPath": "/submissions/carwash-decision/deepseek-v4-pro-GA/response.md",
     "renderKind": "text",
-    "linesTotal": 10,
+    "linesTotal": 12,
     "linesCss": 0,
     "linesJs": 0,
-    "sizeBytes": 834,
+    "sizeBytes": 753,
     "withinLineLimit": true,
     "unlimitedLines": false,
     "usesBitmap": false,
-    "updatedAt": "2026-05-20T00:00:26.618Z",
+    "updatedAt": "2026-08-13T12:47:40.104Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
-    "answerText": "结论：走过去\n\n理由1：洗车店距你家仅50米，步行时间约1分钟，远比启动车辆、出库、找车位再入库的效率高。开车反而需要额外的发动、倒车、停车操作，对于50米距离来说得不偿失。\n\n理由2：洗车目的是让车变干净，如果洗完车再开50米回家，途中可能经过积水、扬尘或鸟粪区域，导致刚洗好的车身再次沾染污渍。走过去取车则避免了这一风险，洗完即净。\n\n理由3：大多数洗车店需要你把车留在店内排队或等待，如果你开车过去但前面有车在洗，你需要把车停在附近等待。50米距离走路过去可以先看排队情况再决定何时取车，灵活度更高。\n\n建议：直接步行前往洗车店，洗完后再把车开回家，既保持车身洁净又节省时间。"
+    "answerText": "结论：开车过去。\n\n理由1：洗车的对象是这辆车，车不到店就洗不了；走过去只解决了人到店的问题，车还停在家门口，等于白跑。\n\n理由2：50 米的距离对车来说完全在正常使用范围内，点火起步到店通常不到一分钟，不存在“路程太短没必要开”的成本问题。\n\n理由3：洗完车可以直接开回家或开去下一个目的地，一次到位；如果人走过去再回家取车，就多了一次折返和两次挪车。\n\n理由4：如果需要排队，车在场即可进入排队流程，人在车边或店内等都不影响；人车分离反而可能错过叫号。\n\n建议：直接开车过去，到店把车交给师傅，顺手收好车内贵重物品再走。"
   },
   {
     "id": "carwash-decision:deepseek-v4-flash",
@@ -5200,6 +5644,25 @@
     "updatedAt": "2026-05-20T00:00:26.618Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "结论：走过去\n\n理由1：距离仅 50 米，步行约 1 分钟，开车反而需要热车、系安全带、找停车位，耗时可能更长。\n理由2：洗车时车辆需要清洗外部，人下车等待更方便，步行到达刚好可以顺便活动身体。\n理由3：环保省油，短途启动对发动机磨损大，且燃油消耗不经济。\n理由4：避免开车后车身再次沾染路面灰尘或水渍，步行前往可保持刚洗完的干净状态。\n\n建议：穿双舒服的鞋，带把伞防晒或挡雨，轻松走过去顺便享受一下出门的小确幸。"
+  },
+  {
+    "id": "carwash-decision:grok-4.5",
+    "theme": "carwash-decision",
+    "model": "grok-4.5",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/grok-4.5/response.md",
+    "publicPath": "/submissions/carwash-decision/grok-4.5/response.md",
+    "renderKind": "text",
+    "linesTotal": 12,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 694,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-07-08T23:32:24.272Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：走过去\n\n理由1：距离只有 50 米，正常步行大约 40–60 秒就能到，几乎不耗时，没必要为了这点路启动车辆。\n\n理由2：开车过去还要点火、挪车、找停车位、熄火下车，整套动作往往比步行更久，还多耗油、多磨损。\n\n理由3：洗车店门口车位通常紧张，50 米内步行最灵活，还能避免进出场排队或临时违停的麻烦。\n\n理由4：步行零排放、零停车成本，还能顺路活动一下身体，对短距离出行更合理。\n\n建议：穿双方便走路的鞋，带好车钥匙和支付方式，直接步行前往；若提着大件洗车用品或天气极端恶劣，再考虑开车。"
   },
   {
     "id": "carwash-decision:grok-4.3",

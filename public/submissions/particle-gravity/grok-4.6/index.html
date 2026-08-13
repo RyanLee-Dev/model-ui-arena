@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>粒子引力场</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#05060b;color:#d7deef;font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif;overflow:hidden;touch-action:none}
+canvas{display:block;width:100%;height:100%}
+.hud{position:fixed;left:14px;right:14px;top:14px;display:flex;justify-content:space-between;gap:8px;pointer-events:none}
+.hud span{padding:8px 11px;border:1px solid #ffffff16;border-radius:999px;background:#0b0d14b3;backdrop-filter:blur(12px);font-size:10px;letter-spacing:.14em}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="hud"><span id="a">PARTICLES 0</span><span id="b">ENERGY 0</span><span id="c2">FPS -- · 吸引</span></div>
+<script>
+const cv=document.getElementById("c"),x=cv.getContext("2d");
+let W,H,dpr,mx,my,down=false,mode="pull",fps=60,frames=0,last=performance.now();
+const N=280,ps=[];
+function resize(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;x.setTransform(dpr,0,0,dpr,0,0);mx=W/2;my=H/2}
+addEventListener("resize",resize);resize();
+for(let i=0;i<N;i++){
+  const a=Math.random()*6.28,r=40+Math.random()*Math.min(W,H)*.42;
+  ps.push({x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,vx:-Math.sin(a)*(0.6+Math.random()),vy:Math.cos(a)*(0.6+Math.random()),z:.3+Math.random()});
+}
+function ptr(e){const t=e.touches?e.touches[0]:e;mx=t.clientX;my=t.clientY}
+addEventListener("pointermove",ptr,{passive:true});
+addEventListener("pointerdown",e=>{
+  down=true;ptr(e);mode=mode==="pull"?"shock":"pull";
+  if(mode==="shock")ps.forEach(p=>{const dx=p.x-mx,dy=p.y-my,d=Math.hypot(dx,dy)+10;p.vx+=dx/d*8.5;p.vy+=dy/d*8.5});
+},{passive:true});
+addEventListener("pointerup",()=>down=false);
+function grav(p,cx,cy,g){const dx=cx-p.x,dy=cy-p.y,d2=dx*dx+dy*dy+70;p.vx+=dx*g/d2;p.vy+=dy*g/d2}
+function step(now){
+  frames++;if(now-last>480){fps=Math.round(frames*1000/(now-last));frames=0;last=now}
+  x.fillStyle="rgba(5,6,11,.18)";x.fillRect(0,0,W,H);
+  const cx=W/2,cy=H/2,t=now/1000;
+  const well=x.createRadialGradient(cx,cy,2,cx,cy,90);
+  well.addColorStop(0,"rgba(255,236,196,.9)");well.addColorStop(.18,"rgba(196,165,116,.35)");well.addColorStop(1,"rgba(196,165,116,0)");
+  x.fillStyle=well;x.beginPath();x.arc(cx,cy,90,0,6.28);x.fill();
+  x.strokeStyle="rgba(196,165,116,.18)";x.lineWidth=1;
+  x.beginPath();x.ellipse(cx,cy,58+Math.sin(t)*4,22,t*.3,0,6.28);x.stroke();
+  x.beginPath();x.ellipse(cx,cy,86,30, -t*.2,0,6.28);x.stroke();
+  if(down&&mode==="pull"){
+    const g=x.createRadialGradient(mx,my,0,mx,my,70);
+    g.addColorStop(0,"rgba(140,190,255,.28)");g.addColorStop(1,"rgba(140,190,255,0)");
+    x.fillStyle=g;x.beginPath();x.arc(mx,my,70,0,6.28);x.fill();
+  }
+  let E=0;
+  x.globalCompositeOperation="lighter";
+  for(const p of ps){
+    grav(p,cx,cy,1.35);
+    if(down&&mode==="pull")grav(p,mx,my,2.8);
+    p.vx*=.991;p.vy*=.991;p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0||p.x>W)p.vx*=-1;if(p.y<0||p.y>H)p.vy*=-1;
+    E+=p.vx*p.vx+p.vy*p.vy;
+    const hue=p.z>.62?36:208;
+    x.fillStyle=`hsla(${hue},82%,${60+p.z*20}%,.9)`;
+    x.beginPath();x.arc(p.x,p.y,1.1+p.z*1.5,0,6.28);x.fill();
+    x.strokeStyle=`hsla(${hue},82%,80%,.22)`;
+    x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x-p.vx*3.2,p.y-p.vy*3.2);x.stroke();
+  }
+  x.globalCompositeOperation="source-over";
+  a.textContent="PARTICLES "+N;
+  b.textContent="ENERGY "+E.toFixed(1);
+  c2.textContent=`FPS ${fps} · ${mode==="pull"?"吸引":"冲击波"}`;
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>现场录音机</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(80% 50% at 50% 0,#1d2621,transparent 56%),#090c0b;font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif;color:#dce8df}
+.deck{width:min(390px,94vw);background:linear-gradient(180deg,#2c342f,#141917 46%,#101412);border:1px solid #465049;border-radius:32px;padding:20px 18px 16px;box-shadow:0 34px 80px #000b,inset 0 1px 0 #fff2}
+.top{display:flex;justify-content:space-between;align-items:center;font-size:10px;letter-spacing:.28em;color:#8a9b90}
+.live{display:flex;gap:8px;align-items:center;color:#ff8080;font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;background:#3a4741}
+.rec .dot{background:#ff3030;box-shadow:0 0 12px #ff3030;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:.2}}
+.lcd{margin:14px 0 12px;padding:14px 14px 12px;border-radius:18px;background:linear-gradient(#06140c,#0a1c12);border:1px solid #1a2e22;box-shadow:inset 0 0 30px #020805,0 1px 0 #fff1;color:#b9ffd2;text-shadow:0 0 16px #4dff9a55}
+.row{display:flex;justify-content:space-between;align-items:end}
+.time{font:500 46px/1 "DIN Alternate",ui-monospace,Menlo,monospace;letter-spacing:.08em}
+.vu{width:92px}
+.vu b{display:block;height:6px;border-radius:99px;background:#102018;margin-top:6px;overflow:hidden}
+.vu b i{display:block;height:100%;width:8%;background:linear-gradient(90deg,#3dff8a,#e8ff6a 70%,#ff5a3a);transition:width .12s}
+.meta{margin-top:8px;font-size:11px;opacity:.7}
+.stage{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:8px;align-items:center;margin:8px 0 6px}
+.reel{width:84px;height:84px;border-radius:50%;margin:0 auto;background:conic-gradient(from 18deg,#313934 0 12deg,#0c100f 0 46deg);border:7px solid #4c5751;box-shadow:inset 0 0 0 18px #141918,0 10px 18px #0005}
+.reel:after{content:"";display:block;width:16px;height:16px;margin:27px auto;border-radius:50%;background:#090c0b}
+.spin .reel{animation:spin 1.5s linear infinite}
+.spin.pause .reel{animation-play-state:paused}
+@keyframes spin{to{transform:rotate(1turn)}}
+canvas{width:100%;height:64px;display:block;border-radius:10px;background:#07110c}
+.btns{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:8px;margin-top:12px}
+button{appearance:none;border:0;border-radius:14px;padding:13px 0;font:700 12px/1 inherit;letter-spacing:.08em;color:#eef6ef;background:linear-gradient(#36423c,#24302b);box-shadow:inset 0 1px 0 #fff2,0 3px 0 #0b0f0d;cursor:pointer}
+button:disabled{opacity:.34;cursor:not-allowed}
+button:active:not(:disabled){transform:translateY(2px);box-shadow:inset 0 1px 0 #0004}
+#start{background:linear-gradient(#2c8058,#1a5a3c)}
+#stop{background:linear-gradient(#823838,#5a2222)}
+.note{margin-top:13px;min-height:42px;font-size:12px;line-height:1.55;color:#9aafa3}
+.ask{display:flex;gap:8px;margin-top:8px}
+.ask button{flex:1}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <div class="top"><span>FIELD TAPE · 03</span><span class="live"><i class="dot"></i><b id="st">待机</b></span></div>
+  <div class="lcd">
+    <div class="row">
+      <div class="time" id="tm">00:00</div>
+      <div class="vu"><b><i id="l"></i></b><b><i id="r"></i></b></div>
+    </div>
+    <div class="meta" id="meta">准备录音 · 模拟器</div>
+  </div>
+  <div class="stage"><div class="reel"></div><canvas id="wv"></canvas><div class="reel"></div></div>
+  <div class="btns">
+    <button id="start">Start</button>
+    <button id="pause" disabled>Pause</button>
+    <button id="stop" disabled>Stop</button>
+  </div>
+  <div class="note" id="note">按 Start 开始一段现场备忘。Stop 会先确认，避免误触丢掉本次时长。</div>
+</div>
+<script>
+let mode="idle",acc=0,t0=0,raf=0,last=null,hist=Array(64).fill(4);
+const pad=n=>String(n).padStart(2,"0");
+const fmt=ms=>{const s=Math.floor(ms/1000);return pad(Math.floor(s/60))+":"+pad(s%60)};
+const now=()=>acc+(mode==="rec"?performance.now()-t0:0);
+const cv=document.getElementById("wv"),x=cv.getContext("2d");
+function size(){const d=Math.min(devicePixelRatio||1,2),r=cv.getBoundingClientRect();cv.width=r.width*d;cv.height=r.height*d;x.setTransform(d,0,0,d,0,0)}
+addEventListener("resize",size);size();
+function wave(t){
+  const w=cv.getBoundingClientRect().width,h=cv.getBoundingClientRect().height;
+  let amp=mode==="rec"?18+Math.sin(t/90)*8+Math.random()*10:mode==="pause"?10:4;
+  hist.push(amp);if(hist.length>64)hist.shift();
+  l.style.width=(mode==="rec"?40+Math.random()*50:8)+"%";
+  r.style.width=(mode==="rec"?35+Math.random()*55:8)+"%";
+  x.clearRect(0,0,w,h);
+  x.beginPath();
+  hist.forEach((v,i)=>{const X=i/(hist.length-1)*w,Y=h/2+(i%2?v:-v);i?x.lineTo(X,Y):x.moveTo(X,Y)});
+  x.strokeStyle="#6dffb0";x.lineWidth=1.6;x.stroke();
+  if(mode==="rec")raf=requestAnimationFrame(wave);
+}
+function paint(){document.getElementById("tm").textContent=fmt(now());if(mode==="rec")requestAnimationFrame(paint)}
+function setUI(){
+  deck.className="deck"+(mode==="rec"?" rec spin":mode==="pause"?" pause spin":"");
+  st.textContent={idle:"待机",rec:"录音中",pause:"已暂停",stop:"已停止"}[mode];
+  meta.textContent=mode==="idle"?"准备录音 · 模拟器":"本次时长 "+fmt(now());
+  start.disabled=mode==="rec";pause.disabled=mode!=="rec"&&mode!=="pause";stop.disabled=mode==="idle"||mode==="stop";
+  pause.textContent=mode==="pause"?"Resume":"Pause";
+}
+function go(next){
+  if(mode==="rec")acc+=performance.now()-t0;
+  if(next==="rec"){t0=performance.now();paint();cancelAnimationFrame(raf);raf=requestAnimationFrame(wave)}
+  else cancelAnimationFrame(raf);
+  mode=next;setUI();
+}
+start.onclick=()=>{if(mode==="stop"){acc=0;last=null;hist=Array(64).fill(4)}go("rec");note.textContent="红点亮起，磁带在转。可 Pause 或 Stop。"};
+pause.onclick=()=>{if(mode==="rec"){go("pause");note.textContent="已暂停，计时冻结，波形停住。"}else if(mode==="pause"){go("rec");note.textContent="继续录制，时长累计。"}};
+stop.onclick=()=>{
+  if(mode==="stop"||mode==="idle")return;
+  note.innerHTML='确认结束本段录音？<div class="ask"><button id="yes">确认停止</button><button id="no">继续</button></div>';
+  yes.onclick=()=>{last=now();go("stop");note.textContent=`录音摘要：时长 ${fmt(last)} · 状态 已完成 · 未写入真实麦克风。再按 Start 开始新的一段。`};
+  no.onclick=()=>{note.textContent=mode==="rec"?"继续录制中。":"仍保持暂停。"};
+};
+setUI();
+</script>
+</body>
+</html>

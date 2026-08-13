@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>时光之环 · Chrono Ring</title>
+<style>
+:root{
+  --bg0:#050a16; --bg1:#0c1630; --face:#081020; --ink:#eaf4ff; --muted:#7f94bb;
+  --accent:#3ae0ff; --warm:#ffd166; --ring:rgba(58,224,255,.22); --shadow:rgba(0,0,0,.6);
+}
+body.day{
+  --bg0:#b7d6f0; --bg1:#eef6fd; --face:#f6fbff; --ink:#153552; --muted:#55799d;
+  --accent:#0f7cff; --warm:#ff8a3d; --ring:rgba(15,124,255,.2); --shadow:rgba(28,64,110,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  min-height:100vh; display:grid; place-items:center; overflow:hidden; color:var(--ink);
+  background:radial-gradient(130% 100% at 50% -12%, var(--bg1), transparent 62%), var(--bg0);
+  font-family:ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+  transition:background 1.2s ease,color 1.2s ease;
+}
+.stage{position:relative;display:grid;place-items:center;padding:24px}
+.glow{position:absolute;width:min(88vmin,430px);aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(circle,var(--ring),transparent 64%);animation:breathe 4.5s ease-in-out infinite}
+@keyframes breathe{0%,100%{transform:scale(.95);opacity:.65}50%{transform:scale(1.07);opacity:1}}
+.clock{position:relative;display:grid;justify-items:center;gap:16px}
+svg.face{width:min(88vmin,400px);height:auto;filter:drop-shadow(0 20px 44px var(--shadow))}
+.digital{font-variant-numeric:tabular-nums;font-weight:700;letter-spacing:.06em;
+  font-size:clamp(34px,9vw,54px);line-height:1;text-shadow:0 0 24px var(--ring)}
+.digital b{color:var(--accent)}
+.meta{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:13px;letter-spacing:.18em}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:999px;
+  border:1px solid var(--ring);background:color-mix(in srgb,var(--face) 72%,transparent)}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--warm);box-shadow:0 0 10px var(--warm)}
+body.day .dot{background:#ffb84d}
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="glow"></div>
+  <section class="clock" aria-label="时钟">
+    <svg class="face" viewBox="0 0 320 320" role="img" aria-label="模拟表盘">
+      <defs>
+        <radialGradient id="dial" cx="50%" cy="42%" r="72%">
+          <stop offset="0%" stop-color="#16233f"/><stop offset="100%" stop-color="#060d1e"/>
+        </radialGradient>
+        <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#22375e"/><stop offset="50%" stop-color="#0b1529"/>
+          <stop offset="100%" stop-color="#1b2c50"/>
+        </linearGradient>
+        <linearGradient id="rimDay" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#b9cfe8"/>
+        </linearGradient>
+        <filter id="soft"><feGaussianBlur stdDeviation="2.4"/></filter>
+      </defs>
+      <circle cx="160" cy="160" r="148" fill="url(#rim)"/>
+      <circle cx="160" cy="160" r="138" fill="url(#dial)" stroke="#0a1428" stroke-width="1.5"/>
+      <circle cx="160" cy="160" r="132" fill="none" stroke="rgba(120,170,255,.16)" stroke-width="1"/>
+      <g id="ticks"></g>
+      <line id="hh" x1="160" y1="176" x2="160" y2="88" stroke="#dbe9ff" stroke-width="7" stroke-linecap="round"/>
+      <line id="mh" x1="160" y1="180" x2="160" y2="56" stroke="#9fc3ff" stroke-width="4" stroke-linecap="round"/>
+      <g filter="url(#soft)">
+        <line id="sh" x1="160" y1="190" x2="160" y2="48" stroke="#3ae0ff" stroke-width="2" stroke-linecap="round"/>
+      </g>
+      <circle cx="160" cy="160" r="8" fill="#eaf4ff"/>
+      <circle cx="160" cy="160" r="3.4" fill="#3ae0ff"/>
+      <circle cx="160" cy="46" r="3" fill="#ffd166" opacity=".9"/>
+      <circle cx="160" cy="34" r="3" fill="#ffd166" opacity=".55"/>
+      <circle cx="160" cy="22" r="3" fill="#ffd166" opacity=".3"/>
+    </svg>
+    <div class="digital" id="dig" aria-live="off">--:--:--</div>
+    <div class="meta">
+      <span class="pill"><i class="dot"></i><span id="mode">夜晚</span></span>
+      <span id="date">·</span>
+    </div>
+  </section>
+</main>
+<script>
+const ticks=document.getElementById('ticks');
+const hh=document.getElementById('hh'),mh=document.getElementById('mh'),sh=document.getElementById('sh');
+const dig=document.getElementById('dig'),date=document.getElementById('date'),mode=document.getElementById('mode');
+const dial=document.querySelector('#dial');
+let marks='';
+for(let i=0;i<60;i++){
+  const a=i*6*Math.PI/180,major=i%5===0;
+  const r1=132,r2=major?115:125,w=major?3.2:1,o=major?.95:.45;
+  marks+=`<line x1="${(160+r1*Math.cos(a)).toFixed(2)}" y1="${(160+r1*Math.sin(a)).toFixed(2)}" x2="${(160+r2*Math.cos(a)).toFixed(2)}" y2="${(160+r2*Math.sin(a)).toFixed(2)}" stroke="rgba(158,190,255,${o})" stroke-width="${w}" stroke-linecap="round"/>`;
+}
+ticks.innerHTML=marks;
+const p=n=>String(n).padStart(2,'0');
+let last='';
+function tick(t){
+  const d=new Date(),ms=d.getMilliseconds();
+  const s=d.getSeconds()+ms/1000,m=d.getMinutes()+s/60,h=(d.getHours()%12)+m/60;
+  sh.setAttribute('transform',`rotate(${(s*6).toFixed(3)} 160 160)`);
+  mh.setAttribute('transform',`rotate(${(m*6).toFixed(3)} 160 160)`);
+  hh.setAttribute('transform',`rotate(${(h*30).toFixed(3)} 160 160)`);
+  const txt=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  if(txt!==last){last=txt;dig.textContent=txt;}
+  const isDay=d.getHours()>=6&&d.getHours()<18;
+  document.body.classList.toggle('day',isDay);
+  mode.textContent=isDay?'白昼':'夜晚';
+  date.textContent=`${d.getMonth()+1}月${d.getDate()}日 周${'日一二三四五六'[d.getDay()]}`;
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+</body>
+</html>

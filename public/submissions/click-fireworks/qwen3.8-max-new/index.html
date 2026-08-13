@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>星夜 · 烟花庆典</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{background:#040712;touch-action:manipulation;
+    font-family:"Avenir Next",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  canvas{display:block;width:100vw;height:100vh;cursor:crosshair}
+  .hint{position:fixed;left:50%;bottom:9vh;transform:translateX(-50%);color:rgba(230,236,255,.72);
+    font-size:13px;letter-spacing:.42em;text-indent:.42em;pointer-events:none;transition:opacity 1.2s;
+    text-shadow:0 0 18px rgba(140,170,255,.8);animation:sway 2.6s ease-in-out infinite}
+  @keyframes sway{50%{opacity:.45}}
+  .title{position:fixed;top:5vh;left:50%;transform:translateX(-50%);text-align:center;pointer-events:none}
+  .title h1{font-size:15px;font-weight:300;letter-spacing:.6em;text-indent:.6em;color:rgba(240,244,255,.85)}
+  .title p{font-size:9px;letter-spacing:.3em;color:rgba(160,175,215,.55);margin-top:8px}
+  .vignette{position:fixed;inset:0;pointer-events:none;
+    background:radial-gradient(120% 100% at 50% 40%,transparent 55%,rgba(2,3,8,.65) 100%)}
+</style>
+</head>
+<body>
+  <canvas id="cv"></canvas>
+  <div class="vignette"></div>
+  <div class="title"><h1>星夜烟花 · 庆典</h1><p>FIREWORKS FESTIVAL</p></div>
+  <p class="hint" id="hint">点击夜空任意处 · 绽放烟花</p>
+<script>
+  const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+  const DPR = Math.min(2, devicePixelRatio || 1);
+  let W = 0, H = 0, stars = [], city = [];
+  function resize() {
+    W = innerWidth; H = innerHeight;
+    cv.width = W * DPR; cv.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    stars = Array.from({ length: Math.round(W * H / 9000) }, () => ({
+      x: Math.random() * W, y: Math.random() * H * .72, r: Math.random() * 1.2 + .3, p: Math.random() * 6.28
+    }));
+    city = []; let x = 0;                                       // 生成城市剪影
+    while (x < W) {
+      const bw = 24 + Math.random() * 46, bh = 30 + Math.random() * H * .16;
+      city.push({ x, w: bw, h: bh, win: Math.random() > .3 });
+      x += bw + Math.random() * 14;
+    }
+  }
+  resize(); addEventListener("resize", resize);
+  const PALETTES = [
+    ["hsl(46,100%,62%)", "hsl(36,100%,55%)", "hsl(52,100%,78%)"],          // 鎏金
+    ["hsl(348,95%,62%)", "hsl(330,90%,58%)", "hsl(12,100%,66%)"],          // 绯樱
+    ["hsl(190,95%,62%)", "hsl(210,100%,70%)", "hsl(168,90%,60%)"],         // 青澜
+    ["hsl(276,90%,68%)", "hsl(300,85%,62%)", "hsl(252,95%,74%)"],          // 紫霞
+    ["hsl(140,80%,60%)", "hsl(90,85%,62%)", "hsl(160,90%,70%)"],           // 翡翠
+    ["hsl(0,0%,96%)", "hsl(220,30%,85%)", "hsl(46,60%,80%)"]               // 银白
+  ];
+  const rockets = [], parts = [];
+  function launch(tx, ty) {
+    const sx = tx + (Math.random() - .5) * 40;
+    rockets.push({ x: sx, y: H + 6, tx, ty, vx: (tx - sx) / 52, vy: -(7 + Math.random() * 3.2), hue: Math.random() * 360 });
+  }
+  function explode(x, y) {
+    const pal = PALETTES[Math.floor(Math.random() * PALETTES.length)];
+    const kind = Math.random(), n = 70 + Math.floor(Math.random() * 80);
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI * 2 * i / n + Math.random() * .12;
+      let sp = kind < .28 ? 2.2 + Math.random() * .35        // 环形：速度一致
+        : kind < .7 ? (1.2 + Math.random() * 3.6)            // 牡丹：随机半径
+        : (0.8 + Math.random() * 2.2);                        // 垂柳：低速长尾
+      parts.push({ x, y, px: x, py: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp,
+        life: 1, decay: kind < .7 ? .011 + Math.random() * .012 : .006 + Math.random() * .006,
+        g: kind >= .7 ? .052 : .03, c: pal[Math.floor(Math.random() * pal.length)],
+        tw: Math.random() * 6.28, drag: kind >= .7 ? .992 : .985 });
+    }
+    if (parts.length > 1500) parts.splice(0, parts.length - 1500);   // 内存上限保护
+  }
+  let hintGone = false;
+  function pop(e) {
+    const t = e.touches ? e.touches[0] : e;
+    launch(t.clientX, Math.max(60, t.clientY));
+    if (!hintGone) { hintGone = true; document.getElementById("hint").style.opacity = 0; }
+  }
+  addEventListener("pointerdown", pop);
+  function drawBackdrop(now) {
+    const g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "#04060f"); g.addColorStop(.62, "#0a1024"); g.addColorStop(1, "#141a33");
+    ctx.globalAlpha = 1; ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    for (const s of stars) {                                    // 星星闪烁
+      ctx.globalAlpha = .3 + .5 * Math.abs(Math.sin(now / 900 + s.p));
+      ctx.fillStyle = "#cfd9ff"; ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, 6.29); ctx.fill();
+    }
+    ctx.globalAlpha = 1;                                        // 月亮与光晕
+    const mx = W * .82, my = H * .16, mg = ctx.createRadialGradient(mx, my, 4, mx, my, 86);
+    mg.addColorStop(0, "rgba(255,250,225,.95)"); mg.addColorStop(.24, "rgba(255,244,200,.85)");
+    mg.addColorStop(.28, "rgba(255,240,190,.12)"); mg.addColorStop(1, "transparent");
+    ctx.fillStyle = mg; ctx.beginPath(); ctx.arc(mx, my, 86, 0, 6.29); ctx.fill();
+    for (const b of city) {                                     // 城市剪影与窗灯
+      ctx.fillStyle = "#060810"; ctx.fillRect(b.x, H - b.h, b.w, b.h);
+      if (b.win) { ctx.fillStyle = "rgba(255,214,120,.5)";
+        for (let wy = H - b.h + 8; wy < H - 8; wy += 13)
+          for (let wx = b.x + 5; wx < b.x + b.w - 5; wx += 11)
+            if ((wx * 7 + wy * 13) % 17 < 6) ctx.fillRect(wx, wy, 2.6, 3.6); }
+    }
+  }
+  let last = 0;
+  function frame(now) {
+    const dt = Math.min(2.4, (now - last) / 16.7 || 1); last = now;
+    drawBackdrop(now);
+    ctx.globalCompositeOperation = "lighter";
+    for (let i = rockets.length - 1; i >= 0; i--) {             // 上升尾迹
+      const r = rockets[i];
+      r.x += r.vx * dt; r.y += r.vy * dt; r.vy += .06 * dt;
+      ctx.strokeStyle = "hsla(" + r.hue + ",100%,74%,.9)"; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.moveTo(r.x, r.y); ctx.lineTo(r.x - r.vx * 3, r.y - r.vy * 3.4); ctx.stroke();
+      if (Math.random() < .5) parts.push({ x: r.x, y: r.y, px: r.x, py: r.y, vx: (Math.random() - .5) * .3,
+        vy: .4 + Math.random() * .5, life: .5, decay: .05, g: .01, c: "hsl(46,100%,72%)", tw: 0, drag: .96 });
+      if (r.vy >= -1.2 || r.y <= r.ty) { explode(r.x, r.y); rockets.splice(i, 1); }
+    }
+    for (let i = parts.length - 1; i >= 0; i--) {               // 粒子：扩散→衰减→熄灭
+      const p = parts[i];
+      p.px = p.x; p.py = p.y;
+      p.vx *= Math.pow(p.drag, dt); p.vy = p.vy * Math.pow(p.drag, dt) + p.g * dt;
+      p.x += p.vx * dt; p.y += p.vy * dt; p.life -= p.decay * dt;
+      if (p.life <= 0) { parts.splice(i, 1); continue; }
+      const twk = .72 + .28 * Math.sin(now / 60 + p.tw);        // 闪烁余辉
+      ctx.globalAlpha = Math.max(0, p.life) * twk;
+      ctx.strokeStyle = p.c; ctx.lineWidth = 1.7;
+      ctx.beginPath(); ctx.moveTo(p.px, p.py); ctx.lineTo(p.x, p.y); ctx.stroke();
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  let idle = setInterval(() => { if (!hintGone && Math.random() < .5) launch(W * (.2 + Math.random() * .6), H * (.2 + Math.random() * .3)); }, 3200);
+  addEventListener("pointerdown", () => { clearInterval(idle); }, { once: true });
+</script>
+</body>
+</html>

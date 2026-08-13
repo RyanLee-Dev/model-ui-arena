@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>行情面板</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(80% 50% at 50% 0,#1b2236,transparent 60%),#080b12;color:#e8edf6;font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif}
+.panel{width:min(390px,94vw);background:linear-gradient(180deg,#171d2d,#101521);border:1px solid #2b3450;border-radius:28px;padding:18px 16px 14px;box-shadow:0 34px 80px #0009,inset 0 1px 0 #fff1}
+.head{display:flex;justify-content:space-between;align-items:end}
+h1{font:500 20px/1 "Iowan Old Style","Songti SC",serif}
+.live{display:flex;gap:7px;align-items:center;font-size:10px;letter-spacing:.18em;color:#c4a574}
+.live i{width:6px;height:6px;border-radius:50%;background:#3dd68c;box-shadow:0 0 8px #3dd68c;animation:blink 1.3s step-end infinite}
+@keyframes blink{50%{opacity:.25}}
+.hero{margin:14px 0 8px;padding:12px 12px 8px;border-radius:18px;background:#0c111c;border:1px solid #24304a}
+.hero .name{font-size:13px;color:#9aa8c2}
+.hero .px{margin-top:4px;font:500 34px/1 ui-monospace,Menlo,monospace}
+.hero .chg{margin-top:6px;font-size:13px}
+svg{width:100%;height:86px;display:block;margin-top:8px}
+.row{display:grid;grid-template-columns:1.2fr .9fr;gap:8px;align-items:center;padding:11px 8px;border-top:1px solid #222b44;cursor:pointer}
+.row.on{background:#c4a57412}
+.name{font-size:14px;font-weight:650}.code{display:block;margin-top:2px;font-size:11px;color:#8090b0}
+.px{text-align:right;font:500 16px/1.1 ui-monospace,Menlo,monospace}
+.chg{margin-top:4px;font-size:11px}.up{color:#3dd68c}.dn{color:#ff7a86}
+.risk{margin-top:12px;padding:11px 12px;border-radius:14px;background:#0d1220;border:1px solid #24304a;font-size:12px;line-height:1.5;color:#c5cfe4}
+.hot{color:#e0a15c;letter-spacing:.08em;font-size:10px;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="panel">
+  <div class="head"><h1>夜盘监控</h1><div class="live"><i></i><span id="clock">LIVE</span></div></div>
+  <div class="hero">
+    <div class="name" id="hn"></div>
+    <div class="px" id="hp"></div>
+    <div class="chg" id="hc"></div>
+    <svg id="chart" viewBox="0 0 320 86"></svg>
+  </div>
+  <div id="list"></div>
+  <div class="risk" id="risk"></div>
+</div>
+<script>
+const stocks=[
+  {name:"宁德时代",code:"300750",px:198.4,hist:[196,197.2,198,197.6,198.4,199.1,198.8,198.4],vol:1.1},
+  {name:"贵州茅台",code:"600519",px:1486,hist:[1498,1492,1488,1490,1486,1484,1487,1486],vol:.45},
+  {name:"腾讯控股",code:"00700",px:392.8,hist:[388,389.4,391,390.6,392.8,393.4,392.2,392.8],vol:.8}
+];
+let sel=0;
+function path(h,H=80){
+  const min=Math.min(...h),max=Math.max(...h),span=max-min||1;
+  return h.map((v,i)=>`${(i/(h.length-1))*318+1},${H-((v-min)/span)*(H-10)}`).join(" ");
+}
+function paint(){
+  const s=stocks[sel],ch=s.px-s.hist[0],pct=ch/s.hist[0]*100,up=ch>=0,c=up?"#3dd68c":"#ff7a86";
+  hn.textContent=s.name+"  "+s.code;
+  hp.textContent=s.px.toFixed(2);
+  hc.className="chg "+(up?"up":"dn");
+  hc.textContent=`${up?"▲":"▼"} ${up?"+":""}${ch.toFixed(2)}   ${up?"+":""}${pct.toFixed(2)}%`;
+  const pts=path(s.hist);
+  chart.innerHTML=`<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${c}" stop-opacity=".35"/><stop offset="100%" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>
+    <polygon fill="url(#g)" points="1,86 ${pts} 319,86"/><polyline fill="none" stroke="${c}" stroke-width="2" points="${pts}"/>`;
+  list.innerHTML=stocks.map((k,i)=>{
+    const d=k.px-k.hist[0],p=d/k.hist[0]*100,u=d>=0;
+    return `<div class="row ${i===sel?"on":""}" data-i="${i}"><div><span class="name">${k.name}</span><span class="code">${k.code}</span></div>
+      <div class="px">${k.px.toFixed(2)}<div class="chg ${u?"up":"dn"}">${u?"+":""}${p.toFixed(2)}%</div></div></div>`;
+  }).join("");
+  const hot=stocks.map(k=>({k,p:Math.abs(k.px-k.hist[0])/k.hist[0]})).sort((a,b)=>b.p-a.p)[0];
+  risk.innerHTML=hot.p>0.012?`<span class="hot">高波动</span>${hot.k.name} 相对开盘振幅 ${(hot.p*100).toFixed(2)}%，注意回撤。`:`盘面平稳。最大振幅 ${hot.k.name} ${(hot.p*100).toFixed(2)}%。数据为本地模拟。`;
+}
+list.onclick=e=>{const r=e.target.closest(".row");if(r){sel=+r.dataset.i;paint()}};
+function tick(){
+  clock.textContent=new Date().toTimeString().slice(0,8);
+  stocks.forEach(s=>{s.px=Math.max(1,+(s.px+(Math.random()-.48)*s.vol).toFixed(2));s.hist.push(s.px);if(s.hist.length>28)s.hist.shift()});
+  paint();
+}
+paint();setInterval(tick,1100);
+</script>
+</body>
+</html>

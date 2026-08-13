@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拾音器 · Pocket Recorder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  min-height:100vh;display:grid;place-items:center;padding:20px;color:#e8f0ff;
+  background:radial-gradient(120% 90% at 50% 0%,#131c31 0%,#070b16 55%,#04060d 100%);
+  font-family:ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;
+}
+.deck{
+  width:min(94vw,390px);border:1px solid rgba(140,170,255,.16);border-radius:26px;
+  background:linear-gradient(180deg,rgba(23,32,56,.92),rgba(9,13,26,.94));
+  box-shadow:0 30px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06);
+  padding:28px 24px 26px;position:relative;overflow:hidden;
+}
+.deck::before{content:"";position:absolute;inset:0 0 auto 0;height:130px;opacity:.5;
+  background:radial-gradient(60% 100% at 50% 0%,rgba(58,120,255,.18),transparent 70%)}
+.head{display:flex;align-items:center;justify-content:space-between;position:relative}
+.brand{font-weight:800;letter-spacing:.12em;font-size:15px}
+.brand i{font-style:normal;color:#5aa2ff}
+.chip{font-size:11px;letter-spacing:.16em;padding:5px 12px;border-radius:999px;
+  border:1px solid rgba(140,170,255,.25);color:#a9bde4;transition:.35s}
+.chip.rec{color:#ff6b81;border-color:rgba(255,107,129,.55);background:rgba(255,107,129,.12);
+  animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.45}}
+.time{position:relative;text-align:center;margin:30px 0 22px;font-variant-numeric:tabular-nums}
+.time b{font-size:clamp(56px,18vw,76px);font-weight:700;letter-spacing:.05em;line-height:1}
+.time small{display:block;color:#6d81ad;font-size:12px;letter-spacing:.3em;margin-top:8px}
+.wave{display:flex;align-items:center;gap:4px;height:58px;padding:0 6px;margin-bottom:26px;
+  border-radius:14px;background:rgba(6,10,22,.6);overflow:hidden}
+.wave i{flex:1;height:8px;min-height:4px;border-radius:4px;background:linear-gradient(180deg,#4da3ff,#7c5cff);
+  opacity:.85;transform:scaleY(.18);transform-origin:center;transition:transform .12s linear}
+.rec .wave i{background:linear-gradient(180deg,#ff7b8d,#ff4d6a)}
+.controls{display:flex;align-items:center;justify-content:center;gap:22px;position:relative}
+.btn{border:0;cursor:pointer;font-family:inherit;color:#dce7ff;transition:transform .15s,filter .15s}
+.btn:active{transform:scale(.94)}
+.main-btn{width:88px;height:88px;border-radius:50%;font-size:15px;font-weight:700;letter-spacing:.08em;
+  background:radial-gradient(circle at 32% 28%,#ff5f76,#d92f4b 70%);
+  box-shadow:0 12px 30px rgba(255,77,106,.35),inset 0 2px 6px rgba(255,255,255,.35);
+  position:relative}
+.main-btn::after{content:"";position:absolute;inset:-9px;border-radius:50%;
+  border:2px solid rgba(255,107,129,.35);opacity:0;transition:.3s}
+.rec .main-btn::after{opacity:1;animation:pulse 1.2s ease-out infinite}
+@keyframes pulse{0%{transform:scale(.96);opacity:.9}100%{transform:scale(1.25);opacity:0}}
+.side-btn{width:54px;height:54px;border-radius:50%;font-size:12px;letter-spacing:.06em;
+  background:rgba(23,32,56,.9);border:1px solid rgba(140,170,255,.22)}
+.side-btn.armed{background:#3c2a16;border-color:#ffb84d;color:#ffd48a;
+  animation:shake .4s ease}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.summary{position:relative;margin-top:22px;border-radius:16px;padding:16px 18px;display:none;
+  background:linear-gradient(180deg,rgba(32,44,74,.7),rgba(14,20,38,.8));
+  border:1px solid rgba(140,170,255,.18);animation:up .45s cubic-bezier(.2,.9,.3,1.2)}
+.summary.show{display:grid;grid-template-columns:1fr auto;gap:10px 16px;align-items:center}
+@keyframes up{from{opacity:0;transform:translateY(14px)}}
+.summary h3{grid-column:1/-1;font-size:13px;color:#8fa6d4;font-weight:600;letter-spacing:.14em}
+.kv b{display:block;font-size:20px;font-variant-numeric:tabular-nums}
+.kv span{font-size:11px;color:#6d81ad}
+.again{grid-column:1/-1;border:1px solid rgba(90,162,255,.4);background:rgba(90,162,255,.12);
+  color:#a8ccff;padding:10px;border-radius:12px;cursor:pointer;font-family:inherit;font-size:13px;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<main class="deck" id="deck">
+  <header class="head">
+    <span class="brand"><i>◉</i> 拾音器</span>
+    <span class="chip" id="chip">待机</span>
+  </header>
+  <div class="time"><b id="timer">00:00</b><small>REC TIME</small></div>
+  <div class="wave" id="wave" aria-hidden="true"></div>
+  <section class="controls">
+    <button class="btn side-btn" id="stopBtn" title="停止">■ 停止</button>
+    <button class="btn main-btn" id="recBtn">开始</button>
+    <button class="btn side-btn" id="pauseBtn" title="暂停">Ⅱ 暂停</button>
+  </section>
+  <section class="summary" id="summary">
+    <h3>本次录音摘要</h3>
+    <div class="kv"><b id="sDur">--</b><span>录音时长</span></div>
+    <div class="kv"><b id="sSt">--</b><span>结束状态</span></div>
+    <button class="again" id="again">重新录音</button>
+  </section>
+</main>
+<script>
+const deck=document.getElementById('deck'),chip=document.getElementById('chip');
+const timer=document.getElementById('timer'),recBtn=document.getElementById('recBtn');
+const stopBtn=document.getElementById('stopBtn'),pauseBtn=document.getElementById('pauseBtn');
+const wave=document.getElementById('wave'),summary=document.getElementById('summary');
+let state='idle',start=0,elapsed=0,raf=0,armed=0;
+const N=30,bars=[];
+for(let i=0;i<N;i++){const b=document.createElement('i');wave.appendChild(b);bars.push(b);}
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function setState(next){
+  state=next;deck.classList.toggle('rec',next==='rec');
+  const map={idle:['待机','开始'],rec:['录音中','暂停'],paused:['已暂停','继续'],stopped:['已停止','开始']};
+  chip.textContent=map[next][0];recBtn.textContent=map[next][1];
+  if(next==='stopped'){
+    summary.classList.add('show');
+    document.getElementById('sDur').textContent=fmt(elapsed/1000);
+    document.getElementById('sSt').textContent='手动停止';
+  }
+}
+function loop(t){
+  const now=performance.now();
+  if(state==='rec'){
+    timer.textContent=fmt((now-start)/1000);
+    for(let i=0;i<N;i++){
+      const r=Math.random(),env=.35+.65*Math.sin(now/260+i*1.7)*Math.sin(now/97+i*.6);
+      bars[i].style.transform=`scaleY(${Math.max(.06,Math.min(1,.12+r*.9*env+Math.sin(now/300+i)*.12).toFixed(3))})`;
+    }
+  }else if(state==='idle'){
+    for(let i=0;i<N;i++){
+      const w=.05+Math.abs(Math.sin(now/900+i*.55))*.06;
+      bars[i].style.transform=`scaleY(${w.toFixed(3)})`;
+    }
+  }
+  raf=requestAnimationFrame(loop);
+}
+recBtn.addEventListener('click',()=>{
+  if(state==='idle'){start=performance.now();elapsed=0;setState('rec');}
+  else if(state==='rec'){elapsed+=performance.now()-start;setState('paused');}
+  else if(state==='paused'){start=performance.now();setState('rec');}
+});
+pauseBtn.addEventListener('click',()=>{
+  if(state==='rec'){elapsed+=performance.now()-start;setState('paused');}
+  else if(state==='paused'){start=performance.now();setState('rec');}
+});
+stopBtn.addEventListener('click',()=>{
+  if(state==='idle'||state==='stopped')return;
+  if(!armed){armed=Date.now();stopBtn.classList.add('armed');stopBtn.textContent='再按确认';
+    setTimeout(()=>{armed=0;stopBtn.classList.remove('armed');stopBtn.textContent='■ 停止';},3000);return;}
+  clearTimeout();stopBtn.classList.remove('armed');stopBtn.textContent='■ 停止';
+  if(state==='rec')elapsed+=performance.now()-start;
+  setState('stopped');
+});
+document.getElementById('again').addEventListener('click',()=>{
+  summary.classList.remove('show');timer.textContent='00:00';elapsed=0;setState('idle');
+});
+setState('idle');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天气卡片</title>
+<style>
+*{box-sizing:border-box;margin:0}
+body{min-height:100vh;display:grid;place-items:center;background:#0e1118;font-family:ui-sans-serif,system-ui,"PingFang SC",sans-serif}
+.card{width:min(390px,94vw);height:620px;border-radius:34px;overflow:hidden;position:relative;color:#fff;
+  box-shadow:0 40px 90px #0008,0 0 0 1px #fff2}
+.sky{position:absolute;inset:0;transition:opacity .7s}
+.sun .s{background:linear-gradient(180deg,#3b9dff,#8fd0ff 46%,#ffe3b0)}
+.rain .s{background:linear-gradient(180deg,#243246,#5b6c82)}
+.snow .s{background:linear-gradient(180deg,#6f88a8,#e8eef6)}
+.sun.night .s{background:linear-gradient(180deg,#0a1428,#1d2942 60%,#3d2a40)}
+.rain.night .s{background:linear-gradient(180deg,#101722,#283244)}
+.snow.night .s{background:linear-gradient(180deg,#141c2a,#3c4a62)}
+.s{position:absolute;inset:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ui{position:relative;z-index:2;height:100%;padding:20px 18px 16px;display:flex;flex-direction:column}
+.bar{display:flex;gap:6px}
+.bar button,.unit{border:0;background:#ffffff22;color:inherit;border-radius:999px;padding:8px 13px;font:650 12px inherit;cursor:pointer;backdrop-filter:blur(10px)}
+.bar .on{background:#fff;color:#16324a}
+.now{margin-top:36px}
+.temp{font:300 108px/.82 "Iowan Old Style","Songti SC",serif;letter-spacing:-.05em}
+.temp i{font-style:normal;font-size:38px;vertical-align:super}
+.desc{margin-top:8px;font-size:22px;font-weight:560}
+.sub{margin-top:8px;font-size:13px;letter-spacing:.04em;opacity:.78}
+.dock{margin-top:auto;padding:12px 10px 10px;border-radius:22px;background:#ffffff1c;border:1px solid #fff3;backdrop-filter:blur(18px)}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;font-size:11px;text-align:center}
+.days b{display:block;margin:5px 0 3px;font-size:12px}
+svg{width:100%;height:48px;display:block;margin:2px 0 8px}
+.leave .now,.leave .dock{opacity:0;transform:translateY(12px)}
+.now,.dock{transition:opacity .45s .05s,transform .45s .05s}
+.foot{display:flex;justify-content:flex-end;margin-top:8px}
+.flash{position:absolute;inset:0;background:#e8f2ff;opacity:0;pointer-events:none;z-index:1}
+.bolt .flash{animation:bolt .35s ease}
+@keyframes bolt{0%,100%{opacity:0}18%{opacity:.55}32%{opacity:.08}48%{opacity:.4}}
+</style>
+</head>
+<body>
+<div class="card sun" id="card">
+  <div class="sky s"></div>
+  <div class="flash" id="fl"></div>
+  <canvas id="fx"></canvas>
+  <div class="ui">
+    <div class="bar" id="tabs"></div>
+    <div class="now">
+      <div class="temp"><span id="t">28</span><i>°</i></div>
+      <div class="desc" id="d">晴</div>
+      <div class="sub" id="m">风速 3.2 m/s · 湿度 46%</div>
+    </div>
+    <div class="dock">
+      <svg id="line" viewBox="0 0 320 46"></svg>
+      <div class="days" id="days"></div>
+      <div class="foot"><button class="unit" id="unit">°C</button></div>
+    </div>
+  </div>
+</div>
+<script>
+const CITIES=[
+  {n:"杭州",k:"sun",now:[28,"晴",3.2,46],days:[["一",28,20,"晴"],["二",30,21,"多云"],["三",27,19,"晴"],["四",24,18,"小雨"],["五",26,17,"晴"]]},
+  {n:"伦敦",k:"rain",now:[13,"小雨",5.4,82],days:[["一",13,8,"雨"],["二",12,7,"雨"],["三",14,9,"阴"],["四",15,8,"多云"],["五",13,7,"雨"]]},
+  {n:"札幌",k:"snow",now:[-2,"小雪",4.1,74],days:[["一",-2,-8,"雪"],["二",-3,-9,"雪"],["三",0,-6,"阴"],["四",1,-5,"多云"],["五",-1,-7,"雪"]]}
+];
+let i=0,F=false,shown=28,kind="sun",parts=[];
+const night=new Date().getHours()<6||new Date().getHours()>=18;
+const cv=document.getElementById("fx"),x=cv.getContext("2d");
+let W,H;
+function size(){const r=cv.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;x.setTransform(d,0,0,d,0,0)}
+addEventListener("resize",size);size();
+function seed(k){
+  kind=k;parts=[];
+  if(k==="sun")for(let n=0;n<36;n++)parts.push({x:Math.random()*W,y:Math.random()*H*.55,r:.6+Math.random()*1.6,v:.15+Math.random()*.35,a:.15+Math.random()*.4});
+  if(k==="rain")for(let n=0;n<90;n++)parts.push({x:Math.random()*W,y:Math.random()*H,l:8+Math.random()*12,v:7+Math.random()*8});
+  if(k==="snow")for(let n=0;n<70;n++)parts.push({x:Math.random()*W,y:Math.random()*H,r:1+Math.random()*2.4,v:.4+Math.random()*1.1,w:Math.random()*2});
+}
+function drawFx(t){
+  x.clearRect(0,0,W,H);
+  if(kind==="sun"){
+    const cx=W*.78,cy=H*.18,R=54+Math.sin(t/700)*4;
+    const g=x.createRadialGradient(cx,cy,4,cx,cy,R*2.2);
+    g.addColorStop(0,"rgba(255,255,255,.95)");g.addColorStop(.22,"rgba(255,214,110,.55)");g.addColorStop(1,"rgba(255,214,110,0)");
+    x.fillStyle=g;x.beginPath();x.arc(cx,cy,R*2.2,0,6.28);x.fill();
+    x.save();x.translate(cx,cy);x.rotate(t/4000);
+    x.strokeStyle="rgba(255,236,180,.28)";
+    for(let n=0;n<16;n++){x.rotate(Math.PI/8);x.beginPath();x.moveTo(20,0);x.lineTo(78,0);x.stroke()}
+    x.restore();
+    parts.forEach(p=>{p.y-=p.v;if(p.y<0)p.y=H*.6;x.fillStyle=`rgba(255,255,255,${p.a})`;x.beginPath();x.arc(p.x,p.y,p.r,0,6.28);x.fill()});
+  }
+  if(kind==="rain"){
+    x.strokeStyle="rgba(220,235,255,.55)";x.lineWidth=1.2;
+    parts.forEach(p=>{p.y+=p.v;p.x+=.6;if(p.y>H){p.y=-10;p.x=Math.random()*W}
+      x.beginPath();x.moveTo(p.x,p.y);x.lineTo(p.x-2,p.y+p.l);x.stroke()});
+    if(Math.random()<.008){card.classList.add("bolt");setTimeout(()=>card.classList.remove("bolt"),360)}
+  }
+  if(kind==="snow"){
+    parts.forEach(p=>{p.y+=p.v;p.x+=Math.sin(t/500+p.w)*p.w;if(p.y>H){p.y=-6;p.x=Math.random()*W}
+      x.fillStyle="rgba(255,255,255,.9)";x.beginPath();x.arc(p.x,p.y,p.r,0,6.28);x.fill()});
+  }
+  requestAnimationFrame(drawFx);
+}
+requestAnimationFrame(drawFx);
+function conv(c){return F?Math.round(c*1.8+32):c}
+function draw(city,animate){
+  const highs=city.days.map(d=>d[1]),min=Math.min(...highs)-2,max=Math.max(...highs)+2;
+  const ys=highs.map(v=>38-((v-min)/(max-min))*30);
+  const pts=ys.map((y,n)=>`${20+n*70},${y}`).join(" ");
+  line.innerHTML=`<polygon fill="#fff3" points="20,46 ${pts} 300,46"/><polyline fill="none" stroke="#fff" stroke-width="2.2" points="${pts}"/>`+
+    ys.map((y,n)=>`<circle cx="${20+n*70}" cy="${y}" r="3" fill="#fff"/>`).join("");
+  days.innerHTML=city.days.map(d=>`<div>${d[0]}<b>${d[3]}</b>${conv(d[1])}° / ${conv(d[2])}°</div>`).join("");
+  d.textContent=city.now[1];
+  m.textContent=`风速 ${city.now[2]} m/s · 湿度 ${city.now[3]}%`;
+  card.className="card "+city.k+(night?" night":"")+(animate?" leave":"");
+  size();seed(city.k);
+  const target=conv(city.now[0]),from=shown,t0=performance.now();
+  (function step(now){const p=Math.min(1,(now-t0)/460);shown=Math.round(from+(target-from)*p);t.textContent=shown;if(p<1)requestAnimationFrame(step)})(t0);
+  if(animate)requestAnimationFrame(()=>card.classList.remove("leave"));
+}
+tabs.innerHTML=CITIES.map((c,n)=>`<button data-i="${n}">${c.n}</button>`).join("");
+tabs.onclick=e=>{const b=e.target.closest("button");if(!b)return;i=+b.dataset.i;[...tabs.children].forEach((el,n)=>el.classList.toggle("on",n===i));draw(CITIES[i],true)};
+unit.onclick=()=>{F=!F;unit.textContent=F?"°F":"°C";draw(CITIES[i],false)};
+tabs.children[0].classList.add("on");draw(CITIES[0],false);
+</script>
+</body>
+</html>

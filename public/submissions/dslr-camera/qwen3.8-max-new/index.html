@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURELIA AL-9 · 单反相机拟物复刻</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;
+    background:radial-gradient(110% 90% at 50% 18%,#f6f7f9 0%,#e3e5e9 52%,#c9ccd3 100%);
+    font-family:"Avenir Next",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    padding:22px 12px;
+  }
+  .stage{width:min(96vw,920px);filter:drop-shadow(0 26px 40px rgba(30,34,44,.18))}
+  svg{display:block;width:100%;height:auto}
+  .cap{font-size:11px;letter-spacing:.34em;color:#9aa0ad;text-transform:uppercase}
+  .cap b{color:#5c6270;font-weight:600}
+  /* 模式转盘交互与镜片流光动效（不破坏静态首帧） */
+  #dialSpin{transition:transform .6s cubic-bezier(.3,1.5,.4,1)}
+  #dialHit{cursor:pointer}
+  #dialHit:hover #dialTopEdge{filter:brightness(1.25)}
+  .sweep{animation:sweep 7.5s ease-in-out infinite}
+  @keyframes sweep{
+    0%,64%{transform:translate(-70px,0);opacity:0}
+    72%{opacity:.9}
+    86%{opacity:.9}
+    94%,100%{transform:translate(74px,0);opacity:0}
+  }
+  .glintPulse{animation:gp 5s ease-in-out infinite}
+  @keyframes gp{0%,100%{opacity:.5}50%{opacity:.95}}
+</style>
+</head>
+<body>
+<div class="stage">
+<svg viewBox="0 0 1000 760" role="img" aria-label="3/4 视角单反相机拟物复刻">
+  <defs>
+    <!-- 机身材质：磨砂塑料 / 顶板金属 / 侧面暗部 -->
+    <linearGradient id="gFront" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b2e35"/><stop offset=".14" stop-color="#23252b"/>
+      <stop offset=".75" stop-color="#17181d"/><stop offset="1" stop-color="#101116"/>
+    </linearGradient>
+    <linearGradient id="gTop" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4a4e57"/><stop offset=".5" stop-color="#33363e"/><stop offset="1" stop-color="#22242a"/>
+    </linearGradient>
+    <linearGradient id="gSide" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#191b20"/><stop offset="1" stop-color="#0a0b0e"/>
+    </linearGradient>
+    <linearGradient id="gGrip" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#26282f"/><stop offset=".5" stop-color="#1a1c21"/><stop offset="1" stop-color="#0f1013"/>
+    </linearGradient>
+    <linearGradient id="gHump" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#383b43"/><stop offset=".6" stop-color="#232529"/><stop offset="1" stop-color="#191b1f"/>
+    </linearGradient>
+    <linearGradient id="gMetal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f5f7"/><stop offset=".45" stop-color="#c3c8d1"/><stop offset=".72" stop-color="#8f95a1"/><stop offset="1" stop-color="#6c7280"/>
+    </linearGradient>
+    <linearGradient id="gRed" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0525e"/><stop offset=".5" stop-color="#c22733"/><stop offset="1" stop-color="#7e151e"/>
+    </linearGradient>
+    <!-- 柱面明暗（镜头环共用，自上而下：反光带→暗部） -->
+    <linearGradient id="gCyl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(0,0,0,.62)"/>
+      <stop offset=".2" stop-color="rgba(255,255,255,.14)"/>
+      <stop offset=".33" stop-color="rgba(255,255,255,.36)"/>
+      <stop offset=".52" stop-color="rgba(255,255,255,.04)"/>
+      <stop offset=".8" stop-color="rgba(0,0,0,.5)"/>
+      <stop offset="1" stop-color="rgba(0,0,0,.74)"/>
+    </linearGradient>
+    <radialGradient id="gGlass" cx=".36" cy=".3" r="1.05">
+      <stop offset="0" stop-color="#33427a"/><stop offset=".34" stop-color="#1b2650"/>
+      <stop offset=".66" stop-color="#0c1230"/><stop offset="1" stop-color="#04050d"/>
+    </radialGradient>
+    <radialGradient id="gPupil" cx=".42" cy=".36" r="1">
+      <stop offset="0" stop-color="#141d42"/><stop offset=".7" stop-color="#05070f"/><stop offset="1" stop-color="#020308"/>
+    </radialGradient>
+    <linearGradient id="gShadow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(0,0,0,.55)"/><stop offset="1" stop-color="rgba(0,0,0,0)"/>
+    </linearGradient>
+    <radialGradient id="gSpot" cx=".5" cy=".42" r=".62">
+      <stop offset="0" stop-color="rgba(255,255,255,.85)"/><stop offset="1" stop-color="rgba(255,255,255,0)"/>
+    </radialGradient>
+    <!-- 蒙皮防滑纹理（矢量图案，非位图） -->
+    <pattern id="pGrip" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(8)">
+      <rect width="9" height="9" fill="#17181d"/>
+      <circle cx="4.5" cy="4.5" r="2" fill="#0c0d10"/>
+      <circle cx="4" cy="4" r=".8" fill="#2c2f37"/>
+    </pattern>
+    <pattern id="pRib" width="7" height="12" patternUnits="userSpaceOnUse">
+      <rect width="7" height="12" fill="#141519"/>
+      <rect x="2.4" width="2.6" height="12" fill="#08090b"/>
+      <rect x="1.4" width="1" height="12" fill="#33363f"/>
+    </pattern>
+    <!-- 磨砂颗粒（feTurbulence 程序化质感） -->
+    <filter id="fGrain" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" result="n"/>
+      <feColorMatrix in="n" type="saturate" values="0" result="g"/>
+      <feComponentTransfer in="g" result="ga"><feFuncA type="linear" slope=".16" intercept="0"/></feComponentTransfer>
+      <feComposite in="ga" in2="SourceAlpha" operator="in"/>
+    </filter>
+    <filter id="fBlur10"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="fBlur4"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="fGlow"><feGaussianBlur stdDeviation="1.6" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <clipPath id="clipGlass"><ellipse cx="456" cy="402" rx="17" ry="82"/></clipPath>
+    <path id="lensTextPath" d="M 474 318 A 21 84 0 0 1 474 486"/>
+  </defs>
+
+  <!-- ===== 背景与台面 ===== -->
+  <g id="backdrop">
+    <rect width="1000" height="760" fill="url(#gSpot)" opacity=".5"/>
+    <rect y="560" width="1000" height="200" fill="#d3d6dc"/>
+    <rect y="556" width="1000" height="8" fill="rgba(0,0,0,.14)" filter="url(#fBlur4)"/>
+    <!-- 接触投影：软影 + 紧贴暗部 -->
+    <ellipse cx="648" cy="576" rx="330" ry="30" fill="rgba(20,22,30,.34)" filter="url(#fBlur10)"/>
+    <ellipse cx="640" cy="568" rx="238" ry="16" fill="rgba(16,18,24,.42)" filter="url(#fBlur4)"/>
+  </g>
+
+  <!-- ===== 机身主体（3/4 透视：正面 + 顶面 + 侧面） ===== -->
+  <g id="body">
+    <!-- 顶面 -->
+    <path d="M544 300 L816 300 L854 272 L582 272 Z" fill="url(#gTop)"/>
+    <path d="M544 300 L816 300 L854 272 L582 272 Z" fill="#000" filter="url(#fGrain)" opacity=".5"/>
+    <!-- 侧面（右侧，带背带环） -->
+    <path d="M816 300 L854 272 L854 532 L816 560 Z" fill="url(#gSide)"/>
+    <path d="M830 296 q 12 -10 22 -14 l 4 8 q -10 5 -20 13 Z" fill="#3c414c"/>
+    <circle cx="850" cy="284" r="7" fill="none" stroke="url(#gMetal)" stroke-width="3.4"/>
+    <rect x="832" y="392" width="14" height="84" rx="6" fill="#101216" stroke="#2c303a" stroke-width="1"/>
+    <!-- 正面 -->
+    <path id="frontPlate" d="M544 300 L816 300 Q 824 300 824 310 L824 548 Q 824 560 812 560 L552 560 Q 540 560 540 548 L540 312 Q 540 300 544 300 Z"
+      fill="url(#gFront)"/>
+    <path d="M544 300 L816 300 Q 824 300 824 310 L824 548 Q 824 560 812 560 L552 560 Q 540 560 540 548 L540 312 Q 540 300 544 300 Z"
+      fill="#000" filter="url(#fGrain)" opacity=".55"/>
+    <path d="M544 300 L816 300" stroke="rgba(255,255,255,.22)" stroke-width="2"/>
+    <path d="M540 312 L540 548" stroke="rgba(255,255,255,.07)" stroke-width="2"/>
+    <!-- 军舰头下沿阴影 -->
+    <rect x="560" y="300" width="150" height="10" fill="url(#gShadow)" opacity=".6"/>
+  </g>
+
+  <!-- ===== 军舰头（取景器凸起）+ 热靴 ===== -->
+  <g id="pentaprism">
+    <path d="M566 300 L690 300 L672 252 L584 252 Z" fill="url(#gHump)"/>
+    <path d="M584 252 L672 252 L700 234 L612 234 Z" fill="url(#gTop)"/>
+    <path d="M690 300 L672 252 L700 234 L718 282 Z" fill="#15171b"/>
+    <path d="M566 300 L584 252" stroke="rgba(255,255,255,.18)" stroke-width="1.6"/>
+    <path d="M584 252 L672 252" stroke="rgba(255,255,255,.3)" stroke-width="1.6"/>
+    <!-- 热靴 -->
+    <g id="hotshoe">
+      <path d="M628 246 L676 246 L684 238 L636 238 Z" fill="url(#gMetal)"/>
+      <path d="M636 238 L684 238 L684 234 L636 234 Z" fill="#8f95a1"/>
+      <path d="M640 245 L672 245 L678 240 L646 240 Z" fill="#191b20"/>
+      <circle cx="660" cy="242" r="1.8" fill="#d9b64a"/>
+    </g>
+    <!-- 品牌铭牌（自创品牌，非真实商标） -->
+    <text x="628" y="286" text-anchor="middle" font-size="15" letter-spacing="4"
+      font-weight="600" fill="url(#gMetal)" font-family="Georgia,serif">AURELIA</text>
+  </g>
+
+  <!-- ===== 顶板部件：模式转盘 / 快门 / 电源 / 螺丝 ===== -->
+  <g id="topdeck">
+    <!-- 模式转盘（点击可转动） -->
+    <g id="dialHit">
+      <path d="M768 284 A 32 13 0 0 0 832 284 L832 300 A 32 13 0 0 1 768 300 Z" fill="#14161a"/>
+      <g stroke="#3a3f4a" stroke-width="1.6" id="dialKnurl"></g>
+      <g id="dialTopEdge">
+        <ellipse cx="800" cy="284" rx="32" ry="13" fill="url(#gTop)" stroke="#4c515d" stroke-width="1.4"/>
+      </g>
+      <g transform="translate(800,284) scale(1,.4)">
+        <circle r="30" fill="#26282e" stroke="#41454f" stroke-width="2"/>
+        <g id="dialSpin" fill="#cfd3dc" font-size="11" font-weight="600" text-anchor="middle"
+          font-family="Menlo,Consolas,monospace"></g>
+        <circle r="6" fill="url(#gMetal)"/>
+      </g>
+      <path d="M798 299 l 4 0 l -2 5 Z" fill="#ff8c3a"/>
+    </g>
+    <!-- 电源指示灯 -->
+    <circle cx="764" cy="290" r="3" fill="#39d98a" filter="url(#fGlow)"/>
+    <!-- 快门按钮（握把顶面前缘） -->
+    <g id="shutter">
+      <ellipse cx="742" cy="296" rx="15" ry="6.4" fill="#0d0e11"/>
+      <ellipse cx="742" cy="293.6" rx="13" ry="5.6" fill="url(#gMetal)" stroke="#565c68" stroke-width="1"/>
+      <ellipse cx="739" cy="292.2" rx="6" ry="2" fill="rgba(255,255,255,.75)"/>
+    </g>
+    <!-- 顶板螺丝 -->
+    <g fill="#7c828e" stroke="#3a3e47" stroke-width=".8">
+      <circle cx="566" cy="286" r="2.6"/><circle cx="700" cy="262" r="2.4"/><circle cx="838" cy="280" r="2.4"/>
+    </g>
+    <path d="M564.6 286 l 2.8 0 M699 261 l 2 1.8" stroke="#23262c" stroke-width=".9"/>
+  </g>
+
+  <!-- ===== 手柄（握把 + 蒙皮防滑） ===== -->
+  <g id="grip">
+    <path d="M744 302 Q 706 318 702 372 L 700 496 Q 700 552 748 556 L 824 558 L 824 306 Z" fill="url(#gGrip)"/>
+    <path d="M744 306 Q 712 322 708 372 L 706 492 Q 706 544 750 550 L 818 552 L 818 310 Z" fill="url(#pGrip)"/>
+    <path d="M744 306 Q 712 322 708 372" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="2.4"/>
+    <path d="M702 372 L 700 496" stroke="rgba(0,0,0,.5)" stroke-width="3"/>
+    <!-- 中指凹槽暗部 -->
+    <path d="M712 336 q 26 10 30 34 l -6 3 q -6 -22 -28 -31 Z" fill="rgba(0,0,0,.4)"/>
+  </g>
+
+  <!-- ===== 正面细节：红点徽标 / 对焦辅助灯 / 镜头释放键 / 前拨轮 / 扬声器 ===== -->
+  <g id="frontDetails">
+    <circle cx="724" cy="330" r="8" fill="url(#gRed)" stroke="#5c0d14" stroke-width="1.4"/>
+    <circle cx="721" cy="327" r="2.6" fill="rgba(255,255,255,.6)"/>
+    <circle cx="696" cy="352" r="4.6" fill="#f2b544" opacity=".9" filter="url(#fGlow)"/>
+    <ellipse cx="672" cy="468" rx="9" ry="14" fill="url(#gMetal)" stroke="#4c515c" stroke-width="1.2"/>
+    <ellipse cx="672" cy="468" rx="5" ry="9" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="1"/>
+    <!-- 前拨轮（半露滚轮） -->
+    <g id="frontDial">
+      <rect x="548" y="296" width="34" height="14" rx="7" fill="#0c0d10"/>
+      <g stroke="#3c414c" stroke-width="1.8">
+        <path d="M554 297 v 12 M560 297 v 12 M566 297 v 12 M572 297 v 12 M578 297 v 12"/>
+      </g>
+    </g>
+    <!-- 扬声器孔 -->
+    <g fill="#0a0b0d">
+      <circle cx="560" cy="506" r="1.7"/><circle cx="568" cy="506" r="1.7"/><circle cx="576" cy="506" r="1.7"/>
+      <circle cx="560" cy="514" r="1.7"/><circle cx="568" cy="514" r="1.7"/><circle cx="576" cy="514" r="1.7"/>
+      <circle cx="560" cy="522" r="1.7"/><circle cx="568" cy="522" r="1.7"/><circle cx="576" cy="522" r="1.7"/>
+    </g>
+    <!-- 型号丝印 -->
+    <text x="700" y="540" font-size="12" letter-spacing="2" fill="#8b909c"
+      font-family="Menlo,Consolas,monospace">AL-9 Mark II</text>
+    <text x="560" y="540" font-size="8.5" letter-spacing="1.4" fill="#565b66"
+      font-family="Menlo,Consolas,monospace">AURELIA OPTICS · 手绘复刻</text>
+  </g>
+
+  <!-- ===== 镜头（JS 生成多层镜筒 + 前组镜片） ===== -->
+  <ellipse cx="600" cy="402" rx="34" ry="112" fill="rgba(0,0,0,.5)" filter="url(#fBlur10)"/>
+  <g id="lens"></g>
+
+  <!-- ===== 镜片流光动效（裁剪到前组玻璃） ===== -->
+  <g clip-path="url(#clipGlass)">
+    <g class="sweep">
+      <rect x="430" y="300" width="16" height="210" fill="rgba(190,220,255,.34)"
+        transform="rotate(16 456 402)" filter="url(#fBlur4)"/>
+    </g>
+    <ellipse class="glintPulse" cx="450" cy="352" rx="5" ry="14" fill="rgba(220,238,255,.5)"
+      transform="rotate(-18 450 352)" filter="url(#fBlur4)"/>
+  </g>
+</svg>
+</div>
+<p class="cap">AURELIA <b>AL-9</b> · 3/4 视角拟物复刻 · 纯 HTML / CSS / SVG 手绘 · 零素材</p>
+<script>
+  const NS = "http://www.w3.org/2000/svg";
+  const $ = (id) => document.getElementById(id);
+  function el(tag, attrs, parent) {
+    const n = document.createElementNS(NS, tag);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    parent.appendChild(n); return n;
+  }
+  const CY = 402, L = $("lens");
+  // 镜筒环定义：自后（靠机身）向前（朝观者左侧）
+  // k: mount 金属卡口座 / barrel 平滑镜筒 / red 红圈 / rib 橡胶螺纹环 / name 铭牌环 / rim 前压圈
+  const rings = [
+    { cx: 600, rx: 30, ry: 106, k: "mount" },
+    { cx: 584, rx: 26, ry: 101, k: "barrel" },
+    { cx: 572, rx: 24, ry: 100, k: "red" },
+    { cx: 546, rx: 28, ry: 102, k: "rib" },
+    { cx: 522, rx: 23, ry: 96,  k: "barrel" },
+    { cx: 496, rx: 28, ry: 98,  k: "rib" },
+    { cx: 472, rx: 24, ry: 92,  k: "name" },
+    { cx: 458, rx: 21, ry: 88,  k: "rim" }
+  ];
+  const FILL = {
+    mount: "url(#gMetal)", barrel: "#1b1d23", red: "url(#gRed)",
+    rib: "url(#pRib)", name: "#111318", rim: "url(#gMetal)"
+  };
+  function bandPath(a, b) { // a=前片(小cx)，b=后片
+    return `M ${a.cx} ${CY - a.ry} L ${b.cx} ${CY - b.ry} A ${b.rx} ${b.ry} 0 0 1 ${b.cx} ${CY + b.ry}` +
+      ` L ${a.cx} ${CY + a.ry} A ${a.rx} ${a.ry} 0 0 1 ${a.cx} ${CY - a.ry} Z`;
+  }
+  // 由后向前绘制，保证正确遮挡
+  for (let i = 0; i < rings.length - 1; i++) {
+    const back = rings[i], front = rings[i + 1];
+    const band = el("path", { d: bandPath(front, back), fill: FILL[front.k] }, L);
+    if (front.k === "rib") {                                   // 橡胶环螺纹高光
+      el("path", { d: bandPath(front, back), fill: "url(#gCyl)" }, L);
+    } else if (front.k === "red") {
+      el("path", { d: bandPath(front, back), fill: "url(#gCyl)", opacity: .8 }, L);
+    } else if (front.k === "mount") {
+      el("path", { d: bandPath(front, back), fill: "url(#gCyl)", opacity: .66 }, L);
+    } else {
+      el("path", { d: bandPath(front, back), fill: "url(#gCyl)", opacity: .9 }, L);
+    }
+    band.setAttribute("stroke", "rgba(0,0,0,.45)");
+    band.setAttribute("stroke-width", "1");
+  }
+  // 各环前缘端面（制造厚度层次）
+  rings.slice(1).forEach((r, i) => {
+    el("ellipse", { cx: r.cx, cy: CY, rx: r.rx, ry: r.ry,
+      fill: i % 2 ? "#16181d" : "#1e2026", stroke: "rgba(255,255,255,.08)", "stroke-width": 1 }, L);
+  });
+  // 对焦距离窗（中段镜筒）
+  const win = el("g", {}, L);
+  el("rect", { x: 528, y: CY - 16, width: 30, height: 32, rx: 4, fill: "#0a0b0e",
+    stroke: "#33363f", "stroke-width": 1.2 }, win);
+  [["∞", 344], ["5", 352], ["3", 360], ["1.5", 369]].forEach(([t, y]) =>
+    el("text", { x: 543, y, "font-size": 7.6, fill: "#e8e2c8", "text-anchor": "middle",
+      "font-family": "Menlo,Consolas,monospace" }, win).textContent = t);
+  // 铭牌环刻字（沿椭圆路径环绕）
+  const lt = el("text", { "font-size": 8.4, fill: "#c9ced8", "letter-spacing": 2.2,
+    "font-family": "Menlo,Consolas,monospace" }, L);
+  const tp = el("textPath", { href: "#lensTextPath", startOffset: "6%" }, lt);
+  tp.textContent = "AURELIA LUX 50mm 1:1.4 ASPH Ø58";
+  // 前压圈端面 + 同心圆镜片组
+  el("ellipse", { cx: 458, cy: CY, rx: 21, ry: 88, fill: "#20232a",
+    stroke: "rgba(255,255,255,.14)", "stroke-width": 1.2 }, L);
+  el("ellipse", { cx: 457, cy: CY, rx: 18.4, ry: 84, fill: "#0b0d12" }, L);
+  el("ellipse", { cx: 456, cy: CY, rx: 17, ry: 82, fill: "url(#gGlass)" }, L);
+  // 内部同心镜片 + 镀膜反光
+  el("ellipse", { cx: 456, cy: CY, rx: 13.6, ry: 68, fill: "none", stroke: "rgba(122,150,255,.34)", "stroke-width": 1.4 }, L);
+  el("ellipse", { cx: 456, cy: CY, rx: 10.4, ry: 52, fill: "none", stroke: "rgba(150,120,255,.28)", "stroke-width": 1.2 }, L);
+  el("ellipse", { cx: 456, cy: CY, rx: 7.6, ry: 38, fill: "none", stroke: "rgba(110,220,200,.22)", "stroke-width": 1.1 }, L);
+  el("ellipse", { cx: 456, cy: CY, rx: 5, ry: 25, fill: "url(#gPupil)" }, L);
+  el("ellipse", { cx: 456, cy: CY, rx: 2.2, ry: 10, fill: "#010208" }, L);
+  // 高光反射：主高光弧 + 副反光 + 中心亮点
+  el("path", { d: "M 452 336 q -6 30 -2 58", stroke: "rgba(225,240,255,.75)", "stroke-width": 2.6,
+    fill: "none", "stroke-linecap": "round", filter: "url(#fGlow)" }, L);
+  el("path", { d: "M 462 452 q 4 16 -1 26", stroke: "rgba(180,200,255,.4)", "stroke-width": 2,
+    fill: "none", "stroke-linecap": "round" }, L);
+  el("circle", { cx: 454, cy: CY - 8, r: 1.6, fill: "rgba(255,255,255,.9)" }, L);
+  // 卡口座与机身衔接阴影
+  el("ellipse", { cx: 601, cy: CY, rx: 31, ry: 107, fill: "none", stroke: "rgba(0,0,0,.55)",
+    "stroke-width": 3, filter: "url(#fBlur4)" }, L);
+
+  // 转盘滚花（侧面竖纹）
+  for (let t = 12; t <= 168; t += 12) {
+    const a = t * Math.PI / 180, x = 800 + 32 * Math.cos(a);
+    el("line", { x1: x, y1: 284 + 13 * Math.sin(a), x2: x, y2: 300 + 13 * Math.sin(a) }, $("dialKnurl"));
+  }
+  // 转盘档位标签（透视压扁后旋转，仍保持立体感）
+  const marks = ["M", "Av", "Tv", "P", "A+", "C"];
+  const spin = $("dialSpin");
+  marks.forEach((m, i) => {
+    const a = i * 60 * Math.PI / 180 - Math.PI / 2;
+    const t = el("text", { x: (22 * Math.cos(a)).toFixed(1), y: (22 * Math.sin(a) + 4).toFixed(1) }, spin);
+    t.textContent = m;
+  });
+  let dial = 0;
+  $("dialHit").addEventListener("click", () => {
+    dial += 60;
+    spin.style.transform = `rotate(${dial}deg)`;
+  });
+</script>
+</body>
+</html>

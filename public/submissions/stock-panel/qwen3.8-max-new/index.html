@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARENA · 行情终端</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{min-height:100vh;background:radial-gradient(130% 100% at 50% -10%,#101625,#07090f 72%);
+    display:flex;align-items:center;justify-content:center;padding:22px;
+    font-family:"Avenir Next",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;color:#dfe4f0}
+  .term{width:min(96vw,460px);border-radius:20px;overflow:hidden;
+    background:linear-gradient(180deg,#141a2a,#0d1120 60%,#0a0d18);
+    border:1px solid rgba(255,255,255,.07);box-shadow:0 34px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.07)}
+  .bar{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(255,255,255,.06)}
+  .live{width:8px;height:8px;border-radius:50%;background:#2fe6a7;box-shadow:0 0 10px #2fe6a7;animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.35}}
+  .bar h1{font-size:13px;letter-spacing:.26em;font-weight:600}
+  .bar span{margin-left:auto;font-size:10px;letter-spacing:.18em;color:#77809a}
+  .idx{display:flex;gap:8px;padding:12px 18px 2px}
+  .chip{flex:1;border-radius:10px;padding:8px 10px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)}
+  .chip b{display:block;font-size:10px;color:#8b93aa;letter-spacing:.1em;font-weight:500}
+  .chip i{font-style:normal;font-size:12.5px;font-variant-numeric:tabular-nums}
+  .rows{padding:8px 10px}
+  .row{display:grid;grid-template-columns:74px 1fr 92px;gap:8px;align-items:center;width:100%;
+    padding:11px 8px;border-radius:12px;background:transparent;border:1px solid transparent;cursor:pointer;transition:.25s;text-align:left;color:inherit}
+  .row:hover{background:rgba(255,255,255,.045)}
+  .row.sel{background:rgba(90,141,255,.09);border-color:rgba(90,141,255,.35)}
+  .row.flash-up{animation:fUp .7s}.row.flash-dn{animation:fDn .7s}
+  @keyframes fUp{0%{background:rgba(47,230,167,.22)}100%{background:transparent}}
+  @keyframes fDn{0%{background:rgba(255,92,108,.22)}100%{background:transparent}}
+  .sym b{font-size:13.5px;letter-spacing:.04em}
+  .sym i{display:block;font-style:normal;font-size:9.5px;color:#77809a;margin-top:2px}
+  .spark svg{display:block;width:100%;height:30px}
+  .sp{fill:none;stroke-width:1.6;stroke-linecap:round}
+  .num{text-align:right}
+  .px{font-size:14.5px;font-weight:600;font-variant-numeric:tabular-nums}
+  .chg{font-size:11px;margin-top:2px;font-variant-numeric:tabular-nums}
+  .up{color:#2fe6a7}.dn{color:#ff5c6c}
+  .warn{display:inline-block;margin-left:6px;font-size:8.5px;color:#f2b544;border:1px solid rgba(242,181,68,.5);border-radius:99px;padding:1px 5px;letter-spacing:.05em}
+  .chart{margin:6px 14px 0;border-radius:14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);padding:12px 12px 6px}
+  .chart h2{font-size:11px;letter-spacing:.14em;color:#98a1b8;font-weight:500;display:flex;align-items:center;gap:8px}
+  .chart h2 em{font-style:normal;margin-left:auto;font-size:15px;font-weight:600}
+  .chart svg{display:block;width:100%;height:auto;margin-top:6px}
+  .ln{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .ar{stroke:none}
+  .base{stroke:#5a6584;stroke-dasharray:3 4;stroke-width:1}
+  .axis{fill:#6a7390;font-size:8.5px}
+  .risk{padding:12px 18px 14px;font-size:9.5px;color:#5f6880;letter-spacing:.06em;line-height:1.6}
+</style>
+</head>
+<body>
+  <main class="term">
+    <header class="bar"><span class="live"></span><h1>ARENA TERMINAL</h1><span>美股 · 模拟实时流</span></header>
+    <section class="idx" id="idx"></section>
+    <section class="rows" id="rows"></section>
+    <section class="chart" id="chart"></section>
+    <footer class="risk">风险提示：本面板数据为本地随机游走模拟，仅用于界面演示，不构成任何投资建议。高波动标的已标注，请注意仓位控制。</footer>
+  </main>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const S = [
+    { s:"NVDA", n:"英伟达", p:1284.5, prev:1251.2 },
+    { s:"AAPL", n:"苹果", p:226.34, prev:228.91 },
+    { s:"TSLA", n:"特斯拉", p:244.68, prev:236.44 },
+    { s:"MSFT", n:"微软", p:452.10, prev:449.87 }
+  ];
+  const IDX = [ { n:"标普 500", v:5842.3, o:5841.1 }, { n:"纳斯达克", v:19218.7, o:19244.6 }, { n:"道琼斯", v:43612.5, o:43598.2 } ];
+  let sel = 0;
+  S.forEach(st => { st.h = []; let v = st.prev;
+    for (let i = 0; i < 42; i++) { v *= 1 + (Math.random() - .487) * .006; st.h.push(v); }
+    st.h[41] = st.p; });
+  const fmt = (v, d = 2) => v.toFixed(d);
+  const pct = st => (st.p - st.prev) / st.prev * 100;
+  function spark(st, w = 110, h = 30) {
+    const lo = Math.min(...st.h), hi = Math.max(...st.h), up = st.p >= st.prev;
+    const pts = st.h.map((v, i) => (i * w / 41).toFixed(1) + "," + (2 + (hi - v) / (hi - lo || 1) * (h - 5)).toFixed(1)).join(" ");
+    return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><polyline class="sp" stroke="${up ? "#2fe6a7" : "#ff5c6c"}" points="${pts}"/></svg>`;
+  }
+  function mainChart() {
+    const st = S[sel], w = 400, h = 130, lo = Math.min(...st.h, st.prev) * .999, hi = Math.max(...st.h, st.prev) * 1.001;
+    const X = i => 6 + i * (w - 46) / 41, Y = v => 8 + (hi - v) / (hi - lo) * (h - 26);
+    const up = st.p >= st.prev, c = up ? "#2fe6a7" : "#ff5c6c";
+    const line = st.h.map((v, i) => X(i).toFixed(1) + "," + Y(v).toFixed(1)).join(" ");
+    return `<h2>${st.s} · ${st.n} 分时走势<em class="${up ? "up" : "dn"}">$${fmt(st.p)}</em></h2>
+      <svg viewBox="0 0 ${w} ${h}">
+      <defs><linearGradient id="cg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${c}" stop-opacity=".34"/><stop offset="1" stop-color="${c}" stop-opacity="0"/></linearGradient></defs>
+      <line class="base" x1="6" x2="${w - 40}" y1="${Y(st.prev)}" y2="${Y(st.prev)}"/>
+      <text class="axis" x="${w - 38}" y="${Y(st.prev) + 3}">昨收 ${fmt(st.prev)}</text>
+      <polygon class="ar" fill="url(#cg)" points="6,${Y(st.h[0])} ${line} ${X(41)},${h - 14} 6,${h - 14}"/>
+      <polyline class="ln" stroke="${c}" points="${line}"/>
+      <circle cx="${X(41)}" cy="${Y(st.p)}" r="3" fill="${c}"/>
+      <text class="axis" x="6" y="${h - 4}">高 ${fmt(Math.max(...st.h))} · 低 ${fmt(Math.min(...st.h))} · 42 个采样点</text></svg>`;
+  }
+  function render(flashIdx = -1, dir = 0) {
+    $("rows").innerHTML = S.map((st, i) => {
+      const up = st.p >= st.prev, d = st.p - st.prev, hot = Math.abs(pct(st)) > 2.2;
+      return `<button class="row ${i === sel ? "sel" : ""} ${i === flashIdx ? (dir > 0 ? "flash-up" : "flash-dn") : ""}" data-i="${i}">
+        <div class="sym"><b>${st.s}</b><i>${st.n}${hot ? '<span class="warn">高波动</span>' : ""}</i></div>
+        <div class="spark">${spark(st)}</div>
+        <div class="num"><p class="px">${fmt(st.p)}</p>
+        <p class="chg ${up ? "up" : "dn"}">${up ? "▲ +" : "▼ −"}${fmt(Math.abs(d))} (${up ? "+" : "−"}${fmt(Math.abs(pct(st)))}%)</p></div></button>`;
+    }).join("");
+    $("idx").innerHTML = IDX.map(({ n, v, o }) => {
+      const up = v >= o;
+      return `<div class="chip"><b>${n}</b><i class="${up ? "up" : "dn"}">${fmt(v, 1)}</i></div>`;
+    }).join("");
+    $("chart").innerHTML = mainChart();
+  }
+  $("rows").addEventListener("click", e => {
+    const b = e.target.closest(".row"); if (!b) return;
+    sel = +b.dataset.i; render();
+  });
+  render();
+  // 模拟实时流：每 1.4s 随机 1-2 支股票随机游走
+  setInterval(() => {
+    const k = Math.random() > .5 ? 2 : 1;
+    for (let j = 0; j < k; j++) {
+      const i = Math.floor(Math.random() * S.length), st = S[i];
+      const drift = (Math.random() - .485) * .007;
+      st.p = Math.max(1, st.p * (1 + drift)); st.h.push(st.p);
+      if (st.h.length > 42) st.h.shift();
+      render(i, drift >= 0 ? 1 : -1);
+    }
+    IDX.forEach(a => { a.v *= 1 + (Math.random() - .49) * .0012; });
+  }, 1400);
+</script>
+</body>
+</html>

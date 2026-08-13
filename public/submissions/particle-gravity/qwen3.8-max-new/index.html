@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>EVENT HORIZON · 粒子引力场</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{background:#030409;touch-action:none;user-select:none;
+    font-family:"SF Mono",ui-monospace,Menlo,Consolas,"PingFang SC",monospace;color:#cfe3ff}
+  canvas{position:fixed;inset:0;display:block}
+  .hud{position:fixed;top:14px;left:16px;font-size:10.5px;letter-spacing:.14em;line-height:1.9;
+    text-shadow:0 0 12px rgba(90,160,255,.6);pointer-events:none}
+  .hud b{color:#7fd6ff;font-weight:600}
+  .hud2{position:fixed;top:14px;right:16px;text-align:right;font-size:10.5px;letter-spacing:.14em;
+    line-height:1.9;text-shadow:0 0 12px rgba(150,110,255,.6);pointer-events:none}
+  .hud2 b{color:#c99cff;font-weight:600}
+  .corner{position:fixed;width:22px;height:22px;border:1.5px solid rgba(130,190,255,.4);pointer-events:none}
+  .c1{top:10px;left:10px;border-right:none;border-bottom:none}
+  .c2{top:10px;right:10px;border-left:none;border-bottom:none}
+  .c3{bottom:10px;left:10px;border-right:none;border-top:none}
+  .c4{bottom:10px;right:10px;border-left:none;border-top:none}
+  .modes{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);display:flex;gap:8px;
+    background:rgba(8,12,26,.7);border:1px solid rgba(120,170,255,.22);border-radius:99px;padding:6px;
+    backdrop-filter:blur(8px);box-shadow:0 10px 30px rgba(0,0,0,.5)}
+  .mode{border:none;background:transparent;color:#8fa5cc;font:inherit;font-size:11px;letter-spacing:.12em;
+    padding:8px 16px;border-radius:99px;cursor:pointer;transition:.3s}
+  .mode.on{background:linear-gradient(180deg,#4f8dff,#3757d6);color:#fff;box-shadow:0 0 18px rgba(90,140,255,.55)}
+  .tip{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);font-size:10px;letter-spacing:.3em;
+    color:rgba(150,175,220,.5);pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+  <canvas id="cv"></canvas>
+  <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+  <div class="hud">PARTICLES <b id="hN">0</b><br>FPS <b id="hF">60</b><br>核心质量 <b id="hM">1.00 M⊙</b></div>
+  <div class="hud2">ENERGY <b id="hE">0.00</b><br>MODE <b id="hMode">GRAVITY</b><br>FIELD <b>STABLE</b></div>
+  <p class="tip">点击 / 触摸 → 冲击波 · 移动指针 → 临时引力点</p>
+  <nav class="modes">
+    <button class="mode on" data-m="gravity">引力</button>
+    <button class="mode" data-m="repel">斥力</button>
+    <button class="mode" data-m="vortex">涡旋</button>
+  </nav>
+<script>
+  const cv = document.getElementById("cv"), ctx = cv.getContext("2d");
+  const DPR = Math.min(2, devicePixelRatio || 1);
+  let W = 0, H = 0, CX = 0, CY = 0;
+  const isMobile = innerWidth < 500;
+  const N = isMobile ? 230 : 430, G = 1500, SOFT = 30;
+  let mode = "gravity", mx = null, my = null, waves = [];
+  const P = [];
+  function size() {
+    W = innerWidth; H = innerHeight; CX = W / 2; CY = H / 2;
+    cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  size(); addEventListener("resize", size);
+  for (let i = 0; i < N; i++) {                                 // 初始化近圆轨道粒子
+    const r = 70 + Math.pow(Math.random(), .72) * Math.min(W, H) * .48, a = Math.random() * 6.29;
+    const x = CX + r * Math.cos(a), y = CY + r * Math.sin(a);
+    const v = Math.sqrt(G / Math.max(r, 70)) * (.86 + Math.random() * .3);
+    P.push({ x, y, vx: -Math.sin(a) * v, vy: Math.cos(a) * v,
+      z: Math.random(), hue: 195 + Math.random() * 85 });
+  }
+  function force(p, tx, ty, gm) {                               // 平方反比 + 软化（gm 为负即斥力）
+    const dx = tx - p.x, dy = ty - p.y, d2 = dx * dx + dy * dy + SOFT * SOFT;
+    const f = gm / d2, d = Math.sqrt(d2);
+    p.vx += dx / d * f; p.vy += dy / d * f;
+  }
+  let last = performance.now(), fps = 60, E = 0, hudAt = 0;
+  function frame(now) {
+    const rawDt = Math.max(1, now - last);
+    const dt = Math.min(2.6, rawDt / 16.7); last = now;
+    fps += (1000 / rawDt - fps) * .06;
+    ctx.fillStyle = "rgba(3,4,9,.30)"; ctx.fillRect(0, 0, W, H);   // 尾迹淡出
+    const corePulse = 1 + .1 * Math.sin(now / 420);
+    const cg = ctx.createRadialGradient(CX, CY, 2, CX, CY, 64 * corePulse);
+    cg.addColorStop(0, "rgba(255,255,255,.95)"); cg.addColorStop(.25, "rgba(140,190,255,.75)");
+    cg.addColorStop(.6, "rgba(90,120,255,.22)"); cg.addColorStop(1, "transparent");
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(CX, CY, 64 * corePulse, 0, 6.29); ctx.fill();
+    ctx.strokeStyle = "rgba(150,200,255," + (.22 + .1 * Math.sin(now / 300)) + ")";    // 核心环
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.arc(CX, CY, 34 * corePulse, 0, 6.29); ctx.stroke();
+    for (let i = waves.length - 1; i >= 0; i--) {               // 冲击波扩散环
+      const w = waves[i]; w.r += 9 * dt; w.a -= .022 * dt;
+      if (w.a <= 0) { waves.splice(i, 1); continue; }
+      ctx.strokeStyle = "rgba(160,220,255," + w.a + ")"; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(w.x, w.y, w.r, 0, 6.29); ctx.stroke();
+    }
+    E = 0;
+    const gm = G * 1.4;
+    for (const p of P) {
+      if (mode === "gravity") force(p, CX, CY, gm);
+      else if (mode === "repel") {
+        force(p, CX, CY, -gm * .62);
+        const dx = CX - p.x, dy = CY - p.y, d = Math.hypot(dx, dy);
+        if (d > Math.min(W, H) * .46) { p.vx += dx / d * .34 * dt; p.vy += dy / d * .34 * dt; }
+      } else {                                                    // 涡旋：引力 + 切向力
+        force(p, CX, CY, gm);
+        const dx = p.x - CX, dy = p.y - CY, d = Math.hypot(dx, dy) || 1;
+        p.vx += -dy / d * .36 * dt; p.vy += dx / d * .36 * dt;
+      }
+      if (mx !== null) force(p, mx, my, 620);                    // 指针临时引力点
+      p.vx *= Math.pow(.999, dt); p.vy *= Math.pow(.999, dt);
+      p.x += p.vx * dt; p.y += p.vy * dt;
+      if (p.x < -60 || p.x > W + 60 || p.y < -60 || p.y > H + 60) {   // 逃逸回收
+        const r = 80 + Math.random() * 120, a = Math.random() * 6.29;
+        p.x = CX + r * Math.cos(a); p.y = CY + r * Math.sin(a);
+        const v = Math.sqrt(G / r); p.vx = -Math.sin(a) * v; p.vy = Math.cos(a) * v;
+      }
+      E += .5 * (p.vx * p.vx + p.vy * p.vy);
+      const sp = Math.hypot(p.vx, p.vy), glow = Math.min(1, .3 + sp / 6);
+      ctx.globalAlpha = (.35 + p.z * .6) * glow;
+      ctx.fillStyle = "hsl(" + (p.hue + sp * 6) + ",92%,66%)";
+      ctx.beginPath(); ctx.arc(p.x, p.y, .8 + p.z * 1.9, 0, 6.29); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+    if (now - hudAt > 250) {                                      // HUD 节流刷新
+      hudAt = now;
+      document.getElementById("hN").textContent = N;
+      document.getElementById("hF").textContent = Math.round(fps);
+      document.getElementById("hE").textContent = (E / N).toFixed(2);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  document.getElementById("hN").textContent = N;
+  function shock(x, y) {                                          // 冲击波：径向冲量
+    waves.push({ x, y, r: 6, a: .85 });
+    for (const p of P) {
+      const dx = p.x - x, dy = p.y - y, d = Math.hypot(dx, dy) || 1;
+      const imp = 7.5 / (1 + d / 90);
+      p.vx += dx / d * imp; p.vy += dy / d * imp;
+    }
+  }
+  addEventListener("pointerdown", e => shock(e.clientX, e.clientY));
+  addEventListener("pointermove", e => { mx = e.clientX; my = e.clientY; });
+  addEventListener("pointerleave", () => { mx = my = null; });
+  document.querySelectorAll(".mode").forEach(b => b.onclick = () => {
+    mode = b.dataset.m;
+    document.querySelectorAll(".mode").forEach(x => x.classList.toggle("on", x === b));
+    document.getElementById("hMode").textContent = mode.toUpperCase();
+    shock(CX, CY);
+  });
+</script>
+</body>
+</html>

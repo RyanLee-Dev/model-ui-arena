@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>REEL-9 · 录音室</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 100% at 50% 0%,#1a1d27,#0b0c10 70%);
+    font-family:"Avenir Next",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    color:#e8eaf0;padding:24px;
+  }
+  .deck{width:min(94vw,430px);border-radius:22px;padding:26px 24px 22px;position:relative;
+    background:linear-gradient(180deg,#20242f,#14161d 58%,#101218);
+    box-shadow:0 30px 60px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.06);
+  }
+  .head{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+  .led{width:9px;height:9px;border-radius:50%;background:#3a3f4d;transition:.4s}
+  body[data-state=rec] .led{background:#ff4d5e;box-shadow:0 0 12px #ff4d5e;animation:blink 1s steps(2) infinite}
+  body[data-state=pause] .led{background:#f2b544;box-shadow:0 0 10px rgba(242,181,68,.7)}
+  @keyframes blink{50%{opacity:.35}}
+  .name{font-size:12px;letter-spacing:.34em;color:#9aa1b2}
+  .state{margin-left:auto;font-size:11px;letter-spacing:.22em;color:#6c7385}
+  body[data-state=rec] .state{color:#ff8b95}
+  .timer{text-align:center;font-family:"SF Mono",ui-monospace,Menlo,Consolas,monospace;
+    font-size:52px;font-weight:200;letter-spacing:.1em;margin:6px 0 14px;
+    text-shadow:0 2px 18px rgba(0,0,0,.5);font-variant-numeric:tabular-nums;
+  }
+  body[data-state=rec] .timer{color:#fff}
+  .wave{width:100%;height:86px;border-radius:12px;background:#0a0b0f;
+    border:1px solid rgba(255,255,255,.05);box-shadow:inset 0 2px 10px rgba(0,0,0,.6);display:block}
+  .meter{display:flex;align-items:center;gap:10px;margin:14px 2px 20px;font-size:10px;letter-spacing:.2em;color:#6c7385}
+  .bar{flex:1;height:5px;border-radius:99px;background:#23262f;overflow:hidden}
+  .bar i{display:block;height:100%;width:0%;border-radius:99px;
+    background:linear-gradient(90deg,#41dc9a,#f2b544 65%,#ff4d5e);transition:width .1s linear}
+  .transport{display:flex;justify-content:center;gap:26px}
+  .btn{width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,.1);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;transition:transform .15s,opacity .3s,box-shadow .3s;
+    background:linear-gradient(180deg,#2a2f3c,#181b23);box-shadow:0 8px 18px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);
+  }
+  .btn:active{transform:scale(.93)}
+  .btn:disabled{opacity:.32;cursor:not-allowed}
+  .btn svg{width:22px;height:22px}
+  #btnRec{width:76px;height:76px}
+  body[data-state=rec] #btnRec{box-shadow:0 0 0 6px rgba(255,77,94,.15),0 0 26px rgba(255,77,94,.5)}
+  .mask{position:fixed;inset:0;background:rgba(5,6,9,.72);backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s;z-index:9}
+  .mask.show{opacity:1;pointer-events:auto}
+  .panel{width:min(88vw,360px);border-radius:18px;padding:26px;text-align:center;
+    background:linear-gradient(180deg,#232733,#15171f);border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 30px 70px rgba(0,0,0,.6);transform:translateY(10px);transition:transform .3s}
+  .mask.show .panel{transform:none}
+  .panel h2{font-size:16px;font-weight:600;letter-spacing:.12em;margin-bottom:8px}
+  .panel p{font-size:12px;color:#8b92a5;line-height:1.7}
+  .rows{margin:16px 0 6px;text-align:left}
+  .row{display:flex;justify-content:space-between;padding:9px 2px;border-bottom:1px dashed rgba(255,255,255,.08);font-size:12px}
+  .row b{font-weight:500;color:#f2b544}
+  .actions{display:flex;gap:12px;margin-top:18px}
+  .ghost,.solid{flex:1;padding:11px 0;border-radius:10px;font-size:13px;letter-spacing:.1em;cursor:pointer;border:none;transition:.2s}
+  .ghost{background:transparent;border:1px solid rgba(255,255,255,.16);color:#c6cbda}
+  .solid{background:linear-gradient(180deg,#ff5f6d,#d93848);color:#fff;box-shadow:0 8px 18px rgba(255,77,94,.35)}
+  .solid.blue{background:linear-gradient(180deg,#5a8dff,#3b63d8);box-shadow:0 8px 18px rgba(90,141,255,.3)}
+  .ghost:hover,.solid:hover{filter:brightness(1.12)}
+</style>
+</head>
+<body data-state="idle">
+  <main class="deck">
+    <header class="head"><span class="led"></span><span class="name">REEL-9 STUDIO</span><span class="state" id="stateText">待机 IDLE</span></header>
+    <p class="timer" id="timer">00:00</p>
+    <canvas class="wave" id="wave"></canvas>
+    <div class="meter"><span>电平</span><div class="bar"><i id="lv"></i></div><span>dB</span></div>
+    <div class="transport">
+      <button class="btn" id="btnRec" title="开始 / 继续"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#ff4d5e"/></svg></button>
+      <button class="btn" id="btnPause" disabled title="暂停"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1.4" fill="#e8eaf0"/><rect x="14" y="5" width="4" height="14" rx="1.4" fill="#e8eaf0"/></svg></button>
+      <button class="btn" id="btnStop" disabled title="停止"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2.4" fill="#e8eaf0"/></svg></button>
+    </div>
+  </main>
+  <div class="mask" id="confirm"><div class="panel">
+    <h2>结束本次录音？</h2><p>停止后将生成录音摘要，<br>该操作无法撤销。</p>
+    <div class="actions"><button class="ghost" id="cNo">继续录制</button><button class="solid" id="cYes">确认停止</button></div>
+  </div></div>
+  <div class="mask" id="summary"><div class="panel">
+    <h2>录音摘要</h2><p>本次录音已完成并归档</p>
+    <div class="rows">
+      <div class="row"><span>录音时长</span><b id="sDur">—</b></div>
+      <div class="row"><span>波形采样</span><b id="sFrames">—</b></div>
+      <div class="row"><span>平均电平</span><b id="sLv">—</b></div>
+      <div class="row"><span>状态切换</span><b id="sTrans">—</b></div>
+    </div>
+    <div class="actions"><button class="solid blue" id="sNew">开始新录音</button></div>
+  </div></div>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const cv = $("wave"), ctx = cv.getContext("2d");
+  if (!ctx.roundRect) ctx.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  function fit(){ cv.width = cv.clientWidth * dpr; cv.height = cv.clientHeight * dpr; }
+  fit(); addEventListener("resize", () => { fit(); draw(); });
+  let state = "idle", acc = 0, stamp = 0, levels = [], lv = 0, lvSum = 0, trans = 0;
+  const pad = (n) => String(n).padStart(2, "0");
+  const fmt = (ms) => pad(Math.floor(ms / 60000)) + ":" + pad(Math.floor(ms / 1000) % 60);
+  const elapsed = () => state === "rec" ? acc + performance.now() - stamp : acc;
+  function setState(next, label){
+    state = next; trans++; document.body.dataset.state = next;
+    $("stateText").textContent = label;
+    $("btnRec").disabled = next === "rec";
+    $("btnPause").disabled = next !== "rec";
+    $("btnStop").disabled = next === "idle";
+  }
+  function draw(){
+    const w = cv.width, h = cv.height; ctx.clearRect(0, 0, w, h);
+    const n = 72, gap = w / n, take = levels.slice(-n);
+    for (let i = 0; i < take.length; i++) {
+      const amp = take[i] * (h * 0.46), x = gap * i + gap * 0.5;
+      const g = ctx.createLinearGradient(0, h / 2 - amp, 0, h / 2 + amp);
+      g.addColorStop(0, "#ff6b78"); g.addColorStop(1, "#f2b544");
+      ctx.fillStyle = i === take.length - 1 ? "#ffffff" : g;
+      ctx.beginPath(); ctx.roundRect(x - gap * 0.3, h / 2 - amp, gap * 0.6, amp * 2, gap * 0.3); ctx.fill();
+    }
+    ctx.fillStyle = "rgba(255,255,255,.12)"; ctx.fillRect(0, h / 2 - 0.5 * dpr, w, dpr);
+  }
+  function loop(now){
+    if (state === "rec") {
+      const t = now / 1000, target = Math.min(1, Math.max(.06, .42 + .3 * Math.sin(t * 2.3) + .2 * Math.sin(t * 5.7) + (Math.random() - .5) * .42));
+      lv += (target - lv) * 0.25; levels.push(lv); lvSum += lv;
+      if (levels.length > 900) levels.shift();
+      $("lv").style.width = Math.round(lv * 100) + "%";
+      $("timer").textContent = fmt(elapsed()); draw();
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+  $("btnRec").onclick = () => { stamp = performance.now(); setState("rec", "录制中 REC"); };
+  $("btnPause").onclick = () => { acc = elapsed(); setState("pause", "已暂停 PAUSE"); };
+  $("btnStop").onclick = () => $("confirm").classList.add("show");   // 误操作防护：二次确认
+  $("cNo").onclick = () => $("confirm").classList.remove("show");
+  $("cYes").onclick = () => {
+    acc = elapsed(); $("confirm").classList.remove("show");
+    $("sDur").textContent = fmt(acc);
+    $("sFrames").textContent = levels.length + " 帧";
+    $("sLv").textContent = levels.length ? "-" + Math.round(30 - lvSum / levels.length * 28) + " dB" : "—";
+    $("sTrans").textContent = trans + " 次";
+    setState("idle", "待机 IDLE"); acc = 0; $("timer").textContent = "00:00";
+    $("summary").classList.add("show");
+  };
+  $("sNew").onclick = () => { levels = []; lvSum = 0; lv = 0; $("lv").style.width = "0%"; draw(); $("summary").classList.remove("show"); };
+  draw();
+</script>
+</body>
+</html>
