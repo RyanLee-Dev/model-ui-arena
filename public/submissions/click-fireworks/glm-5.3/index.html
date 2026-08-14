@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>夜空花火 · Fireworks</title>
+<!--
+设计说明：
+1. 庆典夜空：渐变夜幕 + 闪烁星群 + 月晕 + 城市天际线剪影（含零星亮窗），画面全部由 Canvas 程序化生成。
+2. 点击任意位置发射升空火箭（带下坠火花尾迹），到达后炸开多色球状烟花：粒子扩散、重力下坠、空气阻力衰减、余辉闪烁后熄灭。
+3. 性能：粒子总量上限 2600（超出即回收最旧粒子），单 rAF 循环，DPR 上限 1.75，resize 自适应；夜空静态元素离屏缓存不逐帧重算。
+4. 无人交互时每 4-7 秒自动放一朵，保持庆典氛围；连续快速点击不卡死。
+-->
+<style>
+*{margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#060a1a}
+canvas{display:block;width:100vw;height:100vh;cursor:crosshair}
+.hint{position:fixed;left:50%;top:14%;transform:translateX(-50%);color:rgba(255,240,210,.85);font:300 15px/1 "PingFang SC",system-ui,sans-serif;letter-spacing:.5em;pointer-events:none;animation:hint 3s ease infinite alternate;text-shadow:0 0 18px rgba(255,200,120,.5)}
+@keyframes hint{from{opacity:.45}to{opacity:.95}}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hint" id="hint">点 击 夜 空 · 绽 放 花 火</div>
+<script>
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+let W,H,DPR,sky;
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,1.75);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  sky=document.createElement("canvas");sky.width=W*DPR;sky.height=H*DPR;
+  const s=sky.getContext("2d");s.setTransform(DPR,0,0,DPR,0,0);
+  const g=s.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#050a1e");g.addColorStop(.55,"#0a1330");g.addColorStop(1,"#1a1c33");
+  s.fillStyle=g;s.fillRect(0,0,W,H);
+  for(let i=0;i<130;i++){s.globalAlpha=.25+Math.random()*.7;
+    s.fillStyle=Math.random()<.12?"#ffe9c4":"#dfe9ff";
+    const r=Math.random()<.9?.8:1.5;
+    s.beginPath();s.arc(Math.random()*W,Math.random()*H*.75,r,0,7);s.fill()}
+  s.globalAlpha=1;
+  const mx=W*.82,my=H*.16;
+  const mg=s.createRadialGradient(mx,my,4,mx,my,90);
+  mg.addColorStop(0,"rgba(255,246,220,.95)");mg.addColorStop(.18,"rgba(255,240,200,.5)");mg.addColorStop(1,"rgba(255,240,200,0)");
+  s.fillStyle=mg;s.beginPath();s.arc(mx,my,90,0,7);s.fill();
+  s.fillStyle="#fdf6e3";s.beginPath();s.arc(mx,my,22,0,7);s.fill();
+  s.fillStyle="rgba(226,214,182,.55)";s.beginPath();s.arc(mx-7,my-4,4,0,7);s.arc(mx+6,my+6,5.5,0,7);s.arc(mx+3,my-9,2.5,0,7);s.fill();
+  const bh=H,base=bh*.92;
+  s.fillStyle="#070b18";
+  let x=-10;
+  while(x<W+20){const w=30+Math.random()*70,h=40+Math.random()*140;
+    s.fillRect(x,base-h,w,h+H);
+    s.fillStyle="rgba(255,214,140,.75)";
+    for(let wx=x+6;wx<x+w-6;wx+=11)for(let wy=base-h+8;wy<base-14;wy+=16)
+      if(Math.random()<.16)s.fillRect(wx,wy,3.2,4.6);
+    s.fillStyle="#070b18";x+=w+Math.random()*26}
+}
+resize();addEventListener("resize",resize);
+const P=[],R=[],MAX=2600,PALETTES=[[8,28],[35,55],[95,40],[300,35],[165,30],[48,18]];
+const rand=(a,b)=>a+Math.random()*(b-a);
+class Particle{
+  constructor(x,y,vx,vy,hue,life,glow){
+    this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.hue=hue;this.life=life;this.t=0;this.glow=glow;
+  }
+  step(){
+    this.t++;
+    this.x+=this.vx;this.y+=this.vy;
+    this.vy+=.042;this.vx*=.985;this.vy*=.985;
+    return this.t<this.life;
+  }
+  draw(){
+    const a=(1-this.t/this.life)*(Math.random()<.12?.35:1);
+    ctx.globalAlpha=Math.max(0,a);
+    ctx.fillStyle=`hsl(${this.hue},95%,${this.glow?72:60}%)`;
+    ctx.beginPath();ctx.arc(this.x,this.y,this.glow?2.4:1.7,0,7);ctx.fill();
+    if(this.glow){
+      ctx.globalAlpha=a*.28;ctx.fillStyle=`hsl(${this.hue},100%,70%)`;
+      ctx.beginPath();ctx.arc(this.x,this.y,5.5,0,7);ctx.fill();
+    }
+  }
+}
+function explode(x,y){
+  const[hb,hs]=PALETTES[Math.random()*PALETTES.length|0];
+  const n=90+Math.random()*70|0,pow=rand(2.4,4.4);
+  for(let i=0;i<n;i++){
+    const th=Math.random()*Math.PI*2,sp=Math.pow(Math.random(),.5)*pow;
+    P.push(new Particle(x,y,Math.cos(th)*sp,Math.sin(th)*sp,hb+rand(-hs,hs),60+Math.random()*45,Math.random()<.3));
+  }
+  if(Math.random()<.4)setTimeout(()=>{
+    const n2=40+Math.random()*30|0,h2=hb+rand(-30,30);
+    for(let i=0;i<n2;i++){const th=Math.random()*Math.PI*2,sp=Math.pow(Math.random(),.6)*2.2;
+      P.push(new Particle(x+rand(-20,20),y+rand(-20,20),Math.cos(th)*sp,Math.sin(th)*sp,h2,40+Math.random()*30,false))}
+  },260);
+  if(P.length>MAX)P.splice(0,P.length-MAX);
+}
+class Rocket{
+  constructor(tx,ty){
+    this.x=rand(tx-40,tx+40);this.y=H+8;this.tx=tx;this.ty=ty;
+    const dx=tx-this.x,dy=ty-this.y,k=6.2/Math.hypot(dx,dy);
+    this.vx=dx*k;this.vy=dy*k;this.dead=false;
+  }
+  step(){
+    this.x+=this.vx;this.y+=this.vy;
+    for(let i=0;i<2;i++)P.push(new Particle(this.x+rand(-1.5,1.5),this.y+rand(0,4),rand(-.3,.3),rand(.2,.9),42+rand(-8,8),22+Math.random()*12,false));
+    if(this.y<=this.ty||this.vy>=0){this.dead=true;explode(this.tx,this.ty)}
+  }
+  draw(){
+    ctx.globalAlpha=1;ctx.fillStyle="#ffe9b0";
+    ctx.beginPath();ctx.arc(this.x,this.y,2.2,0,7);ctx.fill();
+  }
+}
+function auto(){R.push(new Rocket(rand(W*.15,W*.85),rand(H*.16,H*.45)));setTimeout(auto,rand(3800,6800))}
+setTimeout(auto,600);
+function frame(){
+  ctx.globalAlpha=1;ctx.fillStyle="rgba(6,10,26,.24)";ctx.fillRect(0,0,W,H);
+  ctx.drawImage(sky,0,0,W,H);
+  for(let i=R.length-1;i>=0;i--){R[i].step();R[i].draw();if(R[i].dead)R.splice(i,1)}
+  for(let i=P.length-1;i>=0;i--){if(!P[i].step()){P.splice(i,1);continue}P[i].draw()}
+  ctx.globalAlpha=1;
+  requestAnimationFrame(frame);
+}
+frame();
+function fire(e){
+  const t=e.touches?e.touches[0]:e;
+  R.push(new Rocket(t.clientX,t.clientY));
+  document.getElementById("hint").style.display="none";
+}
+addEventListener("pointerdown",fire);
+</script>
+</body>
+</html>

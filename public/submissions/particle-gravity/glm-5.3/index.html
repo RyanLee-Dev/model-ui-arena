@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>引力井 · Gravity</title>
+<!--
+设计说明：
+1. 深空引力场：中央高密度能量核心（脉动辉光）+ 380 颗轨道粒子，粒子以近圆轨道速度初始化，围绕核心持续环绕、偏转，物理连续无抖动。
+2. 交互：指针移动生成临时引力点（可一键切换引力/斥力模式）；点击/触控 anywhere 释放冲击波，对波前粒子施加径向脉冲；粒子坠入核心被吞噬并在外环重生，总数恒定。
+3. 视觉层次：尾迹由半透明覆盖产生，粒子色相随速度从深蓝渐变到炽金，速度越快越亮，一眼读出动能分布。
+4. HUD 实时显示粒子数 / 平均能量 / FPS / 当前模式；DPR 上限 1.75，390px 移动端触控同样有反馈。
+-->
+<style>
+*{margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#04060e}
+canvas{display:block;width:100vw;height:100vh;cursor:crosshair;touch-action:none}
+.hud{position:fixed;top:14px;left:14px;padding:12px 16px;border-radius:14px;background:rgba(10,16,32,.62);border:1px solid rgba(255,255,255,.14);backdrop-filter:blur(12px);font:12px/1.9 "SF Mono",Menlo,"PingFang SC",monospace;color:#c6d4ee;letter-spacing:.08em;pointer-events:none}
+.hud b{color:#7ee0ff;font-weight:600}
+.mode{position:fixed;top:14px;right:14px;padding:10px 18px;border-radius:99px;border:1px solid rgba(126,224,255,.5);background:rgba(10,16,32,.62);backdrop-filter:blur(12px);color:#a9e8ff;font:600 13px/1 "PingFang SC",system-ui;letter-spacing:.2em;cursor:pointer;transition:.25s}
+.mode.rep{border-color:rgba(255,138,138,.6);color:#ffb3b3}
+.mode:active{transform:scale(.95)}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud" id="hud">--</div>
+<button class="mode" id="mode">模式 · 引力</button>
+<script>
+const cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+let W,H,DPR,cx,cy;
+function resize(){
+  DPR=Math.min(devicePixelRatio||1,1.75);
+  W=innerWidth;H=innerHeight;
+  cv.width=W*DPR;cv.height=H*DPR;
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+  cx=W/2;cy=H/2;
+  ctx.fillStyle="#04060e";ctx.fillRect(0,0,W,H);
+}
+resize();addEventListener("resize",resize);
+const GM=1050,SOFT=16,N=380,PS=[];
+const rand=(a,b)=>a+Math.random()*(b-a);
+function spawn(){
+  const a=rand(0,Math.PI*2),r=rand(Math.min(W,H)*.26,Math.min(W,H)*.48);
+  const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r;
+  const v=Math.sqrt(GM/r)*rand(.82,1.16),dir=Math.random()<.85?1:-1;
+  return{x,y,vx:-Math.sin(a)*v*dir,vy:Math.cos(a)*v*dir,life:0};
+}
+for(let i=0;i<N;i++)PS.push(spawn());
+let mx=0,my=0,hover=false,mode=1,shocks=[],fps=60,lt=performance.now(),fr=0;
+addEventListener("pointermove",e=>{mx=e.clientX;my=e.clientY;hover=true});
+addEventListener("pointerleave",()=>hover=false);
+addEventListener("blur",()=>hover=false);
+addEventListener("pointerdown",e=>{
+  shocks.push({x:e.clientX,y:e.clientY,r:0,max:Math.min(W,H)*.5});
+  if(shocks.length>6)shocks.shift();
+});
+document.getElementById("mode").onclick=e=>{
+  mode*=-1;
+  e.target.textContent=mode>0?"模式 · 引力":"模式 · 斥力";
+  e.target.classList.toggle("rep",mode<0);
+};
+function step(){
+  for(const p of PS){
+    let ax=cx-p.x,ay=cy-p.y;
+    const d2=ax*ax+ay*ay,d=Math.sqrt(d2),f=GM/((d2+SOFT*SOFT)*Math.max(d,1));
+    ax*=f;ay*=f;
+    if(hover){
+      let bx=mx-p.x,by=my-p.y;
+      const bd2=bx*bx+by*by,bd=Math.sqrt(bd2)||1,bf=mode*320/(bd2+2400);
+      ax+=bx*bf;ay+=by*bf;
+    }
+    p.vx=(p.vx+ax)*.99935;p.vy=(p.vy+ay)*.99935;
+    p.x+=p.vx;p.y+=p.vy;p.life++;
+    if(d<15||p.x<-60||p.x>W+60||p.y<-60||p.y>H+60||p.life>3600)Object.assign(p,spawn());
+  }
+  for(let i=shocks.length-1;i>=0;i--){
+    shocks[i].r+=14;
+    if(shocks[i].r>shocks[i].max)shocks.splice(i,1);
+  }
+  for(const s of shocks)for(const p of PS){
+    const dx=p.x-s.x,dy=p.y-s.y,d=Math.hypot(dx,dy)||1;
+    if(Math.abs(d-s.r)<26){
+      const k=5.4*(1-s.r/s.max)/d;
+      p.vx+=dx*k;p.vy+=dy*k;
+    }
+  }
+}
+function draw(t){
+  ctx.fillStyle="rgba(4,6,14,.3)";ctx.fillRect(0,0,W,H);
+  const pulse=1+Math.sin(t/620)*.08;
+  const core=ctx.createRadialGradient(cx,cy,0,cx,cy,46*pulse);
+  core.addColorStop(0,"rgba(220,240,255,.95)");
+  core.addColorStop(.28,"rgba(120,190,255,.55)");
+  core.addColorStop(1,"rgba(70,110,255,0)");
+  ctx.fillStyle=core;
+  ctx.beginPath();ctx.arc(cx,cy,46*pulse,0,7);ctx.fill();
+  for(const p of PS){
+    const sp=Math.hypot(p.vx,p.vy),v=Math.min(1,sp/4.2);
+    const hue=210-165*v,li=46+38*v;
+    ctx.globalAlpha=.35+.65*v;
+    ctx.fillStyle=`hsl(${hue},92%,${li}%)`;
+    ctx.beginPath();ctx.arc(p.x,p.y,1.1+1.5*v,0,7);ctx.fill();
+    if(v>.62){
+      ctx.globalAlpha=.16*v;
+      ctx.beginPath();ctx.arc(p.x,p.y,4.4*v,0,7);ctx.fill();
+    }
+  }
+  ctx.globalAlpha=.5;
+  for(const s of shocks){
+    ctx.strokeStyle=`rgba(140,200,255,${.55*(1-s.r/s.max)})`;
+    ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,7);ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+let avgE=0;
+function hud(){
+  const e=PS.reduce((s,p)=>s+.5*(p.vx*p.vx+p.vy*p.vy),0)/N;
+  avgE+=(e-avgE)*.1;
+  document.getElementById("hud").innerHTML=
+    `粒子数 <b>${N}</b>　平均能量 <b>${(avgE/100).toFixed(1)}</b><br>FPS <b>${fps|0}</b>　模式 <b>${mode>0?"临时引力":"临时斥力"}</b>${hover?"<br>指针场 <b>ON</b>":""}`;
+}
+function loop(t){
+  step();draw(t);
+  fr++;
+  if(t-lt>500){
+    fps=fr*1000/(t-lt);fr=0;lt=t;hud();
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

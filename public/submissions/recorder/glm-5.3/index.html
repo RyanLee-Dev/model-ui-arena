@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拾音 · Recorder</title>
+<!--
+设计说明：
+1. 录音室暗色基调 + 中央玻璃卡片：顶部滚动波形画布、中部大号 mm:ss 计时与状态灯、底部三态操作区。
+2. 状态机 idle / recording / paused / stopped 驱动全部 UI：红点呼吸、按钮态、波形行为（录音推进、暂停冻结、待机衰减）。
+3. 误操作防护：Stop 需两段确认（第一次点击进入 2.5 秒确认态并变色提示，再次点击才真正结束）。
+4. 停止后展示本次录音摘要（片段名 / 时长 / 状态 / 峰值电平），并保留历史片段列表，可一键开始新录音。
+-->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(900px 500px at 50% -8%,#233052,#0b0f1d 60%),#0b0f1d;font-family:"SF Pro Text","PingFang SC",system-ui,sans-serif;color:#e8eef8;padding:20px}
+.deck{width:min(92vw,460px);border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.09),rgba(255,255,255,.03));border:1px solid rgba(255,255,255,.14);box-shadow:0 30px 80px rgba(0,0,0,.5);backdrop-filter:blur(18px);padding:26px 26px 22px;transition:box-shadow .5s}
+.deck.rec{box-shadow:0 30px 80px rgba(0,0,0,.5),0 0 0 1px rgba(255,80,80,.25),0 0 60px rgba(255,70,70,.12)}
+.wave-box{height:110px;border-radius:16px;background:rgba(8,12,24,.55);border:1px solid rgba(255,255,255,.08);overflow:hidden;position:relative}
+canvas{width:100%;height:100%;display:block}
+.readout{display:flex;align-items:center;justify-content:center;gap:14px;margin:20px 0 6px}
+.dot{width:12px;height:12px;border-radius:50%;background:#5a6478;transition:background .3s}
+.rec .dot,.dot.on{background:#ff4d4f;animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,77,79,.55)}50%{box-shadow:0 0 0 9px rgba(255,77,79,0)}}
+.timer{font-size:52px;font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:.05em;line-height:1}
+.state{width:100%;text-align:center;font-size:12px;letter-spacing:.4em;color:#9fb0c8;margin-bottom:20px}
+.row{display:flex;gap:12px;justify-content:center}
+button{flex:1;height:50px;border:none;border-radius:14px;font-size:15px;font-weight:600;letter-spacing:.1em;cursor:pointer;transition:transform .15s,opacity .2s,background .3s;color:#eaf1fb;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12)}
+button:active{transform:scale(.96)}
+button:disabled{opacity:.32;cursor:not-allowed}
+#btnStart{background:linear-gradient(135deg,#2f7df6,#5aa9ff)}
+#btnStop.arm{background:linear-gradient(135deg,#c2410c,#f97316)}
+.summary{margin-top:20px;border-radius:16px;background:rgba(8,12,24,.5);border:1px solid rgba(255,255,255,.1);padding:16px 18px;animation:rise .45s ease both}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.summary h3{font-size:13px;letter-spacing:.3em;color:#9fb0c8;font-weight:600;margin-bottom:10px}
+.summary .big{font-size:15px;line-height:1.9}
+.summary .big b{color:#7dd3a8;font-weight:600}
+.hist{margin-top:10px;font-size:12.5px;color:#8b9bb4;line-height:1.9;border-top:1px dashed rgba(255,255,255,.12);padding-top:8px}
+.peak{height:5px;border-radius:99px;background:rgba(255,255,255,.1);margin-top:12px;overflow:hidden}
+.peak i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#34d399,#fbbf24,#ff5f5f);width:0;transition:width .6s ease}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+  <div class="wave-box"><canvas id="wave"></canvas></div>
+  <div class="readout"><span class="dot" id="dot"></span><div class="timer" id="timer">00:00</div></div>
+  <div class="state" id="state">待机中</div>
+  <div class="row">
+    <button id="btnStart">开始录音</button>
+    <button id="btnPause" disabled>暂停</button>
+    <button id="btnStop" disabled>停止</button>
+  </div>
+  <div id="panel"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id),deck=$("deck"),cv=$("wave"),ctx=cv.getContext("2d"),
+      bS=$("btnStart"),bP=$("btnPause"),bT=$("btnStop");
+let state="idle",recMs=0,lastT=0,bars=new Array(96).fill(.06),peak=0,armTimer=null,sn=0,hist=[];
+const pad=n=>String(n|0).padStart(2,"0"),fmt=ms=>`${pad(ms/60000)}:${pad(ms/1000%60)}`;
+function fit(){const r=cv.getBoundingClientRect();cv.width=r.width*devicePixelRatio;cv.height=r.height*devicePixelRatio}
+fit();addEventListener("resize",fit);
+function render(){
+  const W=cv.width,H=cv.height,g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#8fd0ff");g.addColorStop(.5,"#5aa9ff");g.addColorStop(1,"#3b6fd4");
+  ctx.clearRect(0,0,W,H);
+  const n=bars.length,bw=W/n*.55;
+  bars.forEach((v,i)=>{
+    const h=Math.max(2,v)*(H*.86);
+    ctx.fillStyle=g;ctx.globalAlpha=.35+.65*v;
+    ctx.fillRect(i*(W/n),(H-h)/2,bw,h);
+  });
+  ctx.globalAlpha=1;
+}
+let smooth=.06;
+function loop(t){
+  if(state==="rec"){
+    const dt=t-lastT;
+    if(dt>90){smooth=Math.min(1,Math.max(.08,smooth+(Math.random()-.48)*.42));
+      bars.push(smooth);bars.shift();peak=Math.max(peak,smooth);lastT=t}
+  }else if(state==="idle"||state==="stopped"){
+    if(Math.random()<.25){bars.push(.05+Math.random()*.03);bars.shift()}
+  }
+  if(state==="rec")recMs+=Math.min(50,t-(loop.prev||t));
+  loop.prev=t;
+  $("timer").textContent=fmt(recMs);
+  render();requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+function setState(s){
+  state=s;clearTimeout(armTimer);bT.classList.remove("arm");bT.textContent="停止";
+  deck.classList.toggle("rec",s==="rec");
+  $("dot").classList.toggle("on",s==="rec");
+  $("state").textContent={idle:"待机中",rec:"录音中 · REC",paused:"已暂停",stopped:"录音完成"}[s];
+  bS.disabled=s==="rec"||s==="paused";
+  bP.disabled=s!=="rec"&&s!=="paused";
+  bT.disabled=s!=="rec"&&s!=="paused";
+  bP.textContent=s==="paused"?"继续":"暂停";
+}
+bS.onclick=()=>{
+  if(state==="stopped"||state==="idle"){recMs=0;peak=0;bars.fill(.06);$("panel").innerHTML=""}
+  setState("rec");smooth=.3;
+};
+bP.onclick=()=>setState(state==="paused"?"rec":"paused");
+bT.onclick=()=>{
+  if(!bT.classList.contains("arm")){
+    bT.classList.add("arm");bT.textContent="确认停止?";
+    armTimer=setTimeout(()=>{bT.classList.remove("arm");bT.textContent="停止"},2500);
+    return;
+  }
+  const dur=recMs,dPeak=peak;sn++;hist.unshift(`片段 ${String(sn).padStart(2,"0")} · ${fmt(dur)}`);
+  setState("stopped");
+  $("panel").innerHTML=`<div class="summary"><h3>本次录音摘要</h3>
+    <div class="big">片段 <b>${String(sn).padStart(2,"0")}</b> · 时长 <b>${fmt(dur)}</b> · 状态 <b>已完成</b> · 峰值电平 <b>${Math.round(dPeak*100)}%</b></div>
+    <div class="peak"><i style="width:${Math.round(dPeak*100)}%"></i></div>
+    <div class="hist">历史片段<br>${hist.slice(0,4).join("<br>")}</div></div>`;
+};
+setState("idle");
+</script>
+</body>
+</html>

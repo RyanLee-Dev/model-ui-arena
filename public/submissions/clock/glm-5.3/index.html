@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拾光 · Clock</title>
+<!--
+设计说明：
+1. 核心创意为「晨昏双形态」：6:00-18:00 呈现日光暖色场景，其余时间自动切换为星空夜色，时间形态随本地时间演变。
+2. 模拟表盘与数字时间双通道：JS 生成 60 刻度与罗马点位，指针由 rAF 驱动平滑扫秒（毫秒插值，无跳格）。
+3. 动效细节：外圈刻度光环呼吸、夜空星子闪烁、秒针红色尾影。
+4. 性能：单一 rAF 循环；数字 DOM 仅在秒变化时写入；动画全部走 transform，避免布局抖动。
+-->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;font-family:"SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:#f4f7fb;overflow:hidden;transition:background 1.8s ease}
+body.day{background:radial-gradient(1100px 620px at 72% -12%,#8fd0f0,transparent 55%),linear-gradient(168deg,#1173a8 0%,#2f97c9 48%,#cfe8f4 100%)}
+body.night{background:radial-gradient(1000px 560px at 70% -10%,#1c2f5c,transparent 60%),linear-gradient(170deg,#0b1130 0%,#0a0f24 100%)}
+body.night::after{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(1.6px 1.6px at 12% 22%,#fff,transparent),radial-gradient(1px 1px at 68% 12%,#d8e8ff,transparent),radial-gradient(1.8px 1.8px at 84% 36%,#fff,transparent),radial-gradient(1px 1px at 32% 8%,#ffe9b0,transparent),radial-gradient(1.3px 1.3px at 52% 30%,#fff,transparent),radial-gradient(1px 1px at 91% 14%,#fff,transparent);animation:twinkle 4.5s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.45}to{opacity:1}}
+.stage{display:flex;flex-direction:column;align-items:center;gap:28px;padding:24px}
+.dial{position:relative;width:min(72vw,320px);aspect-ratio:1;border-radius:50%;background:rgba(255,255,255,.09);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);box-shadow:0 26px 70px rgba(4,10,30,.45),inset 0 0 0 1px rgba(255,255,255,.32),inset 0 14px 34px rgba(255,255,255,.08);display:grid;place-items:center}
+.dial::before{content:"";position:absolute;inset:-14px;border-radius:50%;border:1px dashed rgba(255,255,255,.4);animation:breath 4s ease-in-out infinite}
+@keyframes breath{0%,100%{transform:scale(1);opacity:.35}50%{transform:scale(1.05);opacity:.85}}
+.dial svg{position:absolute;inset:0;width:100%;height:100%}
+.dial svg line{stroke:rgba(255,255,255,.42);stroke-width:1.6;stroke-linecap:round}
+.dial svg line.major{stroke:#fff;stroke-width:3}
+.dial svg text{fill:rgba(255,255,255,.9);font:600 11px "SF Pro Display",system-ui;letter-spacing:.05em}
+.hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:99px;box-shadow:0 0 10px rgba(0,0,0,.45)}
+.h-hour{width:7px;height:25%;margin-left:-3.5px;background:linear-gradient(#fff,#d9e2ee)}
+.h-min{width:5px;height:37%;margin-left:-2.5px;background:linear-gradient(#fff,#c9d4e4)}
+.h-sec{width:2px;height:43%;margin-left:-1px;background:linear-gradient(transparent 30%,#ff5f5f 55%,#ffb35c)}
+.cap{position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px rgba(255,95,95,.45),0 2px 8px rgba(0,0,0,.4)}
+.digital{text-align:center;text-shadow:0 6px 28px rgba(0,0,0,.35)}
+.digits{font-size:clamp(46px,13vw,64px);font-weight:200;letter-spacing:.08em;font-variant-numeric:tabular-nums;line-height:1}
+.digits em{font-style:normal;color:#ffb35c;font-size:.62em}
+.meta{margin-top:12px;font-size:14px;letter-spacing:.42em;opacity:.85}
+.greet{margin-top:10px;font-size:12px;letter-spacing:.55em;opacity:.6}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="dial" id="dial">
+    <svg viewBox="0 0 200 200" id="ticks" aria-hidden="true"></svg>
+    <div class="hand h-hour" id="hh"></div>
+    <div class="hand h-min" id="hm"></div>
+    <div class="hand h-sec" id="hs"></div>
+    <div class="cap"></div>
+  </div>
+  <div class="digital">
+    <div class="digits" id="dt">00:00<em>:00</em></div>
+    <div class="meta" id="meta">--</div>
+    <div class="greet" id="greet">--</div>
+  </div>
+</div>
+<script>
+const svgNS="http://www.w3.org/2000/svg",ticks=document.getElementById("ticks");
+for(let i=0;i<60;i++){
+  const a=i*6*Math.PI/180,major=i%5===0,line=document.createElementNS(svgNS,"line");
+  const r1=94,r2=major?85:90;
+  line.setAttribute("x1",100+r1*Math.sin(a));line.setAttribute("y1",100-r1*Math.cos(a));
+  line.setAttribute("x2",100+r2*Math.sin(a));line.setAttribute("y2",100-r2*Math.cos(a));
+  if(major)line.setAttribute("class","major");
+  ticks.appendChild(line);
+}
+[[12,100,25],[3,175,104],[6,100,183],[9,25,104]].forEach(([t,x,y])=>{
+  const el=document.createElementNS(svgNS,"text");
+  el.setAttribute("x",x);el.setAttribute("y",y);el.setAttribute("text-anchor","middle");
+  el.textContent=t;ticks.appendChild(el);
+});
+const hh=document.getElementById("hh"),hm=document.getElementById("hm"),hs=document.getElementById("hs"),
+      dt=document.getElementById("dt"),meta=document.getElementById("meta"),greet=document.getElementById("greet");
+const WEEK=["星期日","星期一","星期二","星期三","星期四","星期五","星期六"];
+const pad=n=>String(n).padStart(2,"0");
+let lastSec=-1,lastDay=-1;
+function frame(){
+  const now=new Date(),ms=now.getMilliseconds(),s=now.getSeconds()+ms/1000,
+        m=now.getMinutes()+s/60,h=now.getHours()%12+m/60,sec=now.getSeconds();
+  hs.style.transform=`rotate(${s*6}deg)`;
+  hm.style.transform=`rotate(${m*6}deg)`;
+  hh.style.transform=`rotate(${h*30}deg)`;
+  if(sec!==lastSec){
+    lastSec=sec;
+    dt.innerHTML=`${pad(now.getHours())}:${pad(now.getMinutes())}<em>:${pad(sec)}</em>`;
+  }
+  const dayFlag=now.getHours();
+  if(dayFlag!==lastDay){
+    lastDay=dayFlag;
+    const day=dayFlag>=6&&dayFlag<18;
+    document.body.className=day?"day":"night";
+    meta.textContent=`${now.getMonth()+1}月${now.getDate()}日 ${WEEK[now.getDay()]}`;
+    greet.textContent=dayFlag<6?"夜色未尽":dayFlag<9?"清晨好":dayFlag<12?"上午好":dayFlag<14?"午间好":dayFlag<18?"午后好":dayFlag<22?"夜晚好":"夜深了";
+  }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

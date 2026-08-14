@@ -1,5 +1,6 @@
 {
   "latestModels": [
+    "glm-5.3",
     "claude-opus-5",
     "gpt-5.6-sol",
     "grok-4.6",
@@ -38,6 +39,7 @@
     "^kimi-k3$",
     "^kimi-k2\\.7$",
     "^kimi-k2\\.6$",
+    "^glm-5\\.3$",
     "^glm-5\\.2$",
     "^glm-5\\.1$",
     "^glm-5$",
@@ -58,7 +60,7 @@
     ["^qwen3\\.8-max-new$", "^qwen3\\.8-max$", "^qwen3\\.8-max-pre$", "^qwen-3\\.7-max$", "^qwen-3\\.6-plus$", "^qwen3\\.7-plus$"],
     ["^deepseek-v4-pro-GA$", "^deepseek-v4-pro$", "^deepseek-v4-flash$"],
     ["^kimi-k3$", "^kimi-k2\\.7$", "^kimi-k2\\.6$"],
-    ["^glm-5\\.2$", "^glm-5\\.1$", "^glm-5$"],
+    ["^glm-5\\.3$", "^glm-5\\.2$", "^glm-5\\.1$", "^glm-5$"],
     ["^Seed-2\\.0-Pro$"],
     ["^minimax-m2\\.7$", "^minimax-portal-MiniMax-M2\\.5$"]
   ]

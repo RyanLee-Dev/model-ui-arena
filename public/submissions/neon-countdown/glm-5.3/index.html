@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>点燃 · Countdown</title>
+<!--
+设计说明：
+1. 赛博霓虹发射台：中央环形进度（渐变描边 + 60 刻度推进）包裹大号霓虹数字，外圈每秒一次冲击波光环。
+2. 节奏系统：数字每秒弹跳、刻度逐格点亮、背景辐射光晕同步呼吸；最后 3 秒进入「警戒态」——红移、震屏、心跳加倍，紧张感陡增。
+3. 归零瞬间：数字定格 0，双圈冲击波爆发 + 56 粒金色火花四射，浮现完成文案与 Restart 按钮，可无限重开。
+4. 动效全部由 transform/opacity 驱动（合成层），移动端 390px 保持数字可读、布局不溢出。
+-->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(1000px 600px at 50% -10%,#1a1140,#070a18 58%),#070a18;font-family:"SF Pro Display","PingFang SC",system-ui,sans-serif;color:#eef2ff;overflow:hidden;padding:18px}
+.aura{position:fixed;inset:-20%;background:radial-gradient(circle at 50% 45%,rgba(88,120,255,.16),transparent 55%);animation:aura 1s ease-in-out infinite;pointer-events:none}
+@keyframes aura{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.06)}}
+body.final .aura{background:radial-gradient(circle at 50% 45%,rgba(255,60,70,.2),transparent 55%);animation-duration:.5s}
+.stage{position:relative;display:grid;place-items:center;transition:transform .1s}
+body.final .stage{animation:shake .32s linear infinite}
+@keyframes shake{0%,100%{transform:translate(0,0)}25%{transform:translate(1.6px,-1px)}50%{transform:translate(-1.4px,1.2px)}75%{transform:translate(1px,1.4px)}}
+svg.ring{width:min(84vw,360px);height:min(84vw,360px);transform:rotate(-90deg)}
+.track{fill:none;stroke:rgba(255,255,255,.09);stroke-width:6}
+.bar{fill:none;stroke:url(#ng);stroke-width:6;stroke-linecap:round;filter:url(#glow);transition:stroke .4s}
+.tick{stroke:rgba(255,255,255,.22);stroke-width:2;transition:stroke .3s,filter .3s}
+.tick.lit{stroke:#6ee7ff}
+body.final .tick.lit{stroke:#ff6b6b}
+.halo{position:absolute;width:min(84vw,360px);height:min(84vw,360px);border-radius:50%;border:2px solid rgba(110,231,255,.7);opacity:0;pointer-events:none}
+.halo.beat{animation:beat .8s ease-out}
+@keyframes beat{from{opacity:.8;transform:scale(.92)}to{opacity:0;transform:scale(1.45)}}
+.core{position:absolute;text-align:center}
+.num{font-size:min(34vw,150px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:#f4f8ff;text-shadow:0 0 8px #6ee7ff,0 0 26px rgba(110,231,255,.9),0 0 60px rgba(110,231,255,.55);transition:color .4s}
+.num.pop{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes pop{0%{transform:scale(1.28)}100%{transform:scale(1)}}
+body.final .num{color:#ffe9ea;text-shadow:0 0 8px #ff5f5f,0 0 30px rgba(255,70,70,.95),0 0 70px rgba(255,70,70,.6);animation:numFlick 2.2s infinite}
+@keyframes numFlick{0%,93%,97%,100%{opacity:1}94%,96%{opacity:.62}}
+.tag{margin-top:6px;font-size:13px;letter-spacing:.6em;color:#9db4d8}
+body.final .tag{color:#ff9aa2}
+.done{position:absolute;text-align:center;opacity:0;pointer-events:none;transition:opacity .6s}
+.done.show{opacity:1;pointer-events:auto}
+.done h2{font-size:min(9vw,44px);letter-spacing:.24em;color:#ffe9b0;text-shadow:0 0 30px rgba(255,200,90,.8)}
+.done p{margin:10px 0 22px;font-size:14px;letter-spacing:.4em;color:#b8c6e2}
+.restart{border:none;cursor:pointer;padding:14px 44px;border-radius:99px;font-size:15px;font-weight:700;letter-spacing:.3em;color:#0a1024;background:linear-gradient(135deg,#6ee7ff,#7c9cff);box-shadow:0 0 30px rgba(110,150,255,.55);transition:transform .15s}
+.restart:active{transform:scale(.95)}
+.spark{position:absolute;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#ffd166;box-shadow:0 0 10px #ffb340;opacity:0;pointer-events:none}
+.spark.go{animation:spark .95s cubic-bezier(.1,.8,.3,1) forwards}
+@keyframes spark{0%{opacity:1;transform:translate(0,0) scale(1.2)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.15)}}
+.burst{position:absolute;width:min(84vw,360px);height:min(84vw,360px);border-radius:50%;border:3px solid rgba(255,209,102,.9);opacity:0;pointer-events:none}
+.burst.go{animation:burst 1s ease-out forwards}
+@keyframes burst{0%{opacity:1;transform:scale(.2)}100%{opacity:0;transform:scale(1.7)}}
+</style>
+</head>
+<body>
+<div class="aura"></div>
+<div class="stage">
+  <svg class="ring" viewBox="0 0 320 320">
+    <defs>
+      <linearGradient id="ng" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6ee7ff"/><stop offset="1" stop-color="#8f7cff"/></linearGradient>
+      <filter id="glow"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>
+    <circle class="track" cx="160" cy="160" r="132"/>
+    <circle class="bar" id="bar" cx="160" cy="160" r="132"/>
+    <g id="ticks"></g>
+  </svg>
+  <div class="halo" id="halo"></div>
+  <div class="burst" id="burst1"></div><div class="burst" id="burst2"></div>
+  <div class="core" id="core"><div class="num" id="num">10</div><div class="tag" id="tag">LAUNCH IN</div></div>
+  <div class="done" id="done">
+    <div class="num" style="font-size:min(26vw,110px)">0</div>
+    <h2>完美收官</h2><p>IGNITION SEQUENCE COMPLETE</p>
+    <button class="restart" id="btn">RESTART</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id),C=2*Math.PI*132,N=10;
+const bar=$("bar"),num=$("num"),halo=$("halo"),g=$("ticks"),NS="http://www.w3.org/2000/svg";
+bar.style.strokeDasharray=C;bar.style.strokeDashoffset=C;
+const tickEls=[];
+for(let i=0;i<60;i++){
+  const a=i/60*Math.PI*2,r1=144,r2=152,l=document.createElementNS(NS,"line");
+  l.setAttribute("x1",160+r1*Math.cos(a));l.setAttribute("y1",160+r1*Math.sin(a));
+  l.setAttribute("x2",160+r2*Math.cos(a));l.setAttribute("y2",160+r2*Math.sin(a));
+  l.setAttribute("class","tick");g.appendChild(l);tickEls.push(l);
+}
+let t0,raf,lastN=-1,running=true;
+function frame(t){
+  if(!running)return;
+  const el=(t-t0)/1000,rem=Math.max(0,N-el),n=Math.ceil(rem);
+  bar.style.strokeDashoffset=C*(el/N);
+  if(n!==lastN){
+    lastN=n;num.textContent=n||0;
+    num.classList.remove("pop");void num.offsetWidth;num.classList.add("pop");
+    halo.classList.remove("beat");void halo.offsetWidth;halo.classList.add("beat");
+    tickEls.forEach((tk,i)=>tk.classList.toggle("lit",i<Math.round(el/N*60)));
+    document.body.classList.toggle("final",n>0&&n<=3);
+    $("tag").textContent=n>0&&n<=3?"FINAL · 稳住":"LAUNCH IN";
+    if(n===0){finish();return}
+  }
+  raf=requestAnimationFrame(frame);
+}
+function finish(){
+  running=false;
+  document.body.classList.remove("final");
+  $("core").style.opacity=0;
+  $("done").classList.add("show");
+  [$("burst1"),$("burst2")].forEach((b,i)=>{
+    b.classList.remove("go");void b.offsetWidth;
+    b.style.animationDelay=i*.18+"s";b.classList.add("go");
+  });
+  const stage=document.querySelector(".stage");
+  for(let i=0;i<56;i++){
+    const s=document.createElement("i");s.className="spark";
+    const a=Math.random()*Math.PI*2,d=90+Math.random()*180;
+    s.style.setProperty("--dx",Math.cos(a)*d+"px");
+    s.style.setProperty("--dy",Math.sin(a)*d+"px");
+    s.style.animationDelay=Math.random()*.25+"s";
+    stage.appendChild(s);void s.offsetWidth;s.classList.add("go");
+    setTimeout(()=>s.remove(),1400);
+  }
+}
+$("btn").onclick=()=>{
+  $("done").classList.remove("show");
+  $("core").style.opacity=1;
+  tickEls.forEach(t=>t.classList.remove("lit"));
+  bar.style.strokeDashoffset=C;
+  document.body.classList.remove("final");
+  lastN=-1;t0=performance.now();running=true;
+  cancelAnimationFrame(raf);raf=requestAnimationFrame(frame);
+};
+t0=performance.now();raf=requestAnimationFrame(frame);
+</script>
+</body>
+</html>

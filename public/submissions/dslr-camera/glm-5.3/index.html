@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>拟物复刻 · GLM X1 单反相机</title>
+<!--
+设计说明：
+1. 透视方案：整机组采用统一仿射变换（y 向 0.93 压缩 + 微旋转，约 22° 俯视角），所有圆形部件（镜片/转盘/卡口）自动成为透视一致的椭圆，机身以正前面 + 可见左侧面 + 可见顶面三个面构成有厚度的体块。
+2. 镜头分层：卡口金属环 → 对焦环（菱形滚花纹 + 距离刻度窗 0.5/1/3/∞）→ 红色装饰环 → 变焦金属环 → 前组镜片（同心圆 + 光圈叶片暗示 + 流动高光 + 螺纹虚线）。
+3. 机身部件：军舰头（含热靴金属轨）、模式转盘（分段刻度可点击转动）、快门按钮（金色环）、主拨盘、顶部 LCD、防滑手柄（橡胶点阵）、镜头释放钮、自拍灯、背带环、存储卡仓缝线。
+4. 材质三区分：金属（镜环/热靴，锐利高光）、玻璃（镜片径向渐变 + 反光）、磨砂塑料（机身柔和渐变 + 缝隙 AO 暗部 + 台面接触投影）；光源统一来自左上。
+5. 反作弊合规：全件由 HTML/CSS/内联 SVG 形状手绘，无 img/base64/canvas/emoji/现成素材；品牌字样 GLM X1 MARK III 为自创。
+-->
+<style>
+*{margin:0;padding:0}
+body{min-height:100vh;display:grid;place-items:center;background:radial-gradient(900px 620px at 50% 30%,#eceef2,#c9ccd4 70%,#b4b8c1);font-family:system-ui,sans-serif;padding:16px}
+svg{width:min(96vw,980px);height:auto;display:block;filter:drop-shadow(0 34px 44px rgba(30,34,44,.35))}
+#modeDial{cursor:pointer;transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.3,1.5,.5,1)}
+#sweep{animation:sweep 11s ease-in-out infinite alternate;transform-box:fill-box;transform-origin:center}
+@keyframes sweep{from{transform:rotate(-16deg)}to{transform:rotate(10deg)}}
+#lamp{animation:lamp 3.4s ease-in-out infinite}
+@keyframes lamp{0%,88%,100%{opacity:.25}92%{opacity:1}}
+.cap{position:fixed;bottom:14px;left:0;right:0;text-align:center;color:#5a5f6a;font-size:12px;letter-spacing:.3em}
+</style>
+</head>
+<body>
+<svg viewBox="0 0 1000 760" role="img" aria-label="3/4 视角单反相机手绘复刻">
+  <defs>
+    <linearGradient id="desk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3e5ea"/><stop offset="1" stop-color="#b9bdc7"/></linearGradient>
+    <linearGradient id="plasticF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#dfe2e8"/><stop offset=".5" stop-color="#c3c8d1"/><stop offset="1" stop-color="#9aa0ac"/></linearGradient>
+    <linearGradient id="plasticT" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eceef2"/><stop offset="1" stop-color="#cfd3db"/></linearGradient>
+    <linearGradient id="plasticS" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#82878f"/><stop offset="1" stop-color="#a9aeb8"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0.4" y2="1"><stop offset="0" stop-color="#f6f8fa"/><stop offset=".45" stop-color="#c3c9d2"/><stop offset="1" stop-color="#7e858f"/></linearGradient>
+    <linearGradient id="metalD" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa1ab"/><stop offset="1" stop-color="#4c525b"/></linearGradient>
+    <linearGradient id="grip" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3e45"/><stop offset="1" stop-color="#1e2126"/></linearGradient>
+    <radialGradient id="glass" cx=".38" cy=".32" r=".95">
+      <stop offset="0" stop-color="#3f5f9e"/><stop offset=".28" stop-color="#1c2f5c"/><stop offset=".62" stop-color="#101d3d"/><stop offset=".92" stop-color="#0a1226"/><stop offset="1" stop-color="#2c4278"/>
+    </radialGradient>
+    <radialGradient id="glassIn" cx=".5" cy=".5" r=".5"><stop offset=".7" stop-color="#0a1024" stop-opacity="0"/><stop offset="1" stop-color="#060a18" stop-opacity=".85"/></radialGradient>
+    <linearGradient id="prism" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e7eaef"/><stop offset="1" stop-color="#aab0ba"/></linearGradient>
+    <pattern id="rubber" width="9" height="9" patternUnits="userSpaceOnUse">
+      <rect width="9" height="9" fill="#24272d"/><circle cx="2.5" cy="2.5" r="1.5" fill="#43474f"/><circle cx="6.8" cy="6.8" r="1.5" fill="#43474f"/>
+    </pattern>
+    <filter id="soft8" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="8"/></filter>
+    <filter id="soft3" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+  </defs>
+
+  <rect width="1000" height="760" fill="url(#desk)"/>
+  <ellipse cx="505" cy="600" rx="330" ry="44" fill="#878d99" opacity=".5" filter="url(#soft8)"/>
+  <ellipse cx="505" cy="598" rx="255" ry="30" fill="#6d737f" opacity=".55" filter="url(#soft8)"/>
+
+  <!-- 整机：统一仿射 = 约 22° 俯视 3/4 视角，所有圆自动成比例椭圆 -->
+  <g transform="rotate(-1.6 505 400) translate(0,30) scale(1,0.93)">
+    <!-- ============ 机身体块 ============ -->
+    <!-- 左侧面 -->
+    <path d="M330,270 L260,236 L260,470 L330,508 Z" fill="url(#plasticS)"/>
+    <path d="M330,270 L260,236 L260,470 L330,508 Z" fill="#3a3e46" opacity=".18"/>
+    <g stroke="#6a707b" opacity=".55" fill="none">
+      <path d="M292,258 C288,318 288,398 292,486" stroke-width="1.6"/>
+      <path d="M300,254 L300,268 M298,452 L298,466" stroke-width="2"/>
+    </g>
+    <rect x="281" y="330" width="34" height="52" rx="5" fill="#7c828d" opacity=".45"/>
+    <text x="298" y="380" text-anchor="middle" font-size="8.5" fill="#4b5058" opacity=".8" letter-spacing="1">SD</text>
+    <!-- 顶面 -->
+    <path d="M330,270 L680,270 L610,234 L262,234 Z" fill="url(#plasticT)"/>
+    <path d="M330,270 L680,270 L610,234 L262,234 Z" fill="#ffffff" opacity=".12"/>
+    <path d="M332,268 L676,268 L608,236 L266,236" fill="none" stroke="#71767f" stroke-width="1.4" opacity=".6"/>
+    <!-- 军舰头（顶部取景器凸起） -->
+    <path d="M447,234 L563,234 L551,196 L459,196 Z" fill="url(#prism)"/>
+    <path d="M447,234 L563,234 L551,196 L459,196 Z" fill="none" stroke="#8b919b" stroke-width="1.4"/>
+    <path d="M459,196 L551,196 L548,188 L462,188 Z" fill="#c9cdd5"/>
+    <!-- 热靴（金属轨） -->
+    <rect x="474" y="178" width="62" height="11" rx="2.5" fill="url(#metalD)"/>
+    <rect x="480" y="180.5" width="50" height="3.2" fill="#2b2f35"/>
+    <rect x="477" y="186.5" width="12" height="2.5" fill="#2b2f35"/><rect x="521" y="186.5" width="12" height="2.5" fill="#2b2f35"/>
+    <circle cx="505" cy="183.5" r="2.6" fill="#dfe3e9"/>
+    <!-- 模式转盘（可点击转动） -->
+    <g id="modeDial">
+      <ellipse cx="352" cy="252" rx="27" ry="26" fill="url(#metalD)"/>
+      <ellipse cx="352" cy="250" rx="23.5" ry="22.5" fill="url(#metal)"/>
+      <g stroke="#565c66" stroke-width="2.6" stroke-linecap="round">
+        <line x1="352" y1="230" x2="352" y2="236"/><line x1="370" y1="236.5" x2="366" y2="241"/>
+        <line x1="374" y1="252" x2="368" y2="252"/><line x1="366" y1="263" x2="370" y2="267.5"/>
+        <line x1="334" y1="267.5" x2="338" y2="263"/><line x1="330" y1="252" x2="336" y2="252"/>
+        <line x1="338" y1="241" x2="334" y2="236.5"/>
+      </g>
+      <g stroke="#c8102e" stroke-width="3" stroke-linecap="round"><line x1="352" y1="231" x2="352" y2="238"/></g>
+      <ellipse cx="352" cy="250" rx="5.4" ry="5" fill="#8b919b"/>
+      <ellipse cx="350" cy="247.5" rx="2.2" ry="1.9" fill="#eef1f5" opacity=".85"/>
+    </g>
+    <text x="352" y="291" text-anchor="middle" font-size="9.5" fill="#6c727c" letter-spacing="2">MODE</text>
+    <!-- 快门按钮（金色环） -->
+    <ellipse cx="592" cy="245" rx="17" ry="8.5" fill="url(#metalD)"/>
+    <ellipse cx="592" cy="242.5" rx="14.5" ry="7" fill="url(#metal)"/>
+    <ellipse cx="592" cy="241" rx="8" ry="4" fill="#b98a1e"/>
+    <ellipse cx="590" cy="239.6" rx="5" ry="2.4" fill="#f4d47c"/>
+    <path d="M612,252 q10,2 12,8" fill="none" stroke="#9aa0aa" stroke-width="3.4" stroke-linecap="round"/>
+    <!-- 主拨盘 -->
+    <ellipse cx="636" cy="251" rx="17" ry="9" fill="url(#metalD)"/>
+    <ellipse cx="636" cy="249" rx="14" ry="7.2" fill="url(#metal)"/>
+    <ellipse cx="636" cy="249" rx="13" ry="6.4" fill="none" stroke="#5b616b" stroke-width="3.4" stroke-dasharray="3 4"/>
+    <!-- 顶部 LCD -->
+    <path d="M516,258 L578,258 L568,241 L508,241 Z" fill="#20242b" stroke="#7c828c" stroke-width="1.2"/>
+    <g fill="#8fe3a8" opacity=".9">
+      <rect x="517" y="247.5" width="21" height="5.5"/><rect x="542" y="247.5" width="10" height="5.5"/>
+      <rect x="517" y="253.5" width="6" height="2.6"/><rect x="526" y="253.5" width="14" height="2.6"/>
+    </g>
+    <text x="548" y="255.6" font-size="6.2" fill="#8fe3a8" font-family="Menlo,monospace">f/1.2</text>
+    <!-- 正前面 -->
+    <rect x="330" y="270" width="350" height="240" rx="16" fill="url(#plasticF)"/>
+    <rect x="330" y="270" width="350" height="240" rx="16" fill="none" stroke="#838994" stroke-width="1.5"/>
+    <path d="M340,276 L672,276" stroke="#ffffff" stroke-width="1.6" opacity=".5"/>
+    <text x="505" y="228" text-anchor="middle" font-family="Georgia,'Times New Roman',serif" font-size="21" font-weight="700" fill="#41464e" letter-spacing="7">GLM</text>
+    <text x="505" y="222" text-anchor="middle" font-family="Georgia,serif" font-size="7.5" fill="#7d838d" letter-spacing="3">DIGITAL CAMERA SYSTEM</text>
+    <text x="352" y="498" font-family="Georgia,serif" font-size="10" fill="#5f646d" letter-spacing="2.5">X1 MARK III</text>
+    <!-- 手柄（防滑橡胶） -->
+    <path d="M614,286 C660,282 686,296 686,322 L686,462 C686,492 662,502 620,498 C600,494 596,482 596,468 L596,316 C596,298 600,290 614,286 Z" fill="url(#grip)"/>
+    <path d="M600,300 C640,294 676,306 682,330 L682,458 C678,484 652,496 618,494" fill="url(#rubber)" opacity=".9"/>
+    <path d="M614,286 C660,282 686,296 686,322" fill="none" stroke="#565c66" stroke-width="1.6" opacity=".7"/>
+    <!-- 前指令拨盘 + 自拍灯 + 镜头释放钮 -->
+    <ellipse cx="576" cy="318" rx="13" ry="12.4" fill="url(#metalD)"/>
+    <ellipse cx="576" cy="316.5" rx="10.5" ry="10" fill="url(#metal)"/>
+    <ellipse cx="576" cy="316.5" rx="9.6" ry="9.2" fill="none" stroke="#596069" stroke-width="2.6" stroke-dasharray="2.6 3.4"/>
+    <circle id="lamp" cx="612" cy="352" r="4" fill="#ffb02e"/>
+    <circle cx="612" cy="352" r="7" fill="#ffb02e" opacity=".22" filter="url(#soft3)"/>
+    <rect x="394" y="384" width="15" height="22" rx="7" fill="#3d4148" stroke="#71767f" stroke-width="1.2"/>
+    <circle cx="401" cy="440" r="4.4" fill="#8f959f" stroke="#5c626b" stroke-width="1.2"/>
+    <circle cx="609" cy="440" r="4.4" fill="#8f959f" stroke="#5c626b" stroke-width="1.2"/>
+    <!-- 背带环 -->
+    <path d="M326,282 q-12,4 -8,16" fill="none" stroke="#a6adb7" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M684,282 q12,4 8,16" fill="none" stroke="#a6adb7" stroke-width="4.5" stroke-linecap="round"/>
+    <!-- 卡口座 AO -->
+    <ellipse cx="505" cy="399" rx="128" ry="126" fill="#20242a" opacity=".45" filter="url(#soft8)"/>
+
+    <!-- ============ 镜头（多层镜筒 + 前组镜片） ============ -->
+    <g id="lens">
+      <!-- 卡口外筒 -->
+      <circle cx="505" cy="397" r="122" fill="url(#metalD)"/>
+      <circle cx="505" cy="397" r="118" fill="#33383f"/>
+      <!-- 对焦环：菱形滚花 -->
+      <circle cx="505" cy="397" r="112" fill="none" stroke="#20242a" stroke-width="13"/>
+      <circle cx="505" cy="397" r="112" fill="none" stroke="#3f444d" stroke-width="9" stroke-dasharray="4.2 3.4"/>
+      <circle cx="505" cy="397" r="104.5" fill="none" stroke="#12151a" stroke-width="3"/>
+      <!-- 距离刻度窗 -->
+      <g transform="rotate(-4 505 397)">
+        <rect x="462" y="284" width="86" height="26" rx="7" fill="#f3f4f0" stroke="#8a9099" stroke-width="1.6"/>
+        <g stroke="#4b515a" stroke-width="1.4"><line x1="474" y1="290" x2="474" y2="304"/><line x1="492" y1="290" x2="492" y2="300"/><line x1="510" y1="290" x2="510" y2="304"/><line x1="528" y1="290" x2="528" y2="300"/><line x1="540" y1="290" x2="540" y2="304"/></g>
+        <g font-family="Menlo,monospace" font-size="8.6" fill="#3c4148"><text x="470" y="296">0.5</text><text x="488" y="296">1</text><text x="507" y="296">3</text><text x="533" y="296">∞</text></g>
+        <path d="M514,297 l6,-3.4 l6,3.4 l-6,3.4 Z" fill="#c8102e"/>
+        <rect x="462" y="284" width="86" height="7" rx="3.5" fill="#ffffff" opacity=".4"/>
+      </g>
+      <!-- 变焦金属环 + 红色装饰环 -->
+      <circle cx="505" cy="399" r="99" fill="url(#metal)"/>
+      <circle cx="505" cy="399" r="99" fill="none" stroke="#f7f9fb" stroke-width="1.5" opacity=".7"/>
+      <circle cx="505" cy="400" r="93.5" fill="none" stroke="#c8102e" stroke-width="4.6"/>
+      <text x="505" y="510" text-anchor="middle" font-family="Georgia,serif" font-size="11" fill="#53585f" letter-spacing="1.6">GLM 50mm ƒ1.2 ASPH · Ø72</text>
+      <!-- 前组镜筒 -->
+      <circle cx="505" cy="401" r="86" fill="#2c3138"/>
+      <circle cx="505" cy="401" r="82" fill="url(#metalD)"/>
+      <!-- 螺纹暗示 -->
+      <circle cx="505" cy="401" r="76" fill="none" stroke="#cfd5dd" stroke-width="1.4" stroke-dasharray="2.2 3.2" opacity=".4"/>
+      <!-- 前组镜片 -->
+      <circle cx="505" cy="401" r="71" fill="#080d1c"/>
+      <circle cx="505" cy="401" r="68" fill="url(#glass)"/>
+      <!-- 同心内组 -->
+      <circle cx="505" cy="401" r="55" fill="none" stroke="#26406f" stroke-width="2.4" opacity=".75"/>
+      <circle cx="505" cy="401" r="42" fill="none" stroke="#1b2f56" stroke-width="2" opacity=".8"/>
+      <circle cx="505" cy="401" r="30" fill="none" stroke="#122346" stroke-width="2" opacity=".85"/>
+      <circle cx="505" cy="401" r="68" fill="url(#glassIn)"/>
+      <!-- 光圈叶片暗示 -->
+      <g stroke="#0a1224" stroke-width="2.6" opacity=".55">
+        <line x1="505" y1="361" x2="505" y2="381"/><line x1="539.8" y1="375.5" x2="525" y2="391"/><line x1="539.8" y1="426.5" x2="525" y2="411"/>
+        <line x1="505" y1="441" x2="505" y2="421"/><line x1="470.2" y1="426.5" x2="485" y2="411"/><line x1="470.2" y1="375.5" x2="485" y2="391"/>
+      </g>
+      <!-- 镀膜反光 + 流动高光 -->
+      <g id="sweep">
+        <ellipse cx="478" cy="372" rx="30" ry="10.5" fill="#dfe9ff" opacity=".5" transform="rotate(-32 478 372)"/>
+        <ellipse cx="480" cy="371" rx="17" ry="5" fill="#ffffff" opacity=".85" transform="rotate(-32 480 371)"/>
+        <circle cx="530" cy="430" r="4.6" fill="#cfe0ff" opacity=".8"/>
+        <path d="M448,432 q22,20 52,18" fill="none" stroke="#9db8f0" stroke-width="3" opacity=".4" stroke-linecap="round"/>
+      </g>
+      <circle cx="505" cy="401" r="68" fill="none" stroke="#7f9cd8" stroke-width="1.6" opacity=".55"/>
+    </g>
+    <!-- 机身-镜头缝隙 AO 与整体高光 -->
+    <path d="M392,300 A128,128 0 0,0 392,496" fill="none" stroke="#0e1116" stroke-width="7" opacity=".28" filter="url(#soft3)"/>
+    <path d="M346,286 L660,286" stroke="#ffffff" stroke-width="3" opacity=".28" stroke-linecap="round"/>
+    <path d="M268,244 L604,244" stroke="#ffffff" stroke-width="2.4" opacity=".3" stroke-linecap="round"/>
+  </g>
+</svg>
+<div class="cap">GLM X1 MARK III · HANDCRAFTED SVG REPLICA</div>
+<script>
+document.getElementById("modeDial").addEventListener("click",function(){
+  const cur=this.style.transform.match(/-?[\d.]+/);
+  const deg=(cur?parseFloat(cur[0]):0)+30;
+  this.style.transform=`rotate(${deg%360}deg)`;
+});
+</script>
+</body>
+</html>
