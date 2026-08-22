@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<!--
+设计说明：奇点引力场。Canvas 中 380 枚粒子以切向初速环绕中央能量核心公转，
+半隐式欧拉积分保证轨道连续不抖动。三种可切换力场模式：引力 / 斥力 / 漩涡；
+按住指针形成临时引力井拖拽粒子流，单击释放冲击波冲散星流再缓慢回拢。
+粒子按速度着色、加色混合发光，半透明覆盖产生轨迹残影；左上角实时遥测
+（粒子数 / FPS / 能量），粒子池定容，连续交互不掉帧。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>奇点引力场 · GRAVITY WELL</title>
+<style>
+*{margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#04061a;
+  font-family:"SF Pro Display","PingFang SC",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+canvas{position:fixed;inset:0;width:100vw;height:100vh;display:block;touch-action:none;cursor:crosshair}
+.hud{position:fixed;top:max(12px,env(safe-area-inset-top));left:14px;z-index:2;color:#9fb4e8;
+  font-size:11px;line-height:1.9;letter-spacing:.06em;pointer-events:none;
+  background:rgba(10,14,34,.5);border:1px solid rgba(110,140,255,.22);border-radius:12px;padding:9px 13px;
+  backdrop-filter:blur(6px);font-variant-numeric:tabular-nums}
+.hud b{color:#cfe0ff;font-weight:600}
+.mode{position:fixed;top:max(12px,env(safe-area-inset-top));right:14px;z-index:2;
+  color:#bfe3ff;font-size:12px;font-weight:600;letter-spacing:.18em;text-indent:.18em;
+  background:rgba(16,24,54,.6);border:1px solid rgba(110,140,255,.35);border-radius:99px;
+  padding:9px 16px;cursor:pointer;backdrop-filter:blur(6px);transition:.25s}
+.mode:active{transform:scale(.95)}
+.hint{position:fixed;bottom:max(16px,env(safe-area-inset-bottom));left:0;right:0;z-index:2;text-align:center;
+  color:#6f7fb0;font-size:11px;letter-spacing:.22em;text-indent:.22em;pointer-events:none}
+.core{color:#7dd0ff}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">
+  粒子 <b id="hN">380</b> · FPS <b id="hFps">--</b><br>
+  能量 <b id="hE">--%</b> · 核心温度 <b class="core" id="hT">9600K</b>
+</div>
+<button class="mode" id="mode">引力场</button>
+<div class="hint">按住拖动 吸聚粒子 · 单击 释放冲击波 · 右上角切换力场</div>
+<script>
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+const R=Math.random,TAU=Math.PI*2;
+let W,H,DPR=Math.min(devicePixelRatio||1,2);
+function fit(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR}
+fit();addEventListener('resize',fit);
+const MODES=['引力场','斥力场','漩涡场'];let mode=0;
+const N=380,GM=560,VMAX=5;
+let ps=[],ptr={x:0,y:0,on:false},taps=[];
+for(let i=0;i<N;i++){
+  const a=R()*TAU,r=60+R()*Math.min(W,H)*.34,
+        x=W/2+Math.cos(a)*r,y=H/2+Math.sin(a)*r*.8,
+        v=Math.sqrt(GM/r)*(.92+R()*.16);         // 近圆轨道切向速度（与位置半径一致）
+  ps.push({x,y,vx:-Math.sin(a)*v+(R()-.5)*.4,vy:Math.cos(a)*v+(R()-.5)*.4,z:R()<.62?.8:1.5});
+}
+document.getElementById('mode').onclick=e=>{
+  mode=(mode+1)%MODES.length;e.target.textContent=MODES[mode];
+};
+cv.addEventListener('pointerdown',e=>{try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  ptr.x=e.clientX;ptr.y=e.clientY;ptr.on=true;ptr.t=performance.now()});
+cv.addEventListener('pointermove',e=>{if(ptr.on){ptr.x=e.clientX;ptr.y=e.clientY}});
+addEventListener('pointerup',()=>{
+  if(ptr.on&&performance.now()-ptr.t<230)taps.push({x:ptr.x,y:ptr.y,t:performance.now()});
+  ptr.on=false;
+});
+let fpsEMA=60,lastTxt=0,heat=9600,lastFrame=performance.now();
+(function loop(){
+  requestAnimationFrame(loop);
+  const nowT=performance.now();fpsEMA=fpsEMA*.94+.06*(1000/Math.max(nowT-lastFrame,1));lastFrame=nowT;
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  cx.globalCompositeOperation='source-over';
+  cx.fillStyle='rgba(4,7,20,.27)';cx.fillRect(0,0,W,H);        // 轨迹残影
+  const cxp=W/2,cyp=H/2,maxR=Math.min(W,H)*.52;
+  /* 冲击波：一次性外推动量 */
+  taps=taps.filter(tp=>{
+    const age=performance.now()-tp.t;if(age>420)return false;
+    const k=(1-age/420);
+    cx.strokeStyle=`rgba(130,190,255,${k*.55})`;cx.lineWidth=2;
+    cx.beginPath();cx.arc(tp.x,tp.y,20+age*.75,0,TAU);cx.stroke();
+    ps.forEach(p=>{
+      const dx=p.x-tp.x,dy=p.y-tp.y,d=Math.hypot(dx,dy)||1;
+      if(d<240){const f=150*k/(d+26);p.vx+=dx/d*f;p.vy+=dy/d*f}
+    });
+    return true;
+  });
+  /* 能量核心：先画光晕，粒子叠在其上层 */
+  heat+= (R()*400-180);heat=Math.max(7200,Math.min(12800,heat));
+  const pr=9+2*Math.sin(performance.now()/300);
+  const g=cx.createRadialGradient(cxp,cyp,0,cxp,cyp,pr*3.1);
+  g.addColorStop(0,'rgba(210,240,255,.95)');g.addColorStop(.25,'rgba(90,170,255,.45)');
+  g.addColorStop(1,'rgba(70,120,255,0)');
+  cx.fillStyle=g;cx.beginPath();cx.arc(cxp,cyp,pr*3.1,0,TAU);cx.fill();
+  cx.fillStyle='#fff';cx.beginPath();cx.arc(cxp,cyp,pr*.55,0,TAU);cx.fill();
+  let sum=0;
+  for(const p of ps){
+    /* 中心井 */
+    let dx=cxp-p.x,dy=cyp-p.y,d2=dx*dx+dy*dy,d=Math.sqrt(d2)||1;
+    let ax=dx/d*GM/(d2+900),ay=dy/d*GM/(d2+900);
+    if(mode===1){ax=-ax;ay=-ay}                                 // 斥力
+    else if(mode===2){ax+=-dy/d*.055;ay+=dx/d*.055}             // 漩涡切向分量
+    /* 指针临时引力井 */
+    if(ptr.on){
+      const px=ptr.x-p.x,py=ptr.y-p.y,pd2=px*px+py*py||1,pd=Math.sqrt(pd2),
+            g=GM*.85/(pd2+700);
+      ax+=px/pd*g;ay+=py/pd*g;
+    }
+    /* 边界回收：超出活动半径的粒子被拉回 */
+    const ex=d-maxR;
+    if(ex>0){ax-=dx/ex*.06;ay-=dy/ex*.06}
+    p.vx=(p.vx+ax)*.9995;p.vy=(p.vy+ay)*.9995;
+    const sp=Math.hypot(p.vx,p.vy);
+    if(sp>VMAX){p.vx*=VMAX/sp;p.vy*=VMAX/sp}
+    p.x+=p.vx;p.y+=p.vy;sum+=sp;
+    /* 渲染：按速度着色，加色发光 */
+    const t=Math.min(sp/VMAX,1),h=195+t*115,l=52+t*26;
+    cx.globalCompositeOperation='lighter';
+    cx.fillStyle=`hsl(${h},92%,${l}%)`;
+    cx.beginPath();cx.arc(p.x,p.y,(p.z===1.5?2.3:1.35)+t*.9,0,TAU);cx.fill();
+  }
+  /* 遥测 */
+  if(nowT-lastTxt>500){
+    lastTxt=nowT;
+    document.getElementById('hN').textContent=N;
+    document.getElementById('hFps').textContent=Math.round(fpsEMA);
+    document.getElementById('hE').textContent=Math.round(sum/N/VMAX*100)+'%';
+    document.getElementById('hT').textContent=Math.round(heat)+'K';
+  }
+})();
+</script>
+</body>
+</html>

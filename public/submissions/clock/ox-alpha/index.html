@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<!--
+设计说明：曜 · 天文台时钟。深空导航仪质感的本地时间页面：
+SVG 表盘 60 刻度呈波浪式呼吸，时/分/秒三针由 rAF 毫秒级插值平滑扫动，
+数字时间用等宽数字避免跳动，日期与时段徽章同屏。
+6-18 点自动切换「白昼琥珀 / 夜航深蓝」双主题，背景三团极光缓慢漂移。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>曜 · 天文台时钟</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:"SF Pro Display","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:#070b1e;color:#e9edff;overflow:hidden;
+  transition:background 1.2s ease,color 1.2s ease;
+}
+body.day{background:#dfe8ff;color:#1c2444}
+.aurora{position:fixed;inset:-30%;pointer-events:none;filter:blur(64px);opacity:.65}
+.blob{position:absolute;width:46vmax;height:46vmax;border-radius:50%;mix-blend-mode:screen}
+body.day .blob{mix-blend-mode:multiply;opacity:.4}
+.b1{background:radial-gradient(circle,#2b3bd6,transparent 65%);top:2%;left:-8%;animation:drift 26s ease-in-out infinite alternate}
+.b2{background:radial-gradient(circle,#0e8f8f,transparent 65%);bottom:-12%;right:-10%;animation:drift 32s -8s ease-in-out infinite alternate-reverse}
+.b3{background:radial-gradient(circle,#7a2bbd,transparent 65%);top:28%;left:42%;animation:drift 38s -16s ease-in-out infinite alternate}
+body.day .b1{background:radial-gradient(circle,#ffd27a,transparent 65%)}
+body.day .b2{background:radial-gradient(circle,#8fc0ff,transparent 65%)}
+body.day .b3{background:radial-gradient(circle,#ffb27a,transparent 65%)}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(6vw,-5vh) scale(1.18)}}
+header{text-align:center;z-index:1}
+h1{font-size:13px;font-weight:600;letter-spacing:.55em;text-indent:.55em;opacity:.72}
+#digital{font-variant-numeric:tabular-nums;font-size:clamp(42px,12vw,58px);font-weight:700;letter-spacing:.04em;line-height:1.05;margin-top:4px;text-shadow:0 0 24px rgba(124,140,255,.35)}
+body.day #digital{text-shadow:0 2px 18px rgba(217,130,43,.3)}
+#date{margin-top:5px;font-size:13px;color:#93a0d6;letter-spacing:.16em;transition:color 1.2s}
+body.day #date{color:#4a5580}
+.dial-wrap{position:relative;z-index:1;width:min(74vw,330px)}
+.halo{position:absolute;inset:-16%;border-radius:50%;
+  background:radial-gradient(circle,rgba(124,140,255,.26),transparent 68%);
+  animation:breath 3.6s ease-in-out infinite}
+body.day .halo{background:radial-gradient(circle,rgba(217,130,43,.22),transparent 68%)}
+@keyframes breath{50%{transform:scale(1.07);opacity:.72}}
+svg{display:block;width:100%;height:auto}
+.ring{fill:none;stroke:rgba(148,163,255,.20);stroke-width:1}
+body.day .ring{stroke:rgba(70,84,140,.25)}
+.tick{stroke:#5a67a5}
+body.day .tick{stroke:#7d88b8}
+.tick.major{animation:wave 3s ease-in-out infinite}
+@keyframes wave{50%{opacity:.35}}
+.num{fill:#aab4e8;font-size:15px;font-weight:600;text-anchor:middle;dominant-baseline:central;font-family:Georgia,serif}
+body.day .num{fill:#39456f}
+.hand{stroke-linecap:round}
+#hh{stroke:#e9edff;stroke-width:6.5}body.day #hh{stroke:#222c52}
+#mh{stroke:#c6cffa;stroke-width:4}body.day #mh{stroke:#38447a}
+#sh{stroke:#ffb454;stroke-width:2.2}
+.cap{fill:#ffb454}.cap2{fill:#12172f}
+footer{z-index:1;display:flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.22em;color:#93a0d6}
+body.day footer{color:#4a5580}
+.dot{width:7px;height:7px;border-radius:50%;background:#ffb454;box-shadow:0 0 10px #ffb454;animation:blink 2s ease-in-out infinite}
+@keyframes blink{50%{opacity:.35}}
+</style>
+</head>
+<body>
+<div class="aurora"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<header>
+  <h1>OBSERVATORY CLOCK</h1>
+  <div id="digital">--:--:--</div>
+  <div id="date">载入中…</div>
+</header>
+<div class="dial-wrap">
+  <div class="halo"></div>
+  <svg viewBox="0 0 300 300" aria-label="模拟表盘">
+    <circle class="ring" cx="150" cy="150" r="141"/>
+    <circle class="ring" cx="150" cy="150" r="135"/>
+    <g id="ticks"></g>
+    <text class="num" x="150" y="34">12</text>
+    <text class="num" x="266" y="150">3</text>
+    <text class="num" x="150" y="266">6</text>
+    <text class="num" x="34" y="150">9</text>
+    <line id="hh" class="hand" x1="150" y1="162" x2="150" y2="86"/>
+    <line id="mh" class="hand" x1="150" y1="166" x2="150" y2="52"/>
+    <line id="sh" class="hand" x1="150" y1="172" x2="150" y2="40"/>
+    <circle class="cap" cx="150" cy="150" r="5.5"/>
+    <circle class="cap2" cx="150" cy="150" r="2"/>
+  </svg>
+</div>
+<footer><span class="dot"></span><span id="phase">同步系统时间</span></footer>
+<script>
+const $=s=>document.querySelector(s),NS='http://www.w3.org/2000/svg';
+(function buildTicks(){                       // 生成 60 刻度：整点粗刻带波浪呼吸
+  const g=$('#ticks');
+  for(let i=0;i<60;i++){
+    const a=i*6*Math.PI/180,major=i%5===0,r1=major?116:123,r2=132;
+    const l=document.createElementNS(NS,'line');
+    l.setAttribute('x1',(150+r1*Math.sin(a)).toFixed(2));
+    l.setAttribute('y1',(150-r1*Math.cos(a)).toFixed(2));
+    l.setAttribute('x2',(150+r2*Math.sin(a)).toFixed(2));
+    l.setAttribute('y2',(150-r2*Math.cos(a)).toFixed(2));
+    l.setAttribute('class','tick'+(major?' major':''));
+    l.setAttribute('stroke-width',major?3:1);
+    if(major)l.style.animationDelay=(i/5)*0.22+'s';
+    g.appendChild(l);
+  }
+})();
+const hh=$('#hh'),mh=$('#mh'),sh=$('#sh'),dig=$('#digital'),
+      dateEl=$('#date'),phase=$('#phase'),WK='日一二三四五六';
+let last=-1;
+function frame(){
+  const n=new Date(),ms=n.getMilliseconds(),
+        s=n.getSeconds()+ms/1000,m=n.getMinutes()+s/60,h=n.getHours()%12+m/60;
+  sh.setAttribute('transform',`rotate(${(s*6).toFixed(2)} 150 150)`);   // 平滑扫秒
+  mh.setAttribute('transform',`rotate(${(m*6).toFixed(3)} 150 150)`);
+  hh.setAttribute('transform',`rotate(${(h*30).toFixed(3)} 150 150)`);
+  const sec=n.getSeconds();
+  if(sec!==last){                            // 每秒更新一次文字与主题
+    last=sec;
+    dig.textContent=[n.getHours(),n.getMinutes(),sec].map(v=>String(v).padStart(2,'0')).join(':');
+    dateEl.textContent=`${n.getFullYear()} 年 ${n.getMonth()+1} 月 ${n.getDate()} 日 · 星期${WK[n.getDay()]}`;
+    const day=n.getHours()>=6&&n.getHours()<18;
+    document.body.classList.toggle('day',day);
+    phase.textContent=day?'白昼模式 · DAY':'夜航模式 · NIGHT';
+  }
+  requestAnimationFrame(frame);
+}
+frame();
+</script>
+</body>
+</html>

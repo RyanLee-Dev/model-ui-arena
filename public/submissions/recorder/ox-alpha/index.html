@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<!--
+设计说明：磁带工作室风格的录音机交互原型（模拟录音，不申请真实权限）。
+Start/Pause/Stop 三态状态机驱动：红色电平表式波形随「录音」起伏、暂停冻结衰减；
+计时 mm:ss 等宽数字；停止需二次确认防误触，确认后展示本次录音摘要卡。
+按钮图标全部由 CSS 形状绘制，无任何外部素材。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>录音机 · VOICE MEMO</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:"SF Pro Display","PingFang SC",system-ui,sans-serif;display:flex;
+  align-items:center;justify-content:center;background:#101216;color:#eceff5;padding:16px}
+.stage{width:min(92vw,400px);background:linear-gradient(165deg,#1b1f27,#14161c);
+  border:1px solid #2b303c;border-radius:22px;padding:24px 20px 20px;
+  box-shadow:0 24px 60px rgba(0,0,0,.5)}
+header{display:flex;align-items:center;justify-content:space-between}
+.brand{font-size:12px;letter-spacing:.3em;color:#8b93a7;font-weight:600}
+.badge{display:flex;align-items:center;gap:6px;font-size:12px;color:#9aa3b8;
+  background:#22262f;border-radius:99px;padding:4px 10px}
+.led{width:8px;height:8px;border-radius:50%;background:#59617a}
+.rec-on .led{background:#ff4553;box-shadow:0 0 10px #ff4553;animation:blink 1s infinite}
+.pause-on .led{background:#ffb340;box-shadow:0 0 10px #ffb340}
+@keyframes blink{50%{opacity:.25}}
+.timer{text-align:center;font-variant-numeric:tabular-nums;font-size:56px;font-weight:700;
+  letter-spacing:.05em;margin:18px 0 6px}
+.sub{text-align:center;font-size:11px;color:#767e92;letter-spacing:.25em;margin-bottom:14px}
+canvas{display:block;width:100%;height:88px;background:#0c0e12;border-radius:12px}
+.controls{display:flex;align-items:center;justify-content:center;gap:26px;margin-top:22px;height:76px}
+button{border:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:.25s}
+button:disabled{opacity:.28;cursor:not-allowed}
+.b-rec{width:66px;height:66px;border-radius:50%;background:#262b36;border:2px solid #3a4050;
+  display:flex;align-items:center;justify-content:center}
+.core{width:26px;height:26px;border-radius:50%;background:#ff4553;transition:border-radius .3s,transform .3s;box-shadow:0 0 14px rgba(255,69,83,.55)}
+body[data-s=rec] .core,body[data-s=done] .core{border-radius:7px;width:23px;height:23px}
+.b-rec:not(:disabled):active{transform:scale(.94)}
+.b-mid{width:54px;height:54px;border-radius:50%;background:#262b36;border:2px solid #3a4050;
+  display:flex;align-items:center;justify-content:center}
+.b-mid:not(:disabled):active{transform:scale(.94)}
+.i-play{width:0;height:0;border-left:15px solid #ffd166;border-top:9px solid transparent;border-bottom:9px solid transparent;margin-left:4px}
+.i-pause{display:flex;gap:5px}.i-pause::before,.i-pause::after{content:"";width:5px;height:18px;border-radius:2px;background:#ffd166}
+.b-stop{width:54px;height:54px;border-radius:50%;background:#262b36;border:2px solid #3a4050;
+  display:flex;align-items:center;justify-content:center}
+.sq{width:17px;height:17px;border-radius:3px;background:#e9edf5}
+.sheet{position:fixed;inset:0;background:rgba(6,8,12,.62);backdrop-filter:blur(3px);
+  display:flex;align-items:flex-end;justify-content:center;z-index:9;opacity:0;pointer-events:none;transition:.25s}
+.sheet.show{opacity:1;pointer-events:auto}
+.card{width:min(92vw,400px);background:#1d212b;border-radius:20px 20px 0 0;padding:20px;
+  transform:translateY(30px);transition:.28s}
+.sheet.show .card{transform:none}
+.card h3{font-size:15px;margin-bottom:4px}
+.card p{font-size:12px;color:#9aa3b8;margin-bottom:14px}
+.row{display:flex;gap:10px}
+.row button{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:600}
+.c-cancel{background:#2a2f3b;color:#cdd3e0}
+.c-ok{background:#ff4553;color:#fff}
+.summary{margin-top:18px;background:#0c0e12;border:1px solid #232834;border-radius:14px;padding:14px 16px;
+  animation:rise .35s ease}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.summary h4{font-size:13px;color:#8be2b0;letter-spacing:.12em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.tick{width:14px;height:14px;border-radius:50%;background:#2fbf71;position:relative}
+.tick::after{content:"";position:absolute;left:4px;top:2.5px;width:4px;height:7px;
+  border:solid #0c0e12;border-width:0 2px 2px 0;transform:rotate(42deg)}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:#c6ccd9}
+.kv b{font-variant-numeric:tabular-nums;color:#fff;font-weight:600}
+.again{margin-top:12px;width:100%;padding:12px;border-radius:12px;background:#2f6bff;color:#fff;font-weight:600;font-size:14px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body data-s="idle">
+<div class="stage">
+  <header><span class="brand">VOICE&nbsp;MEMO</span><span class="badge"><span class="led"></span><span id="stateTxt">待机</span></span></header>
+  <div class="timer" id="timer">00:00</div>
+  <div class="sub">RECORDER PROTOTYPE · 本地模拟</div>
+  <canvas id="wave"></canvas>
+  <div class="controls">
+    <button class="b-rec" id="bRec" title="开始录音"><span class="core"></span></button>
+    <button class="b-mid" id="bMid" title="暂停 / 继续" disabled>
+      <span id="midIco" class="i-pause"></span>
+    </button>
+    <button class="b-stop" id="bStop" title="结束并保存" disabled><span class="sq"></span></button>
+  </div>
+  <div class="summary" id="summary" hidden>
+    <h4><span class="tick"></span>录音摘要</h4>
+    <div class="kv"><span>文件名</span><b id="sName">—</b></div>
+    <div class="kv"><span>时长</span><b id="sLen">—</b></div>
+    <div class="kv"><span>预估大小</span><b id="sSize">—</b></div>
+    <div class="kv"><span>完成时刻</span><b id="sAt">—</b></div>
+    <button class="again" id="bAgain">重新录音</button>
+  </div>
+</div>
+<div class="sheet" id="sheet">
+  <div class="card">
+    <h3>结束本次录音？</h3>
+    <p>结束后将生成录音摘要，当前内容不可恢复编辑。</p>
+    <div class="row"><button class="c-cancel" id="cCancel">继续录</button><button class="c-ok" id="cOk">结束录音</button></div>
+  </div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+let state='idle',elapsed=0,lastT=0,amp=new Array(48).fill(3),flow=0;
+const fmt=s=>`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;
+function setState(s){
+  state=s;document.body.dataset.s=s;
+  const map={idle:'待机',rec:'录音中',paused:'已暂停',done:'已完成'};
+  $('#stateTxt').textContent=map[s];
+  document.querySelector('.badge').classList.toggle('rec-on',s==='rec');
+  document.querySelector('.badge').classList.toggle('pause-on',s==='paused');
+  $('#bRec').disabled=(s==='rec'||s==='paused');
+  $('#bStop').disabled=!(s==='rec'||s==='paused');
+  $('#bMid').disabled=!(s==='rec'||s==='paused');
+  $('#midIco').className=s==='rec'?'i-pause':'i-play';
+}
+$('#bRec').onclick=()=>{                       // 开始（或重置后开始）
+  elapsed=0;$('#timer').textContent='00:00';
+  $('#summary').hidden=true;setState('rec');
+};
+$('#bMid').onclick=()=>setState(state==='rec'?'paused':'rec');
+$('#bStop').onclick=()=>$('#sheet').classList.add('show');   // 停止二次确认
+$('#cCancel').onclick=()=>$('#sheet').classList.remove('show');
+$('#cOk').onclick=()=>{
+  $('#sheet').classList.remove('show');
+  const sec=Math.floor(elapsed/1000),d=new Date(),p=n=>String(n).padStart(2,'0');
+  $('#sName').textContent=`REC_${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.m4a`;
+  $('#sLen').textContent=fmt(sec)+' 秒表计时';
+  const kb=Math.round(sec*32);
+  $('#sSize').textContent=kb>=1024?(kb/1024).toFixed(2)+' MB':kb+' KB';
+  $('#sAt').textContent=`${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  $('#summary').hidden=false;setState('done');
+};
+$('#bAgain').onclick=()=>{elapsed=0;$('#timer').textContent='00:00';$('#summary').hidden=true;setState('rec')};
+/* 波形：48 根镜像电平条，录音时平滑随机起伏，暂停时缓慢回落 */
+const cv=$('#wave'),cx=cv.getContext('2d');
+function fit(){cv.width=cv.clientWidth*devicePixelRatio;cv.height=cv.clientHeight*devicePixelRatio}
+addEventListener('resize',fit);fit();
+function loop(t){
+  requestAnimationFrame(loop);
+  if(state==='rec'){
+    if(lastT)elapsed+=Math.min(50,t-lastT);
+    $('#timer').textContent=fmt(elapsed/1000);
+    flow+=.09;
+    const env=.45+.55*(.5+.5*Math.sin(flow*.9))*(.6+.4*Math.random());
+    amp.push(amp[amp.length-1]*.55+env*46*Math.random()**1.2+4);amp.shift();
+  }else if(state!=='done'){
+    amp.push(amp[amp.length-1]*.82+3);amp.shift();      // 回落为静默基线
+  }
+  lastT=t;
+  const W=cv.width,H=cv.height,mid=H/2,n=amp.length,gap=W/n*.55,bw=Math.max(2,W/n*.42*devicePixelRatio);
+  cx.clearRect(0,0,W,H);
+  const g=cx.createLinearGradient(0,0,W,0);g.addColorStop(0,'#38e0ff');g.addColorStop(.55,'#7c8cff');g.addColorStop(1,'#c86bff');
+  cx.fillStyle=g;
+  amp.forEach((a,i)=>{
+    const h=state==='rec'?a*devicePixelRatio:(state==='done'?amp[i]*devicePixelRatio:2.5*devicePixelRatio),
+          x=i*W/n+(W/n-bw)/2;
+    cx.beginPath();cx.roundRect(x,mid-h/2,bw,Math.max(h,2.5*devicePixelRatio),bw/2);cx.fill();
+  });
+}
+setState('idle');requestAnimationFrame(loop);
+</script>
+</body>
+</html>

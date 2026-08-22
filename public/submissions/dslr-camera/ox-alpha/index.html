@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<!--
+设计说明：《NOCTERRA D-7》—— 3/4 前侧视角单反相机纯手绘复刻（零位图/零素材）。
+统一轴测体系：深度向量 D=(150,-75)，正面为直视矩形，顶面/右侧面沿同一 D 方向展开——
+军舰头、热靴、模式转盘、快门组全部落在同一投影平面上，透视自洽。
+镜头正对观者（同心圆结构）：卡口红圈 → 金属滚花环 → 橡胶变焦齿环 → 对焦距离窗(0.3…∞)
+→ 金属铭牌环 → 前组镜片（同心镀膜圈 + 窗形高光 + 光圈叶片痕 + 流动眩光）。
+握把包胶防滑纹理由正面延伸包住右侧面；光源统一左上，右侧面最暗；
+台面落影 + 镜头接触暗部。微动效：镜片高光扫过 + 模式转盘点击旋转（不破坏静态首帧）。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NOCTERRA D-7 · 拟物复刻</title>
+<style>
+*{margin:0;padding:0}
+body{min-height:100vh;background:radial-gradient(circle at 30% 22%,#2b3145,#14161f 62%,#0b0c12);
+  display:flex;align-items:center;justify-content:center;padding:14px;
+  font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+svg{width:min(96vw,780px);height:auto;display:block}
+#dialG{transition:transform .45s cubic-bezier(.3,1.4,.4,1);transform-box:fill-box;transform-origin:center;cursor:pointer}
+#sheen{animation:sweep 6.5s ease-in-out infinite}
+@keyframes sweep{0%,58%,100%{opacity:0;transform:translate(-90px,46px) rotate(24deg)}
+  74%{opacity:.55}88%{opacity:0;transform:translate(70px,-34px) rotate(24deg)}}
+</style>
+</head>
+<body>
+<svg viewBox="60 100 800 580" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="手绘单反相机">
+<defs>
+  <linearGradient id="frontG" x1="0" y1="0" x2=".9" y2=".35">
+    <stop offset="0" stop-color="#4a5160"/><stop offset=".5" stop-color="#363c4a"/><stop offset="1" stop-color="#262b38"/>
+  </linearGradient>
+  <linearGradient id="topG" x1="0" y1="0" x2="1" y2=".4">
+    <stop offset="0" stop-color="#586074"/><stop offset="1" stop-color="#3e4456"/>
+  </linearGradient>
+  <linearGradient id="sideG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#20242f"/><stop offset="1" stop-color="#14171e"/>
+  </linearGradient>
+  <linearGradient id="humpG" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#4c5364"/><stop offset="1" stop-color="#343a4a"/>
+  </linearGradient>
+  <linearGradient id="metalRing" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f2f5fa"/><stop offset=".28" stop-color="#aab3c4"/>
+    <stop offset=".52" stop-color="#5d6678"/><stop offset=".78" stop-color="#98a2b5"/><stop offset="1" stop-color="#49505f"/>
+  </linearGradient>
+  <linearGradient id="steelBar" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0" stop-color="#8b94a6"/><stop offset=".5" stop-color="#e8edf5"/><stop offset="1" stop-color="#6a7284"/>
+  </linearGradient>
+  <radialGradient id="glassG" cx=".38" cy=".32" r="1.05">
+    <stop offset="0" stop-color="#27407a"/><stop offset=".38" stop-color="#101c40"/>
+    <stop offset=".72" stop-color="#070b1c"/><stop offset="1" stop-color="#02040c"/>
+  </radialGradient>
+  <radialGradient id="dialTop" cx=".4" cy=".35" r=".9">
+    <stop offset="0" stop-color="#cdd4e2"/><stop offset=".75" stop-color="#8d95a8"/><stop offset="1" stop-color="#5f6779"/>
+  </radialGradient>
+  <pattern id="rubberP" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="9" height="9" fill="#22262f"/>
+    <circle cx="2.2" cy="2.2" r="1.2" fill="#454d5f"/><circle cx="6.7" cy="6.7" r="1.2" fill="#454d5f"/>
+  </pattern>
+  <filter id="soft8" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="8"/></filter>
+  <filter id="soft3"><feGaussianBlur stdDeviation="3"/></filter>
+  <clipPath id="glassClip"><circle cx="330" cy="415" r="44"/></clipPath>
+  <path id="nameArc" d="M 280,415 A 50,50 0 0 1 380,415" fill="none"/>
+  <path id="scaleArc" d="M 264,415 A 66,66 0 0 1 396,415" fill="none"/>
+</defs>
+
+<!-- ═══ 台面接触投影 ═══ -->
+<ellipse cx="490" cy="600" rx="360" ry="30" fill="#000" opacity=".55" filter="url(#soft8)"/>
+<ellipse cx="420" cy="592" rx="230" ry="18" fill="#000" opacity=".45" filter="url(#soft3)"/>
+
+<!-- ═══ 机身：顶面 / 右侧面 / 正面（同一深度向量 D=(150,-75)）═══ -->
+<polygon points="170,250 540,250 690,175 320,175" fill="url(#topG)"/>
+<polygon points="540,250 690,175 690,495 540,570" fill="url(#sideG)"/>
+<rect x="170" y="250" width="370" height="320" rx="26" fill="url(#frontG)"/>
+<!-- 顶面面板缝线 -->
+<path d="M186,262 L540,262 L676,190" stroke="#20242e" stroke-width="2" opacity=".6" fill="none"/>
+<path d="M340,250 L340,222 M524,250 L524,228" stroke="#20242e" stroke-width="2" opacity=".5"/>
+<path d="M182,286 h130" stroke="#5d6678" stroke-width="2" opacity=".5"/>
+<!-- 顶面边缘高光（左上光源）-->
+<path d="M170,250 L320,175 L690,175" stroke="#8d96ac" stroke-width="1.6" opacity=".5" fill="none"/>
+
+<!-- ═══ 军舰头（五棱镜凸起，同投影）+ 热靴 ═══ -->
+<path d="M352,224 L500,224 L480,146 L372,146 Z" fill="url(#humpG)"/>
+<path d="M480,146 L525,124 L525,200 L480,224 Z" fill="#191d28"/>
+<path d="M372,146 L480,146 L525,124 L417,124 Z" fill="url(#topG)"/>
+<!-- 热靴导轨 -->
+<g transform="translate(0,-14)">
+  <path d="M400,146 L476,146 L492,138 L416,138 Z" fill="url(#steelBar)"/>
+  <path d="M406,142 L482,142" stroke="#3a4150" stroke-width="2.4"/>
+  <rect x="420" y="139" width="42" height="5" rx="2" fill="#20242f"/>
+</g>
+<!-- 品牌 -->
+<text x="426" y="192" text-anchor="middle" font-size="21" font-weight="800" letter-spacing="3.5"
+      fill="#dde3ee" font-family="'Avenir Next','Helvetica Neue',Arial">NOCTERRA</text>
+<text x="426" y="210" text-anchor="middle" font-size="9.5" letter-spacing="2.2" fill="#8f97ab">OPTICAL SYSTEMS</text>
+
+<!-- ═══ 快门按钮 + 电源拨杆（位于手柄顶部平面）═══ -->
+<g id="shutter">
+  <ellipse cx="568" cy="212" rx="27" ry="10" fill="#2a2f3c"/>
+  <ellipse cx="568" cy="208" rx="27" ry="10" fill="url(#metalRing)"/>
+  <ellipse cx="568" cy="206" rx="17" ry="6.5" fill="#c9414b"/>
+  <ellipse cx="563" cy="204.4" rx="7" ry="2.4" fill="#ff97a0" opacity=".85"/>
+</g>
+<path d="M524,220 l-20,-9 l0,-7 l20,9 z" fill="#454c5d"/>
+<circle cx="512" cy="209" r="3" fill="#ffd257"/>
+
+<!-- ═══ 模式转盘（左上，点击可旋转）═══ -->
+<g id="dialG">
+  <ellipse cx="300" cy="222" rx="47" ry="17" fill="#111419"/>
+  <ellipse cx="300" cy="218" rx="47" ry="17" fill="url(#metalRing)"/>
+  <ellipse cx="300" cy="218" rx="47" ry="17" fill="none" stroke="#20242f" stroke-width="4.5"
+           stroke-dasharray="3 3.6" opacity=".55"/>
+  <ellipse cx="300" cy="216" rx="38" ry="13" fill="url(#dialTop)"/>
+  <g stroke="#2c313d" stroke-width="2.4" stroke-linecap="round">
+    <line x1="300" y1="204" x2="300" y2="210"/>
+    <line x1="270" y1="212" x2="273" y2="217"/><line x1="330" y1="212" x2="327" y2="217"/>
+    <line x1="257" y1="221" x2="262" y2="223"/><line x1="343" y1="221" x2="338" y2="223"/>
+    <line x1="271" y1="230" x2="274" y2="225"/><line x1="329" y1="230" x2="326" y2="225"/>
+  </g>
+  <text x="300" y="219" text-anchor="middle" font-size="9" font-weight="700" fill="#22283a" font-family="Arial">Av</text>
+</g>
+
+<!-- ═══ 手柄握把（正面延伸包裹右侧面，防滑胶点）═══ -->
+<path d="M480,268 C520,268 540,276 540,296 L540,544 C540,560 524,568 500,568 C470,568 450,556 450,532 L450,300 C450,280 462,268 480,268 Z" fill="url(#rubberP)"/>
+<path d="M480,268 C520,268 540,276 540,296 L540,544 C540,560 524,568 500,568 C470,568 450,556 450,532 L450,300 C450,280 462,268 480,268 Z"
+      fill="none" stroke="#0d0f15" stroke-width="2"/>
+<path d="M456,276 C478,270 508,270 532,280" stroke="#5a6274" stroke-width="2.4" fill="none" opacity=".8"/>
+<polygon points="540,300 690,225 690,430 540,505" fill="url(#rubberP)" opacity=".92"/>
+<polygon points="540,300 690,225 690,430 540,505" fill="#000" opacity=".16"/>
+<path d="M540,300 L690,225" stroke="#5a6274" stroke-width="2" opacity=".55" fill="none"/>
+<path d="M464,290 C504,284 522,288 536,296" stroke="#4a5162" stroke-width="3" fill="none" opacity=".8"/>
+<path d="M468,522 C500,530 522,526 538,516" stroke="#31363f" stroke-width="3" fill="none" opacity=".7"/>
+<!-- 快门前拨轮 -->
+<ellipse cx="452" cy="322" rx="13" ry="20" fill="url(#metalRing)"/>
+<ellipse cx="452" cy="322" rx="13" ry="20" fill="none" stroke="#14171d" stroke-width="5" stroke-dasharray="2.5 3.5"/>
+<!-- 肩带扣（正面左缘 + 右侧面后缘）-->
+<path d="M160,320 l16,10 l0,26 l-16,10 z" fill="none" stroke="#6a7386" stroke-width="3.6"/>
+<g transform="matrix(.894,-.447,0,1,650,272)"><path d="M0,0 l13,9 l0,22 l-13,9 z" fill="none" stroke="#4a5262" stroke-width="3.4"/></g>
+
+<!-- ═══ 型号铭牌 ═══ -->
+<rect x="190" y="500" width="132" height="34" rx="7" fill="#1d222e" stroke="#3a4050" stroke-width="1.5"/>
+<text x="202" y="523" font-size="14.5" font-weight="700" fill="#cfd6e4" letter-spacing="1.6" font-family="Arial">D-7 <tspan fill="#8f97ab" font-weight="400">MARK II</tspan></text>
+
+<!-- ═══ 镜头（正对观者：同心圆多层镜筒）═══ -->
+<g id="lens">
+  <!-- 卡口底板阴影 + 红圈装饰环（L 系标识色）-->
+  <circle cx="332" cy="420" r="128" fill="#12151d"/>
+  <circle cx="330" cy="415" r="118" fill="none" stroke="#b8342c" stroke-width="7"/>
+  <circle cx="330" cy="415" r="108" fill="none" stroke="url(#metalRing)" stroke-width="13"/>
+  <circle cx="330" cy="415" r="108" fill="none" stroke="#20242f" stroke-width="13" stroke-dasharray="3 4" opacity=".5"/>
+  <!-- 第一段镜筒 -->
+  <circle cx="330" cy="415" r="97" fill="#20242c"/>
+  <!-- 变焦橡胶齿环 -->
+  <circle cx="330" cy="415" r="86" fill="#14161c"/>
+  <circle cx="330" cy="415" r="86" fill="none" stroke="#2e3340" stroke-width="18" stroke-dasharray="4 3.4"/>
+  <circle cx="330" cy="415" r="86" fill="none" stroke="#3c4250" stroke-width="5" stroke-dasharray="2.6 5.4" opacity=".9"/>
+  <!-- 对焦环 + 距离刻度窗 -->
+  <circle cx="330" cy="415" r="70" fill="#191c24"/>
+  <circle cx="330" cy="415" r="70" fill="none" stroke="#343a48" stroke-width="11" stroke-dasharray="2.2 4" opacity=".85"/>
+  <path d="M267.7,371.4 A 76,76 0 0 1 392.3,371.4" fill="none" stroke="#050608" stroke-width="22"/>
+  <line x1="330" y1="344" x2="330" y2="360" stroke="#ffd257" stroke-width="3"/>
+  <text font-size="10.5" fill="#c8d0df" letter-spacing="6" font-family="Menlo,monospace">
+    <textPath href="#scaleArc" startOffset="6">0.3&#160;&#160;&#160;&#160;0.5&#160;&#160;&#160;&#160;1&#160;&#160;&#160;&#160;2&#160;&#160;&#160;&#160;5&#160;&#160;&#160;&#160;∞</textPath>
+  </text>
+  <!-- 金属铭牌前环 + 镜头铭文 -->
+  <circle cx="330" cy="415" r="56" fill="none" stroke="url(#metalRing)" stroke-width="12"/>
+  <text font-size="10" fill="#e5eaf4" letter-spacing="2.4" font-family="Arial" font-weight="600">
+    <textPath href="#nameArc" startOffset="4">NOCTERRA&#160;24-70mm&#160;1:2.8&#160;Ø77</textPath>
+  </text>
+  <!-- 细红圈 + 前组镜片 -->
+  <circle cx="330" cy="415" r="47" fill="none" stroke="#b8342c" stroke-width="3"/>
+  <circle cx="330" cy="415" r="44" fill="url(#glassG)"/>
+  <g clip-path="url(#glassClip)">
+    <circle cx="330" cy="415" r="36" fill="none" stroke="#4a6cd4" stroke-width="2.4" opacity=".55"/>
+    <circle cx="330" cy="415" r="28" fill="none" stroke="#3f8f7c" stroke-width="2" opacity=".5"/>
+    <circle cx="330" cy="415" r="20" fill="none" stroke="#5b4a9e" stroke-width="2" opacity=".5"/>
+    <circle cx="330" cy="415" r="13" fill="#04060f"/>
+    <path d="M330,404 l6,9 -4,11 -12,1 -7,-9 3,-11 z" fill="#0a1230" opacity=".9"/>
+    <!-- 左上窗形高光（两层）-->
+    <polygon points="278,378 314,362 296,406" fill="#ffffff" opacity=".34" filter="url(#soft3)"/>
+    <polygon points="268,386 296,370 285,408" fill="#dbe7ff" opacity=".5" filter="url(#soft3)"/>
+    <ellipse cx="362" cy="446" rx="13" ry="8" fill="#7fb2ff" opacity=".4" filter="url(#soft3)"/>
+    <ellipse cx="300" cy="450" rx="24" ry="9" fill="#0e1c44" opacity=".55"/>
+    <!-- 流动眩光条（动效叠加，静态首帧不可见）-->
+    <polygon id="sheen" points="310,368 330,362 316,468 296,468" fill="#bcd2ff" opacity="0"/>
+  </g>
+  <circle cx="330" cy="415" r="45" fill="none" stroke="#39404f" stroke-width="2.5"/>
+  <!-- 对位红点 -->
+  <circle cx="468" cy="415" r="4" fill="#ffd257"/>
+  <!-- 镜头释放钮（贴卡口右上缘）-->
+  <g transform="rotate(-32 404 322)">
+    <ellipse cx="404" cy="322" rx="10" ry="15" fill="#2e3542" stroke="#14171d" stroke-width="1.6"/>
+    <ellipse cx="404" cy="320" rx="5.5" ry="9.5" fill="#3d4553"/>
+  </g>
+</g>
+
+<!-- ═══ 右侧面接口盖与舱门线（局部坐标经 D 向量矩阵映射到侧面）═══ -->
+<g transform="matrix(.894,-.447,0,1,0,0)">
+  <path d="M671,540 L671,720" stroke="#0e1118" stroke-width="2.5" opacity=".8"/>
+  <rect x="660" y="560" width="60" height="50" rx="10" fill="#242a38" stroke="#0e1118" stroke-width="2"/>
+  <rect x="672" y="576" width="34" height="9" rx="4.5" fill="#39404f"/>
+  <rect x="672" y="592" width="24" height="7" rx="3.5" fill="#39404f"/>
+</g>
+
+<!-- ═══ 地面反光余韵 ═══ -->
+<ellipse cx="470" cy="618" rx="300" ry="14" fill="#3a4358" opacity=".12" filter="url(#soft8)"/>
+<script>
+const dial=document.getElementById('dialG');let ang=0;
+dial.addEventListener('click',()=>{ang-=36;dial.style.transform=`rotate(${ang}deg)`});
+</script>
+</svg>
+</body>
+</html>

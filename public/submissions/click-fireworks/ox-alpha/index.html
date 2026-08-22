@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<!--
+设计说明：焰夜 · 点击放烟花。深夜天幕由 Canvas 实时绘制：渐变夜空、地平线辉光与闪烁星野。
+点击任意处先发射上升火箭（带火花尾迹），抵达后按牡丹 / 环形 / 垂柳三种随机形态爆开，
+粒子受重力与阻力衰减、末端闪烁；半透明覆盖实现余辉拖尾，additive 混合提亮。
+粒子池硬上限防内存无限增长；空闲时自动放一发保持氛围。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>焰夜 · 点击放烟花</title>
+<style>
+*{margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#04060f;
+  font-family:"SF Pro Display","PingFang SC",system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+canvas{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:crosshair;touch-action:none}
+.title{position:fixed;top:max(14px,env(safe-area-inset-top));left:0;right:0;text-align:center;
+  color:#cfd6ff;font-size:13px;font-weight:600;letter-spacing:.5em;text-indent:.5em;
+  pointer-events:none;opacity:.85;text-shadow:0 0 16px rgba(120,140,255,.6)}
+.hint{position:fixed;bottom:max(22px,env(safe-area-inset-bottom));left:0;right:0;text-align:center;
+  color:#9aa6d8;font-size:12px;letter-spacing:.28em;text-indent:.28em;
+  pointer-events:none;transition:opacity .8s}
+.hint.off{opacity:0}
+.count{position:fixed;top:max(14px,env(safe-area-inset-top));right:16px;color:#7d89b8;
+  font-size:11px;font-variant-numeric:tabular-nums;pointer-events:none;letter-spacing:.1em}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="title">焰&nbsp;夜</div>
+<div class="count" id="count">BURSTS 000</div>
+<div class="hint" id="hint">点 击 任 意 位 置 绽 放 烟 花</div>
+<script>
+const cv=document.getElementById('sky'),cx=cv.getContext('2d');
+let W,H,DPR=Math.min(devicePixelRatio||1,2);
+function fit(){W=innerWidth;H=innerHeight;cv.width=W*DPR;cv.height=H*DPR;makeStars()}
+addEventListener('resize',fit);
+const R=Math.random,TAU=Math.PI*2;
+let stars=[];
+function makeStars(){stars=Array.from({length:130},()=>({x:R()*W,y:R()*H*.75,r:R()*1.3+.3,p:R()*TAU,s:.5+R()*2}))}
+/* 粒子池：上限 1600，超出丢弃最旧，防止连续点击内存无限增长 */
+const CAP=1600;let ps=[],rockets=[],bursts=0,nextAuto=performance.now()+1600;
+function spawn(x,y,hue,n,type){
+  for(let i=0;i<n;i++){
+    const a=R()*TAU;
+    let vx,vy,g=.05,drag=.985,life=60+R()*40;
+    if(type==='ring'){const sp=(46+R()*8)*(.9+R()*.2);vx=Math.cos(a)*sp;vy=Math.sin(a)*sp}
+    else if(type==='willow'){const sp=20+R()*70;vx=Math.cos(a)*sp;vy=Math.sin(a)*sp-20;g=.085;drag=.992;life=110+R()*50}
+    else{const sp=Math.pow(R(),.5)*(R()<.5?150:80)+18;vx=Math.cos(a)*sp;vy=Math.sin(a)*sp}
+    ps.push({x,y,vx,vy,g,drag,life,max:life,hue:hue+(R()*34-17),tw:R()*10});
+  }
+  while(ps.length>CAP)ps.splice(0,ps.length-CAP);
+}
+function launch(tx,ty){
+  rockets.push({x:tx+(R()*60-30),y:H+10,tx,ty,vy:-(11.5+R()*2.5),hue:R()*360});
+}
+function explode(r){
+  bursts++;document.getElementById('count').textContent='BURSTS '+String(bursts).padStart(3,'0');
+  const t=['peony','peony','ring','willow'][R()*4|0];
+  spawn(r.x,r.y,r.hue,t==='ring'?54:t==='willow'?70:90+R()*40|0,t);
+  for(let i=0;i<26;i++){       // 爆心闪光碎屑
+    const a=R()*TAU,sp=R()*30;
+    ps.push({x:r.x,y:r.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,g:.02,drag:.94,life:16+R()*12,max:26,hue:48,tw:0});
+  }
+}
+function frame(t){
+  requestAnimationFrame(frame);
+  cx.setTransform(DPR,0,0,DPR,0,0);
+  /* 余辉：半透明夜色覆盖 */
+  cx.globalCompositeOperation='source-over';
+  cx.fillStyle='rgba(4,6,18,.17)';cx.fillRect(0,0,W,H);
+  /* 地平线辉光每帧补一笔 */
+  const g=cx.createLinearGradient(0,H*.78,0,H);
+  g.addColorStop(0,'rgba(38,52,120,0)');g.addColorStop(1,'rgba(44,58,140,.18)');
+  cx.fillStyle=g;cx.fillRect(0,H*.78,W,H*.22);
+  /* 星野闪烁 */
+  stars.forEach(s=>{
+    s.p+=.03*s.s;const a=.35+.65*(.5+.5*Math.sin(s.p));
+    cx.globalAlpha=a*.8;cx.fillStyle='#cfe0ff';
+    cx.beginPath();cx.arc(s.x,s.y,s.r,0,TAU);cx.fill();
+  });
+  cx.globalAlpha=1;
+  /* 火箭上升 */
+  for(let i=rockets.length-1;i>=0;i--){
+    const r=rockets[i];r.vy+=.22;r.y+=r.vy;r.x+=(r.tx-r.x)*.04;
+    cx.globalCompositeOperation='lighter';
+    cx.strokeStyle='rgba(255,214,140,.9)';cx.lineWidth=2;cx.lineCap='round';
+    cx.beginPath();cx.moveTo(r.x,r.y);cx.lineTo(r.x-(r.tx-r.x)*.06,r.y+13);cx.stroke();
+    ps.push({x:r.x+(R()*4-2),y:r.y+8,vx:R()*1.4-.7,vy:R()*1.2+.6,g:.03,drag:.96,life:20,max:24,hue:42,tw:0});
+    if(r.y<=r.ty||r.vy>-2){explode(r);rockets.splice(i,1)}
+  }
+  /* 烟花粒子 */
+  for(let i=ps.length-1;i>=0;i--){
+    const p=ps[i];
+    p.vx*=p.drag;p.vy=p.vy*p.drag+p.g;p.x+=p.vx;p.y+=p.vy;
+    p.life--;p.tw+=.35;
+    if(p.life<=0){ps.splice(i,1);continue}
+    const k=p.life/p.max,a=k<.45?(.45+.55*Math.abs(Math.sin(p.tw))):Math.min(k*1.25,1);
+    cx.globalCompositeOperation='lighter';
+    cx.globalAlpha=a;
+    cx.fillStyle=`hsl(${p.hue},95%,${58+k*24}%)`;
+    cx.beginPath();cx.arc(p.x,p.y,1.9+k*2.1,0,TAU);cx.fill();
+    if(k>.65){cx.globalAlpha=a*.16;cx.beginPath();cx.arc(p.x,p.y,(1.9+k*2.1)*2,0,TAU);cx.fill();}
+  }
+  cx.globalAlpha=1;
+  /* 空闲自动燃放 */
+  if(t>nextAuto){launch(W*(.15+R()*.7),H*(.18+R()*.35));nextAuto=t+2200+R()*2200}
+}
+fit();requestAnimationFrame(frame);
+addEventListener('pointerdown',e=>{
+  document.getElementById('hint').classList.add('off');
+  launch(e.clientX,e.clientY);
+});
+</script>
+</body>
+</html>

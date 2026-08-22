@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<!--
+设计说明：晴空气象卡片。三座城市（北京·晴 / 伦敦·雨 / 东京·雪）一键切换，
+天空底色分层交叉淡入避免硬切，Canvas 分别驱动阳光浮粒、斜落雨丝、摇摆雪花三套粒子。
+当前天气大号温度带 countUp 过渡，5 天预报以 SVG 折线串联最高温，支持 °C/°F 切换。
+390px 下卡片居中不溢出，预报完整可读。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>晴空 · 天气卡片</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:"SF Pro Display","PingFang SC",system-ui,sans-serif;display:flex;
+  align-items:center;justify-content:center;color:#fff;padding:14px;overflow:hidden}
+.sky{position:fixed;inset:0;opacity:0;transition:opacity .7s ease}
+.sky.on{opacity:1}
+.s-sun{background:linear-gradient(180deg,#2e6fd8,#67aef5 55%,#f7d789)}
+.s-rain{background:linear-gradient(180deg,#232c3d,#3b4b63 60%,#5a6b82)}
+.s-snow{background:linear-gradient(180deg,#33507a,#7396bd 60%,#c9d9ea)}
+#fx{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+.card{position:relative;width:min(92vw,392px);border-radius:24px;padding:18px 18px 16px;
+  background:rgba(12,20,34,.42);border:1px solid rgba(255,255,255,.22);
+  backdrop-filter:blur(14px);box-shadow:0 24px 60px rgba(0,10,30,.45)}
+.swap{transition:.26s ease}.swap.out{opacity:0;transform:translateY(-10px)}
+.swap.in{opacity:0;transform:translateY(10px);transition:none}
+.top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.chip{flex:1;text-align:center;font-size:13px;font-weight:600;padding:7px 0;border-radius:99px;
+  background:rgba(255,255,255,.14);color:#dfe9ff;cursor:pointer;border:1px solid transparent;transition:.25s}
+.chip.cur{background:#fff;color:#17304f;border-color:#fff}
+.unit{width:44px;height:31px;line-height:29px;text-align:center;border-radius:99px;font-size:13px;
+  border:1px solid rgba(255,255,255,.4);color:#fff;background:rgba(255,255,255,.08);cursor:pointer}
+.city{text-align:center;margin-top:4px}
+.city h1{font-size:15px;letter-spacing:.35em;text-indent:.35em;font-weight:600;opacity:.92}
+.now{display:flex;align-items:center;justify-content:center;gap:14px;margin:10px 0 2px}
+.wicon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:26px;font-weight:700;color:#fff;background:radial-gradient(circle at 32% 28%,rgba(255,255,255,.5),rgba(255,255,255,.12));box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.tmp{font-size:72px;font-weight:200;line-height:1;font-variant-numeric:tabular-nums;text-shadow:0 4px 24px rgba(0,0,0,.3)}
+.tmp small{font-size:26px;font-weight:300;vertical-align:super}
+.desc{text-align:center;font-size:14px;letter-spacing:.14em;opacity:.95}
+.mete{display:flex;justify-content:center;gap:22px;margin:10px 0 14px;font-size:13px;opacity:.92}
+.mete span{display:flex;align-items:center;gap:5px}
+.mete svg{width:15px;height:15px;stroke:#cfe4ff;fill:none;stroke-width:1.8;stroke-linecap:round}
+.fc{position:relative;border-top:1px solid rgba(255,255,255,.25);padding-top:10px}
+#trend{position:absolute;left:0;top:-14px;width:100%;height:46px;pointer-events:none}
+.cols{display:grid;grid-template-columns:repeat(5,1fr);text-align:center;gap:2px}
+.col .d{font-size:11px;opacity:.85}
+.col .w{margin:7px auto 6px;width:30px;height:30px;line-height:30px;border-radius:50%;font-size:13px;font-weight:600;
+  background:rgba(255,255,255,.16)}
+.col .hi{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.col .lo{font-size:11px;opacity:.7;font-variant-numeric:tabular-nums;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="sky s-sun on" id="sk0"></div><div class="sky s-rain" id="sk1"></div><div class="sky s-snow" id="sk2"></div>
+<canvas id="fx"></canvas>
+<div class="card">
+  <div class="swap" id="swap">
+    <div class="top">
+      <span class="chip cur" data-i="0">北京</span><span class="chip" data-i="1">伦敦</span><span class="chip" data-i="2">东京</span>
+      <button class="unit" id="uBtn">°F</button>
+    </div>
+    <div class="city"><h1 id="cName">北京 · BEIJING</h1></div>
+    <div class="now"><div class="wicon" id="wIco">晴</div><div class="tmp"><span id="tVal">32</span><small id="tUnit">°C</small></div></div>
+    <div class="desc" id="cDesc">晴朗无云</div>
+    <div class="mete">
+      <span><svg viewBox="0 0 16 16"><path d="M1 6h8a2.2 2.2 0 1 0-2.2-2.2M1 9.5h11a2.4 2.4 0 1 1-2.4 2.4"/></svg><i id="cWind">东南风 2 级</i></span>
+      <span><svg viewBox="0 0 16 16"><path d="M8 1.8S3.4 7 3.4 10a4.6 4.6 0 0 0 9.2 0C12.6 7 8 1.8 8 1.8z"/></svg><i id="cHum">湿度 38%</i></span>
+    </div>
+    <div class="fc">
+      <svg id="trend" preserveAspectRatio="none"></svg>
+      <div class="cols" id="cols"></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=s=>document.querySelector(s);
+const DATA=[
+ {n:'北京',en:'BEIJING',k:'sun',t:32,d:'晴朗无云',w:'东南风 2 级',h:38,
+  days:[['周一','晴',33,24],['周二','多云',31,23],['周三','晴',34,25],['周四','雷',29,22],['周五','多云',30,23]]},
+ {n:'伦敦',en:'LONDON',k:'rain',t:17,d:'小到中雨',w:'西南风 4 级',h:82,
+  days:[['周一','雨',18,12],['周二','雨',16,11],['周三','云',17,12],['周四','雨',15,10],['周五','多云',18,12]]},
+ {n:'东京',en:'TOKYO',k:'snow',t:2,d:'小雪转阴',w:'北风 3 级',h:64,
+  days:[['周一','雪',3,-2],['周二','雪',2,-3],['周三','云',4,-1],['周四','晴',5,0],['周五','多云',4,-1]]}];
+let cur=0,unit='C',shownTemp=32,anim=null;
+const f=v=>unit==='C'?v:Math.round(v*9/5+32);
+function render(){
+  const c=DATA[cur];
+  $('#cName').textContent=`${c.n} · ${c.en}`;
+  $('#wIco').textContent=c.k==='sun'?'晴':c.k==='rain'?'雨':'雪';
+  $('#cDesc').textContent=c.d;$('#cWind').textContent=c.w;$('#cHum').textContent=`湿度 ${c.h}%`;
+  $('#cols').innerHTML=c.days.map(d=>`<div class="col"><div class="d">${d[0]}</div><div class="w">${d[1]}</div><div class="hi">${f(d[2])}°</div><div class="lo">${f(d[3])}°</div></div>`).join('');
+  drawTrend(c);
+}
+function drawTrend(c){
+  const svg=$('#trend'),W=$('#cols').clientWidth||360,H=46;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  const his=c.days.map(d=>d[2]),lo=Math.min(...his)-2,hi=Math.max(...his)+2,
+        pt=his.map((v,i)=>[(i+.5)*W/5,10+(hi-v)/(hi-lo)*(H-18)]);
+  svg.innerHTML=
+   `<polyline points="${pt.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#ffd77a" stroke-width="2" stroke-linejoin="round"/>`+
+   pt.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#fff"/><text x="${p[0]}" y="${Math.max(p[1]-7,9)}" text-anchor="middle" font-size="9" fill="#ffe9b0">${f(his[i])}°</text>`).join('');
+}
+/* 温度数字 countUp */
+function countTo(target){
+  cancelAnimationFrame(anim);const from=shownTemp,t0=performance.now();
+  (function step(t){
+    const k=Math.min((t-t0)/550,1),e=1-Math.pow(1-k,3);
+    shownTemp=Math.round(from+(target-from)*e);
+    $('#tVal').textContent=f(shownTemp);
+    if(k<1)anim=requestAnimationFrame(step);
+  })(t0);
+}
+document.querySelectorAll('.chip').forEach(ch=>ch.onclick=()=>{
+  const i=+ch.dataset.i;if(i===cur)return;
+  document.querySelectorAll('.chip').forEach(x=>x.classList.remove('cur'));ch.classList.add('cur');
+  const sw=$('#swap');sw.classList.add('out');                 // 内容滑出
+  setTimeout(()=>{
+    cur=i;const c=DATA[i],from=shownTemp;
+    [$('#sk0'),$('#sk1'),$('#sk2')].forEach((s,k)=>s.classList.toggle('on',k===i));
+    initFx(c.k);render();
+    sw.classList.remove('out');sw.classList.add('in');          // 自下方滑入
+    requestAnimationFrame(()=>requestAnimationFrame(()=>sw.classList.remove('in')));
+    shownTemp=from;countTo(c.t);
+  },270);
+});
+$('#uBtn').onclick=e=>{
+  unit=unit==='C'?'F':'C';e.target.textContent=unit==='C'?'°F':'°C';
+  $('#tUnit').textContent=`°${unit}`;render();$('#tVal').textContent=f(shownTemp);
+};
+addEventListener('resize',()=>drawTrend(DATA[cur]));
+/* ---------- 三套天气粒子 ---------- */
+const cv=$('#fx'),cx=cv.getContext('2d');let ps=[],kind='sun';
+function fit(){cv.width=innerWidth*devicePixelRatio;cv.height=innerHeight*devicePixelRatio}
+fit();addEventListener('resize',fit);
+const R=Math.random;
+function initFx(k){
+  kind=k;ps=[];const n=k==='rain'?110:k==='snow'?80:46;
+  for(let i=0;i<n;i++)ps.push({
+    x:R()*innerWidth,y:k==='sun'?R()*innerHeight:R()*innerHeight,
+    v:k==='rain'?9+R()*8:k==='snow'?.7+R()*1.1:.25+R()*.5,
+    r:k==='rain'?0:1+R()*2.2,len:k==='rain'?12+R()*14:0,a:.25+R()*.55,p:R()*7});
+}
+(function loop(){
+  requestAnimationFrame(loop);
+  cx.clearRect(0,0,cv.width,cv.height);const d=devicePixelRatio;
+  if(kind==='sun'){                                            // 阳光：顶部光晕 + 上浮光尘
+    const g=cx.createRadialGradient(cv.width*.82,cv.height*.1,0,cv.width*.82,cv.height*.1,cv.width*.5);
+    g.addColorStop(0,'rgba(255,220,140,.5)');g.addColorStop(1,'rgba(255,220,140,0)');
+    cx.fillStyle=g;cx.fillRect(0,0,cv.width,cv.height);
+    cx.fillStyle='#ffe9ad';cx.globalAlpha=.75;
+    ps.forEach(p=>{p.y-=p.v;p.p+=.02;p.x+=Math.sin(p.p)*.4;
+      if(p.y<-8){p.y=innerHeight+8;p.x=R()*innerWidth}
+      cx.beginPath();cx.arc(p.x*d,p.y*d,(p.r+1)*d,0,7);cx.fill()});
+    cx.globalAlpha=1;
+  }else if(kind==='rain'){                                     // 雨：斜落雨丝
+    cx.strokeStyle='rgba(190,215,255,.55)';cx.lineCap='round';
+    ps.forEach(p=>{p.x-=p.v*.28;p.y+=p.v;
+      if(p.y>innerHeight+20){p.y=-20;p.x=R()*(innerWidth+120)}
+      cx.globalAlpha=p.a;cx.lineWidth=1.1*d;cx.beginPath();
+      cx.moveTo(p.x*d,p.y*d);cx.lineTo((p.x+p.len*.28)*d,(p.y-p.len)*d);cx.stroke()});
+    cx.globalAlpha=1;
+  }else{                                                       // 雪：摇摆飘落
+    cx.fillStyle='#fff';
+    ps.forEach(p=>{p.y+=p.v;p.p+=.03;p.x+=Math.sin(p.p)*.6;
+      if(p.y>innerHeight+6){p.y=-6;p.x=R()*innerWidth}
+      cx.globalAlpha=.35+p.a*.65;cx.beginPath();cx.arc(p.x*d,p.y*d,p.r*d,0,7);cx.fill()});
+    cx.globalAlpha=1;
+  }
+})();
+initFx('sun');render();countTo(DATA[0].t);
+</script>
+</body>
+</html>

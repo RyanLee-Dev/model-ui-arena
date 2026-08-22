@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<!--
+设计说明：霓虹终局倒计时。赛博夜色 + 透视霓虹网格地平线，中央 SVG 光环随剩余时间耗尽，
+大号霓虹数字每秒脉冲爆闪、光环同步推进。最后 3 秒进入「危险态」：全场景切换红色系、
+数字抖动、网格变色，营造冲刺紧张感。归零触发粒子爆发 + TIME UP 完成态，Restart 可完整重开。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NEON COUNTDOWN · 霓虹倒计时</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{background:#0a0616;color:#e6f9ff;font-family:"SF Pro Display","PingFang SC",system-ui,sans-serif;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  overflow:hidden;--neon:#41f0ff;--grid:rgba(65,240,255,.14)}
+body.danger{--neon:#ff3b5c;--grid:rgba(255,59,92,.18)}
+.floor{position:fixed;left:-55%;right:-55%;bottom:-34%;height:72%;pointer-events:none;opacity:.75;
+  background:repeating-linear-gradient(90deg,transparent 0 56px,var(--grid) 56px 58px),
+             repeating-linear-gradient(0deg,transparent 0 56px,var(--grid) 56px 58px);
+  transform:perspective(430px) rotateX(61deg);transform-origin:top;
+  -webkit-mask-image:linear-gradient(180deg,transparent,#000 42%);
+  mask-image:linear-gradient(180deg,transparent,#000 42%);transition:.5s}
+.glow{position:fixed;top:-22%;left:50%;width:130vmax;height:60vmax;transform:translateX(-50%);
+  background:radial-gradient(closest-side,color-mix(in srgb,var(--neon) 22%,transparent),transparent 72%);
+  pointer-events:none;animation:breathe 2s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.55}}
+h1{font-size:12px;font-weight:600;letter-spacing:.6em;text-indent:.6em;color:#8fd8e8;z-index:2}
+.stage{position:relative;width:min(76vw,300px);aspect-ratio:1;display:flex;align-items:center;justify-content:center;z-index:2}
+body.danger .stage{animation:shake .3s linear infinite}
+@keyframes shake{25%{transform:translate(1.5px,-1px)}75%{transform:translate(-1.5px,1px)}}
+svg.ring{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);
+  filter:drop-shadow(0 0 12px var(--neon))}
+.tk{fill:none;stroke:rgba(255,255,255,.09);stroke-width:9}
+.pg{fill:none;stroke:var(--neon);stroke-width:9;stroke-linecap:round;transition:stroke .4s}
+.num{font-size:clamp(88px,26vw,132px);font-weight:800;line-height:1;color:#fff;
+  font-variant-numeric:tabular-nums;text-shadow:0 0 14px var(--neon),0 0 46px var(--neon),0 0 110px color-mix(in srgb,var(--neon) 65%,transparent)}
+.num.beat{animation:beat .5s cubic-bezier(.2,1.6,.4,1)}
+@keyframes beat{from{transform:scale(1.22);filter:brightness(1.9)}to{transform:scale(1)}}
+.flash{position:absolute;inset:-8%;border-radius:50%;background:radial-gradient(circle,var(--neon),transparent 62%);
+  opacity:0;pointer-events:none}
+.flash.go{animation:fg .45s ease-out}
+@keyframes fg{from{opacity:.4}to{opacity:0}}
+#burst{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:3}
+.status{font-size:13px;letter-spacing:.32em;text-indent:.32em;color:#9adfe8;z-index:2;min-height:18px}
+body.danger .status{color:#ff8ba0}
+.restart{z-index:4;padding:13px 44px;border-radius:99px;border:1.5px solid var(--neon);
+  background:transparent;color:var(--neon);font-size:15px;font-weight:700;letter-spacing:.28em;text-indent:.28em;
+  cursor:pointer;box-shadow:0 0 18px color-mix(in srgb,var(--neon) 55%,transparent),inset 0 0 14px color-mix(in srgb,var(--neon) 22%,transparent);
+  opacity:0;pointer-events:none;transition:.35s;-webkit-tap-highlight-color:transparent}
+.restart.show{opacity:1;pointer-events:auto;animation:pulseB 1.4s infinite}
+.restart:not(.show){display:none}
+@keyframes pulseB{50%{box-shadow:0 0 34px color-mix(in srgb,var(--neon) 85%,transparent),inset 0 0 22px color-mix(in srgb,var(--neon) 40%,transparent)}}
+</style>
+</head>
+<body>
+<div class="floor"></div><div class="glow"></div>
+<h1>NEON&nbsp;COUNTDOWN</h1>
+<div class="stage">
+  <svg class="ring" viewBox="0 0 260 260">
+    <circle class="tk" cx="130" cy="130" r="118"/>
+    <circle class="pg" id="pg" cx="130" cy="130" r="118"/>
+  </svg>
+  <div class="flash" id="flash"></div>
+  <div class="num" id="num">10</div>
+</div>
+<div class="status" id="status">即将启动…</div>
+<button class="restart" id="restart">RESTART</button>
+<canvas id="burst"></canvas>
+<script>
+const $=s=>document.querySelector(s),R=Math.random,TAU=Math.PI*2;
+const C=2*Math.PI*118;                       // 光环周长
+const pg=$('#pg');pg.style.strokeDasharray=C;pg.style.strokeDashoffset=0;
+let start=performance.now(),last=-1,finished=false;
+const TOTAL=10;
+/* 归零爆发粒子 */
+const cv=$('#burst'),cx=cv.getContext('2d');cv.width=innerWidth;cv.height=innerHeight;
+addEventListener('resize',()=>{cv.width=innerWidth;cv.height=innerHeight});
+let ps=[];
+function boom(){
+  const cxp=innerWidth/2,cyp=innerHeight/2;
+  const hues=[48,190,320];
+  for(let i=0;i<150;i++){
+    const a=R()*TAU,sp=Math.pow(R(),.5)*(180+R()*260),
+          col=hues[R()*3|0]+R()*20-10;
+    ps.push({x:cxp,y:cyp,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,l:1,d:.985+R()*.01,h:col,s:1.6+R()*2.4});
+  }
+}
+(function ploop(){
+  requestAnimationFrame(ploop);
+  if(!ps.length)return void cx.clearRect(0,0,cv.width,cv.height);
+  cx.clearRect(0,0,cv.width,cv.height);
+  cx.globalCompositeOperation='lighter';
+  ps.forEach(p=>{p.x+=p.vx*.016;p.y+=p.vy*.016;p.vy+=9;p.vx*=p.d;p.vy*=p.d;p.l-=.011});
+  ps=ps.filter(p=>p.l>0);
+  ps.forEach(p=>{
+    cx.globalAlpha=Math.max(p.l,0);cx.fillStyle=`hsl(${p.h},95%,62%)`;
+    cx.beginPath();cx.arc(p.x,p.y,p.s*p.l+ .4,0,TAU);cx.fill();
+  });
+  cx.globalAlpha=1;
+})();
+function finish(){
+  finished=true;$('#num').textContent='0';
+  $('#status').textContent='TIME UP · 完成';
+  document.body.classList.remove('danger');document.body.classList.add('done');
+  $('#restart').classList.add('show');
+  boom();
+}
+function frame(t){
+  requestAnimationFrame(frame);
+  if(finished)return;
+  const rem=Math.max(TOTAL-(t-start)/1000,0);
+  pg.style.strokeDashoffset=(C*(1-rem/TOTAL)).toFixed(1);
+  const disp=Math.ceil(rem);
+  if(disp!==last){
+    last=disp;
+    const n=$('#num'),f=$('#flash');
+    n.textContent=disp;
+    n.classList.remove('beat');void n.offsetWidth;n.classList.add('beat');
+    f.classList.remove('go');void f.offsetWidth;f.classList.add('go');
+    if(disp>0)$('#status').textContent=disp<=3?'!! 最后冲刺 !!':'倒计时进行中';
+    document.body.classList.toggle('danger',disp<=3&&disp>0);
+  }
+  if(rem<=0)finish();
+}
+$('#restart').onclick=()=>{
+  finished=false;last=-1;start=performance.now();
+  ps=[];cx.clearRect(0,0,cv.width,cv.height);
+  document.body.classList.remove('done','danger');
+  $('#restart').classList.remove('show');
+  $('#num').textContent='10';$('#status').textContent='重新开始';
+};
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
