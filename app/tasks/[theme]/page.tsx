@@ -3,12 +3,10 @@ import { notFound } from "next/navigation";
 import { PreviewFrame } from "@/components/preview-frame";
 import { SharePath } from "@/components/share-path";
 import {
-  BITMAP_AUDIT_THEMES,
-  LINE_LIMIT,
   THEMES,
-  UNLIMITED_LINE_THEMES,
   scanSubmissions
 } from "@/lib/submissions";
+import { getTask } from "@/lib/task-registry";
 import { sortSubmissionsByModel } from "@/lib/model-order";
 
 type TaskPageProps = {
@@ -36,8 +34,9 @@ export async function generateMetadata({ params }: TaskPageProps) {
 export default async function TaskPage({ params }: TaskPageProps) {
   const { theme: themeId } = await params;
   const theme = THEMES.find((item) => item.id === themeId);
+  const task = getTask(themeId);
 
-  if (!theme) {
+  if (!theme || !task) {
     notFound();
   }
 
@@ -59,7 +58,7 @@ export default async function TaskPage({ params }: TaskPageProps) {
           <span>主题 ID：{theme.id}</span>
           <span>作品数：{submissions.length}</span>
           <span>通过：{passCount}</span>
-          <span>行数上限：{UNLIMITED_LINE_THEMES.has(theme.id) ? "不限" : LINE_LIMIT}</span>
+          <span>行数上限：{task.lineLimit ?? "不限"}</span>
         </div>
       </header>
 
@@ -73,11 +72,11 @@ export default async function TaskPage({ params }: TaskPageProps) {
               </div>
               {item.unlimitedLines ? (
                 <span
-                  className={BITMAP_AUDIT_THEMES.has(item.theme) && item.usesBitmap
+                  className={task.forbidBitmap && item.usesBitmap
                     ? "badge bad"
                     : "badge ok"}
                 >
-                  {BITMAP_AUDIT_THEMES.has(item.theme)
+                  {task.forbidBitmap
                     ? item.usesBitmap ? "贴图" : "手绘"
                     : "NO LIMIT"}
                 </span>

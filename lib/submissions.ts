@@ -2,12 +2,10 @@ import { Dirent, promises as fs } from "node:fs";
 import path from "node:path";
 import generatedSubmissions from "@/lib/generated-submissions.json";
 import { compareModels } from "@/lib/model-order";
+import { getTask, TASKS, THEMES } from "@/lib/task-registry";
 
-export type ThemeMeta = {
-  id: string;
-  label: string;
-  objective: string;
-};
+export { THEMES } from "@/lib/task-registry";
+export type { ThemeMeta } from "@/lib/task-registry";
 
 export type Submission = {
   id: string;
@@ -31,77 +29,15 @@ export type Submission = {
 
 export const LINE_LIMIT = 220;
 
-export const UNLIMITED_LINE_THEMES = new Set<string>([
-  "cheetah-trophy-run",
-  "dslr-camera",
-  "schwarzschild-black-hole"
-]);
+export const UNLIMITED_LINE_THEMES = new Set(
+  TASKS.filter((task) => task.lineLimit === null).map((task) => task.id)
+);
 
-export const BITMAP_AUDIT_THEMES = new Set<string>(["cheetah-trophy-run", "dslr-camera"]);
+export const BITMAP_AUDIT_THEMES = new Set(
+  TASKS.filter((task) => task.forbidBitmap).map((task) => task.id)
+);
 
-export const CARWASH_Q1 =
-  "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
-
-export const THEMES: ThemeMeta[] = [
-  {
-    id: "clock",
-    label: "钟表",
-    objective: "动画流畅度、时间准确性、视觉设计完成度"
-  },
-  {
-    id: "recorder",
-    label: "录音机",
-    objective: "交互状态管理、波形/时长反馈、可用性"
-  },
-  {
-    id: "weather-card",
-    label: "天气卡片",
-    objective: "信息层级、可读性、动态状态切换"
-  },
-  {
-    id: "stock-panel",
-    label: "股票展示",
-    objective: "数据可视化、涨跌表达、实时感"
-  },
-  {
-    id: "click-fireworks",
-    label: "点击放烟花",
-    objective: "点击交互响应、粒子动效表现、视觉冲击力"
-  },
-  {
-    id: "neon-countdown",
-    label: "最炫倒计时",
-    objective: "时间状态表达、节奏动效、结束瞬间爆发、数字可读性"
-  },
-  {
-    id: "particle-gravity",
-    label: "粒子引力场",
-    objective: "粒子物理、交互反馈、性能稳定性、视觉冲击力"
-  },
-  {
-    id: "cheetah-trophy-run",
-    label: "猎豹举杯冲刺",
-    objective: "SVG 造型、足球冠军叙事、奔跑动势、细节理解"
-  },
-  {
-    id: "dslr-camera",
-    label: "拟物相机",
-    objective: "拟物复刻：结构透视、材质光影、细节还原、纯手绘无贴图"
-  },
-  {
-    id: "schwarzschild-black-hole",
-    label: "施瓦西黑洞",
-    objective: "真实测地线积分、相对论吸积盘、多重像、HDR 后期与交互性能"
-  },
-  {
-    id: "carwash-decision",
-    label: "开放题：洗车决策",
-    objective: "单问答推理能力：直接结论 + 理由解释"
-  }
-];
-
-const THEME_ORDER = new Map(THEMES.map((theme, index) => [theme.id, index]));
-const SUPPORTED_THEME_IDS = new Set(THEMES.map((theme) => theme.id));
+const THEME_ORDER = new Map(TASKS.map((task, index) => [task.id, index]));
 
 function sharePathForSubmission(themeId: string, model: string, filename: string): string {
   const base = `/submissions/${themeId}/${model}`;
@@ -138,14 +74,6 @@ function usesBitmapAsset(content: string): boolean {
   return false;
 }
 
-function candidateFilesForTheme(themeId: string): string[] {
-  if (themeId === "carwash-decision") {
-    return ["response.md", "answer.md", "response.txt", "answer.txt", "index.html"];
-  }
-
-  return ["index.html"];
-}
-
 async function scanFilesystemSubmissions(): Promise<Submission[]> {
   const submissionsRoot = path.join(process.cwd(), "public", "submissions");
 
@@ -164,7 +92,8 @@ async function scanFilesystemSubmissions(): Promise<Submission[]> {
     }
 
     const themeId = themeDir.name;
-    if (!SUPPORTED_THEME_IDS.has(themeId)) {
+    const task = getTask(themeId);
+    if (!task) {
       continue;
     }
 
@@ -177,7 +106,7 @@ async function scanFilesystemSubmissions(): Promise<Submission[]> {
       }
 
       const model = modelDir.name;
-      const candidates = candidateFilesForTheme(themeId);
+      const candidates = task.submissionFiles;
 
       let filename = "";
       let content = "";
@@ -207,7 +136,7 @@ async function scanFilesystemSubmissions(): Promise<Submission[]> {
       const linesTotal = content.split(/\r?\n/).length;
       const linesCss = isHtml ? countInlineTagLines(content, "style") : 0;
       const linesJs = isHtml ? countInlineTagLines(content, "script") : 0;
-      const unlimitedLines = UNLIMITED_LINE_THEMES.has(themeId);
+      const unlimitedLines = task.lineLimit === null;
       const usesBitmap = isHtml ? usesBitmapAsset(content) : false;
 
       output.push({
@@ -222,11 +151,11 @@ async function scanFilesystemSubmissions(): Promise<Submission[]> {
         linesCss,
         linesJs,
         sizeBytes: stats.size,
-        withinLineLimit: unlimitedLines ? true : linesTotal <= LINE_LIMIT,
+        withinLineLimit: task.lineLimit === null || linesTotal <= task.lineLimit,
         unlimitedLines,
         usesBitmap,
         updatedAt: stats.mtime.toISOString(),
-        questionText: themeId === "carwash-decision" && !isHtml ? CARWASH_Q1 : undefined,
+        questionText: !isHtml ? task.questionText : undefined,
         answerText: !isHtml ? content.trim() : undefined
       });
     }

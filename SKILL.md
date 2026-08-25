@@ -79,11 +79,26 @@ Also supported:
 
 ## 4. Prompt Rules
 
+### Adding a new benchmark task
+
+Task metadata is defined only in `tasks/task-definitions.json`; do not register a task separately in the UI, API, scanner, or build scripts.
+
+For every new task:
+
+1. Add a unique lowercase-hyphenated `id` and its rule fields to `tasks/task-definitions.json`.
+2. Create `tasks/<task-id>/prompt.md`.
+3. Run `npm run tasks:sync && npm run check:tasks`.
+4. Place works in `public/submissions/<task-id>/<model>/<submission-file>` and run `npm run manifest`.
+
+Required fields are `id`, `label`, `objective`, `renderKind` (`html` or `text`), `submissionFiles`, `lineLimit` (positive integer or `null`), `forbidBitmap`, `promptProfile` (`standard` / `reasoning` / `svg` / `replica` / `webgl`), and `language`.
+
+Never edit `lib/generated-task-prompts.ts` or `lib/generated-submissions.json` by hand; generate them through the commands above.
+
 ### Visual themes prompt base
 
 Use:
-1. `prompts/base.md`
-2. `prompts/themes/<theme>.md`
+1. `tasks/profiles/standard.md`
+2. `tasks/<theme>/prompt.md`
 
 Generation command:
 
@@ -94,8 +109,8 @@ npm run prompt -- --theme <theme> --model <model_name> --max-lines <N> --languag
 ### Unlimited SVG theme prompt base
 
 Use this for `cheetah-trophy-run`:
-1. `prompts/base-svg.md`
-2. `prompts/themes/cheetah-trophy-run.md`
+1. `tasks/profiles/svg.md`
+2. `tasks/cheetah-trophy-run/prompt.md`
 
 Generation command:
 
@@ -106,8 +121,8 @@ npm run prompt -- --theme cheetah-trophy-run --model <model_name> --language "HT
 ### Replica theme prompt base (拟物复刻)
 
 Use this for `dslr-camera` (and future replica tasks):
-1. `prompts/base-replica.md`
-2. `prompts/themes/dslr-camera.md`
+1. `tasks/profiles/replica.md`
+2. `tasks/dslr-camera/prompt.md`
 
 No line limit. Anti-cheat is the core of this task type: the object must be hand-drawn with HTML + CSS + inline SVG only; no `<img>`, base64 / `data:` images, `<canvas>` bitmaps, emoji, or ready-made SVG/icon assets.
 
@@ -120,8 +135,8 @@ npm run prompt -- --theme dslr-camera --model <model_name> --language "HTML + CS
 ### Reasoning theme prompt base
 
 Use:
-1. `prompts/base-reasoning.md`
-2. `prompts/themes/carwash-decision.md`
+1. `tasks/profiles/reasoning.md`
+2. `tasks/carwash-decision/prompt.md`
 
 Generation command:
 
@@ -132,8 +147,8 @@ npm run prompt -- --theme carwash-decision --model <model_name>
 ### Physics WebGL theme prompt base
 
 Use this for `schwarzschild-black-hole`:
-1. `prompts/base-webgl.md`
-2. `prompts/themes/schwarzschild-black-hole.md`
+1. `tasks/profiles/webgl.md`
+2. `tasks/schwarzschild-black-hole/prompt.md`
 
 No line limit. The core requirements are fragment-shader null-geodesic integration, relativistic disk emission, a multi-pass HDR pipeline, responsive interaction, adaptive quality, and explicit failure states.
 

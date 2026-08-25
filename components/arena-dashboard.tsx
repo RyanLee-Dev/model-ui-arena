@@ -18,6 +18,8 @@ type ThemeMeta = {
   id: string;
   label: string;
   objective: string;
+  lineLimit: number | null;
+  forbidBitmap: boolean;
 };
 
 type Submission = {
@@ -50,12 +52,6 @@ type ApiPayload = {
   submissions: Submission[];
 };
 
-const UNLIMITED_LINE_THEMES = new Set([
-  "cheetah-trophy-run",
-  "dslr-camera",
-  "schwarzschild-black-hole"
-]);
-const BITMAP_AUDIT_THEMES = new Set(["cheetah-trophy-run", "dslr-camera"]);
 const MIN_CARD_WIDTH = 288;
 const GRID_GAP = 16;
 const MAX_PANES_PER_ROW = 6;
@@ -300,7 +296,8 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
     return payload?.themes.find((theme) => theme.id === activeTheme) ?? null;
   }, [activeTheme, payload]);
   const evaluatorGuide = EVALUATOR_GUIDES[activeTheme];
-  const activeThemeHasUnlimitedLines = UNLIMITED_LINE_THEMES.has(activeTheme);
+  const activeThemeHasUnlimitedLines = activeThemeMeta?.lineLimit === null;
+  const activeThemeForbidsBitmap = activeThemeMeta?.forbidBitmap ?? false;
   const effectivePanesPerRow = Math.min(panesPerRow, maxPanesPerRow);
   const currentThemePath = buildThemePath(activeTheme, selectedModels);
 
@@ -745,11 +742,11 @@ export function ArenaDashboard({ initialTheme = "clock" }: ArenaDashboardProps) 
               </div>
               {item.unlimitedLines ? (
                 <span
-                  className={BITMAP_AUDIT_THEMES.has(item.theme) && item.usesBitmap
+                  className={activeThemeForbidsBitmap && item.usesBitmap
                     ? "badge bad"
                     : "badge ok"}
                 >
-                  {BITMAP_AUDIT_THEMES.has(item.theme)
+                  {activeThemeForbidsBitmap
                     ? item.usesBitmap ? "贴图" : "手绘"
                     : "NO LIMIT"}
                 </span>

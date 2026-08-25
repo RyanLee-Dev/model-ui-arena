@@ -7,28 +7,12 @@ const projectRoot = path.join(__dirname, "..");
 const submissionsRoot = path.join(projectRoot, "public", "submissions");
 const outputFile = path.join(projectRoot, "lib", "generated-submissions.json");
 const modelOrderFile = path.join(projectRoot, "lib", "model-order-data.json");
-const lineLimit = 220;
-const unlimitedLineThemes = new Set([
-  "cheetah-trophy-run",
-  "dslr-camera",
-  "schwarzschild-black-hole"
-]);
-const themeOrder = [
-  "clock",
-  "recorder",
-  "weather-card",
-  "stock-panel",
-  "click-fireworks",
-  "neon-countdown",
-  "particle-gravity",
-  "cheetah-trophy-run",
-  "dslr-camera",
-  "schwarzschild-black-hole",
-  "carwash-decision"
-];
-const themeRank = new Map(themeOrder.map((theme, index) => [theme, index]));
-const carwashQuestion =
-  "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？";
+const taskDefinitions = JSON.parse(
+  await fs.readFile(path.join(projectRoot, "tasks", "task-definitions.json"), "utf8")
+);
+const tasks = taskDefinitions.tasks;
+const taskById = new Map(tasks.map((task) => [task.id, task]));
+const themeRank = new Map(tasks.map((task, index) => [task.id, index]));
 
 const modelOrderData = JSON.parse(await fs.readFile(modelOrderFile, "utf8"));
 const latestModelRank = new Map(
@@ -79,14 +63,6 @@ function countInlineTagLines(html, tagName) {
   return lines;
 }
 
-function candidateFilesForTheme(themeId) {
-  if (themeId === "carwash-decision") {
-    return ["response.md", "answer.md", "response.txt", "answer.txt", "index.html"];
-  }
-
-  return ["index.html"];
-}
-
 function usesBitmapAsset(content) {
   if (/<img\b/i.test(content)) {
     return true;
@@ -132,7 +108,8 @@ async function generateManifest() {
     }
 
     const themeId = themeDir.name;
-    if (!themeRank.has(themeId)) {
+    const task = taskById.get(themeId);
+    if (!task) {
       continue;
     }
 
@@ -145,7 +122,7 @@ async function generateManifest() {
       }
 
       const model = modelDir.name;
-      const candidates = candidateFilesForTheme(themeId);
+      const candidates = task.submissionFiles;
       let submission = null;
 
       for (const candidate of candidates) {
@@ -164,7 +141,7 @@ async function generateManifest() {
       const linesTotal = content.split(/\r?\n/).length;
       const linesCss = isHtml ? countInlineTagLines(content, "style") : 0;
       const linesJs = isHtml ? countInlineTagLines(content, "script") : 0;
-      const unlimitedLines = unlimitedLineThemes.has(themeId);
+      const unlimitedLines = task.lineLimit === null;
       const usesBitmap = isHtml ? usesBitmapAsset(content) : false;
 
       output.push({
@@ -179,11 +156,11 @@ async function generateManifest() {
         linesCss,
         linesJs,
         sizeBytes: stats.size,
-        withinLineLimit: unlimitedLines || linesTotal <= lineLimit,
+        withinLineLimit: unlimitedLines || linesTotal <= task.lineLimit,
         unlimitedLines,
         usesBitmap,
         updatedAt: stats.mtime.toISOString(),
-        questionText: themeId === "carwash-decision" && !isHtml ? carwashQuestion : undefined,
+        questionText: !isHtml ? task.questionText : undefined,
         answerText: !isHtml ? content.trim() : undefined
       });
     }

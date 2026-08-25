@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "tasks": [
+    { "id": "clock", "label": "钟表", "objective": "动画流畅度、时间准确性、视觉设计完成度", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": 220, "forbidBitmap": false, "promptProfile": "standard", "language": "HTML + CSS + JavaScript" },
+    { "id": "recorder", "label": "录音机", "objective": "交互状态管理、波形/时长反馈、可用性", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": 220, "forbidBitmap": false, "promptProfile": "standard", "language": "HTML + CSS + JavaScript" },
+    { "id": "weather-card", "label": "天气卡片", "objective": "信息层级、可读性、动态状态切换", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": 220, "forbidBitmap": false, "promptProfile": "standard", "language": "HTML + CSS + JavaScript" },
+    { "id": "stock-panel", "label": "股票展示", "objective": "数据可视化、涨跌表达、实时感", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": 220, "forbidBitmap": false, "promptProfile": "standard", "language": "HTML + CSS + JavaScript" },
+    { "id": "click-fireworks", "label": "点击放烟花", "objective": "点击交互响应、粒子动效表现、视觉冲击力", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": 220, "forbidBitmap": false, "promptProfile": "standard", "language": "HTML + CSS + JavaScript" },
+    { "id": "neon-countdown", "label": "最炫倒计时", "objective": "时间状态表达、节奏动效、结束瞬间爆发、数字可读性", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": 220, "forbidBitmap": false, "promptProfile": "standard", "language": "HTML + CSS + JavaScript" },
+    { "id": "particle-gravity", "label": "粒子引力场", "objective": "粒子物理、交互反馈、性能稳定性、视觉冲击力", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": 220, "forbidBitmap": false, "promptProfile": "standard", "language": "HTML + CSS + JavaScript" },
+    { "id": "cheetah-trophy-run", "label": "猎豹举杯冲刺", "objective": "SVG 造型、足球冠军叙事、奔跑动势、细节理解", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": null, "forbidBitmap": true, "promptProfile": "svg", "language": "HTML + CSS + SVG + JavaScript" },
+    { "id": "dslr-camera", "label": "拟物相机", "objective": "拟物复刻：结构透视、材质光影、细节还原、纯手绘无贴图", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": null, "forbidBitmap": true, "promptProfile": "replica", "language": "HTML + CSS + SVG + JavaScript" },
+    { "id": "schwarzschild-black-hole", "label": "施瓦西黑洞", "objective": "真实测地线积分、相对论吸积盘、多重像、HDR 后期与交互性能", "renderKind": "html", "submissionFiles": ["index.html"], "lineLimit": null, "forbidBitmap": false, "promptProfile": "webgl", "language": "HTML + CSS + WebGL2 + JavaScript" },
+    { "id": "carwash-decision", "label": "开放题：洗车决策", "objective": "单问答推理能力：直接结论 + 理由解释", "renderKind": "text", "submissionFiles": ["response.md", "answer.md", "response.txt", "answer.txt", "index.html"], "lineLimit": 18, "forbidBitmap": false, "promptProfile": "reasoning", "language": "text", "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？" }
+  ]
+}

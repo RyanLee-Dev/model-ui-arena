@@ -82,24 +82,10 @@ model-ui-arena/
     arena-dashboard.tsx           # comparison UI
   lib/
     submissions.ts                # scanner + metrics + theme metadata
-  prompts/
-    base.md                       # shared hard constraints
-    base-svg.md                   # unlimited inline SVG task constraints
-    base-replica.md               # unlimited hand-drawn replica task constraints
-    base-webgl.md                 # unlimited physics WebGL task constraints
-    full-prompts.md               # full ready-to-use prompts
-    themes/
-      clock.md
-      recorder.md
-      weather-card.md
-      stock-panel.md
-      click-fireworks.md
-      neon-countdown.md
-      particle-gravity.md
-      cheetah-trophy-run.md
-      dslr-camera.md
-      schwarzschild-black-hole.md
-      carwash-decision.md
+  tasks/
+    task-definitions.json         # single source of task metadata and rules
+    profiles/                     # shared prompt constraint profiles
+    <task-id>/prompt.md           # task-specific prompt
   public/
     submissions/
       <theme>/<model>/<submission-file> # model outputs (html or text)

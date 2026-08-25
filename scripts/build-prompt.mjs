@@ -1,13 +1,13 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-const noCodeLimitThemes = new Set([
-  "cheetah-trophy-run",
-  "dslr-camera",
-  "schwarzschild-black-hole"
-]);
-const replicaThemes = new Set(["dslr-camera"]);
-const webglThemes = new Set(["schwarzschild-black-hole"]);
+const baseFiles = {
+  standard: "standard.md",
+  reasoning: "reasoning.md",
+  replica: "replica.md",
+  svg: "svg.md",
+  webgl: "webgl.md"
+};
 
 function parseArgs(argv) {
   const args = {};
@@ -34,23 +34,20 @@ async function run() {
   const args = parseArgs(process.argv.slice(2));
   const theme = args.theme ?? "clock";
   const model = args.model ?? "target-model";
-  const language = args.language ?? "HTML + CSS + JavaScript";
-  const defaultMaxLines = theme === "carwash-decision" ? 18 : 220;
-  const maxLines = Number(args["max-lines"] ?? defaultMaxLines);
-
   const root = process.cwd();
-  const baseFile =
-    theme === "carwash-decision"
-      ? "base-reasoning.md"
-      : webglThemes.has(theme)
-        ? "base-webgl.md"
-      : replicaThemes.has(theme)
-        ? "base-replica.md"
-        : noCodeLimitThemes.has(theme)
-          ? "base-svg.md"
-          : "base.md";
-  const basePath = path.join(root, "prompts", baseFile);
-  const themePath = path.join(root, "prompts", "themes", `${theme}.md`);
+  const definitions = JSON.parse(
+    await readFile(path.join(root, "tasks", "task-definitions.json"), "utf8")
+  );
+  const task = definitions.tasks.find((item) => item.id === theme);
+  if (!task) {
+    throw new Error(`unknown task: ${theme}`);
+  }
+
+  const language = args.language ?? task.language;
+  const maxLines = args["max-lines"] ?? task.lineLimit;
+  const baseFile = baseFiles[task.promptProfile];
+  const basePath = path.join(root, "tasks", "profiles", baseFile);
+  const themePath = path.join(root, "tasks", theme, "prompt.md");
 
   const [baseRaw, themeRaw] = await Promise.all([
     readFile(basePath, "utf8"),

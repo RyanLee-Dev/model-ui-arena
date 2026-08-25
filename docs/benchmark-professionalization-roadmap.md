@@ -57,7 +57,7 @@
 
 2. **行数口径不一致**
 
-   `prompts/full-prompts.md` 使用 180 行，当前基础模板与扫描器使用 220 行，`carwash-decision` 的 prompt builder 使用 18 行，扫描器仍按 220 行判断。
+   历史汇总题面 `docs/archive/full-prompts.md` 使用 180 行，当前基础模板与扫描器使用 220 行，`carwash-decision` 的 prompt builder 使用 18 行，扫描器仍按 220 行判断。
 
 3. **行数指标容易被压缩规避**
 
