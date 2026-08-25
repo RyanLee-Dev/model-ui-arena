@@ -1,0 +1,895 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>工业机械臂 IK · 6-DOF 工作站</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg-0: #05070b;
+    --bg-1: #0d131c;
+    --fg: #e6f0ff;
+    --dim: #93a4c2;
+    --accent: #6affff;
+    --accent-2: #ff7adf;
+    --warn: #ffd84a;
+    --bad: #ff5470;
+    --good: #66ffa1;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  .panel {
+    position: fixed;
+    background: rgba(8, 12, 22, 0.78);
+    border: 1px solid rgba(106, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 12px 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 40px -16px rgba(106, 255, 255, 0.25);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .panel h3 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .panel button, .panel select {
+    background: rgba(106, 255, 255, 0.08);
+    color: var(--fg); border: 1px solid rgba(106, 255, 255, 0.25);
+    border-radius: 6px; padding: 6px 10px; font: inherit; cursor: pointer;
+  }
+  .panel button:hover, .panel button:focus-visible { background: rgba(106, 255, 255, 0.18); outline: none; }
+  .panel button[aria-pressed="true"] { background: rgba(106, 255, 255, 0.3); border-color: var(--accent); }
+  .panel input[type="range"] { width: 110px; accent-color: var(--accent); }
+  .panel label { display: flex; gap: 6px; align-items: center; color: var(--dim); }
+
+  #controls { top: 14px; left: 14px; width: 320px; max-height: calc(100vh - 28px); overflow: auto; }
+  #controls .group { margin-bottom: 10px; display: grid; gap: 6px; }
+  #status { top: 14px; right: 14px; width: 260px; }
+  #help { bottom: 14px; left: 14px; font-size: 11px; color: var(--dim); }
+  #help kbd {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 4px; padding: 1px 5px;
+    font-family: ui-monospace, monospace; color: var(--fg);
+  }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  #status .jrow {
+    display: grid; grid-template-columns: 28px 1fr 56px;
+    gap: 6px; align-items: center; font-size: 11px;
+  }
+  #status .jrow .name { color: var(--dim); font-family: ui-monospace, monospace; }
+  #status .jrow .bar {
+    height: 6px; background: rgba(255,255,255,.06);
+    border-radius: 3px; overflow: hidden; position: relative;
+  }
+  #status .jrow .bar > i {
+    position: absolute; top: 0; bottom: 0; background: var(--accent);
+    border-radius: 3px; transition: width .15s, left .15s;
+  }
+  #status .jrow .bar::after {
+    content: ""; position: absolute; left: 50%; top: -2px; bottom: -2px;
+    width: 1px; background: rgba(255,255,255,.4);
+  }
+  #status .jrow .val { font-family: ui-monospace, monospace; color: var(--fg); text-align: right; }
+  #status .jrow.limit .val { color: var(--warn); }
+
+  .warn-line { color: var(--bad); }
+  .ok-line { color: var(--good); }
+
+  #mobile { bottom: 14px; right: 14px; display: none; gap: 8px; }
+  #mobile button {
+    width: 56px; height: 56px; border-radius: 12px;
+    border: 1px solid rgba(106,255,255,.3);
+    background: rgba(8, 12, 22, 0.7); color: var(--accent);
+    font-size: 22px; font-family: ui-monospace, monospace;
+  }
+  @media (max-width: 720px) {
+    #status { width: calc(100vw - 28px); top: auto; bottom: 200px; right: 14px; }
+    #controls { width: calc(100vw - 28px); }
+    #mobile { display: flex; }
+    #help { display: none; }
+  }
+
+  #fallback {
+    position: fixed; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    color: var(--fg); padding: 24px; text-align: center;
+  }
+  #fallback.show { display: flex; }
+  #fallback h1 { font-size: 22px; color: var(--accent); letter-spacing: 0.12em; }
+  #fallback pre {
+    text-align: left; background: rgba(0,0,0,.4); padding: 12px;
+    border-radius: 8px; font-size: 11px; color: var(--bad);
+    max-width: 520px; overflow: auto;
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<aside id="controls" class="panel" aria-label="控制面板">
+  <h3>6-DOF 工业机械臂 · IK 工作站</h3>
+  <div class="group">
+    <div class="row">
+      <button id="btnMode" aria-pressed="true">模式: IK 拖拽</button>
+      <select id="solver" aria-label="求解器">
+        <option value="ccd">CCD</option>
+        <option value="fabrik">FABRIK</option>
+      </select>
+    </div>
+    <label>迭代 <input id="iter" type="range" min="1" max="40" value="14" /> <span id="vIter">14</span></label>
+    <label>阻尼 <input id="damp" type="range" min="0" max="1" step="0.05" value="0.25" /> <span id="vDamp">0.25</span></label>
+  </div>
+
+  <div class="group" id="manualGroup" hidden>
+    <h3 style="margin:0">手动关节</h3>
+    <label>J1 base <input id="m0" type="range" min="-180" max="180" value="0" /></label>
+    <label>J2 shoulder <input id="m1" type="range" min="-90" max="90" value="-30" /></label>
+    <label>J3 elbow <input id="m2" type="range" min="-150" max="150" value="60" /></label>
+    <label>J4 forearm <input id="m3" type="range" min="-180" max="180" value="0" /></label>
+    <label>J5 wrist <input id="m4" type="range" min="-120" max="120" value="20" /></label>
+    <label>J6 gripper <input id="m5" type="range" min="-180" max="180" value="0" /></label>
+  </div>
+
+  <div class="group">
+    <h3 style="margin:0">目标</h3>
+    <label>X <input id="tX" type="range" min="-1.2" max="1.2" step="0.01" value="0.7" /> <span id="vX">0.70</span></label>
+    <label>Y <input id="tY" type="range" min="0.1" max="1.6" step="0.01" value="0.5" /> <span id="vY">0.50</span></label>
+    <label>Z <input id="tZ" type="range" min="-1.2" max="1.2" step="0.01" value="0" /> <span id="vZ">0.00</span></label>
+    <div class="row">
+      <button id="btnPreset1">预设 A</button>
+      <button id="btnPreset2">预设 B</button>
+      <button id="btnPreset3">奇异点</button>
+    </div>
+  </div>
+
+  <div class="group">
+    <h3 style="margin:0">轨迹录制</h3>
+    <div class="row">
+      <button id="btnRec">● 录制</button>
+      <button id="btnPlay">▶ 播放</button>
+      <button id="btnClear">清空</button>
+    </div>
+    <div class="row"><span style="color:var(--dim)">路径点:</span><span id="vPts">0</span></div>
+  </div>
+</aside>
+
+<aside id="status" class="panel" aria-label="实时状态" aria-live="polite">
+  <h3>关节读数</h3>
+  <div class="jrow" id="j0"><span class="name">J1</span><span class="bar"><i></i></span><span class="val">0°</span></div>
+  <div class="jrow" id="j1"><span class="name">J2</span><span class="bar"><i></i></span><span class="val">0°</span></div>
+  <div class="jrow" id="j2"><span class="name">J3</span><span class="bar"><i></i></span><span class="val">0°</span></div>
+  <div class="jrow" id="j3"><span class="name">J4</span><span class="bar"><i></i></span><span class="val">0°</span></div>
+  <div class="jrow" id="j4"><span class="name">J5</span><span class="bar"><i></i></span><span class="val">0°</span></div>
+  <div class="jrow" id="j5"><span class="name">J6</span><span class="bar"><i></i></span><span class="val">0°</span></div>
+  <div class="row" style="margin-top:8px;justify-content:space-between"><span style="color:var(--dim)">末端误差</span><span id="err">—</span></div>
+  <div class="row" style="justify-content:space-between"><span style="color:var(--dim)">可达性</span><span id="reach">—</span></div>
+  <div class="row" style="justify-content:space-between"><span style="color:var(--dim)">状态</span><span id="stat">—</span></div>
+</aside>
+
+<aside id="help" class="panel" aria-label="键盘">
+  <h3>键盘</h3>
+  <div><kbd>1</kbd>/<kbd>2</kbd> 切换模式 &nbsp; <kbd>SPACE</kbd> 抓取</div>
+  <div><kbd>R</kbd> 复位 &nbsp; <kbd>C</kbd> 清空轨迹</div>
+  <div>鼠标拖动场景内目标球移动末端</div>
+</aside>
+
+<div id="mobile">
+  <button id="mA">A</button>
+  <button id="mB">B</button>
+  <button id="mC">奇</button>
+  <button id="mR">R</button>
+</div>
+
+<div id="fallback" role="alert">
+  <div>
+    <h1>三维环境暂不可用</h1>
+    <p id="fbMsg">本页面需要 WebGL2 与 Three.js 0.181。</p>
+    <pre id="fbTrace" hidden></pre>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.181.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.181.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+const FB = document.getElementById('fallback');
+const FB_MSG = document.getElementById('fbMsg');
+const FB_TRACE = document.getElementById('fbTrace');
+function showFallback(msg, err) {
+  FB_MSG.textContent = msg;
+  if (err) { FB_TRACE.hidden = false; FB_TRACE.textContent = (err && err.stack) ? err.stack : String(err); }
+  FB.classList.add('show');
+}
+function hasWebGL() {
+  try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); }
+  catch { return false; }
+}
+if (!hasWebGL()) { showFallback('未检测到 WebGL。'); throw new Error('No WebGL'); }
+
+let THREE, OrbitControls;
+try {
+  THREE = await import('three');
+  ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+} catch (err) { showFallback('Three.js 加载失败。', err); throw err; }
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: !reduceMotion });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = !reduceMotion;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070b);
+scene.fog = new THREE.Fog(0x05070b, 8, 24);
+
+const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.05, 100);
+camera.position.set(3, 2.4, 3.6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.6, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 1.6;
+controls.maxDistance = 8;
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+
+// lights
+scene.add(new THREE.HemisphereLight(0xa6c2ff, 0x14181f, 0.5));
+const sun = new THREE.DirectionalLight(0xfff1d2, 1.3);
+sun.position.set(3, 5, 2);
+sun.castShadow = !reduceMotion;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left = -3; sun.shadow.camera.right = 3;
+sun.shadow.camera.top = 3; sun.shadow.camera.bottom = -3;
+sun.shadow.camera.near = 0.5; sun.shadow.camera.far = 12;
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+scene.add(new THREE.DirectionalLight(0x6affff, 0.3).translateX(-3));
+
+// ground
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(5, 64),
+  new THREE.MeshStandardMaterial({ color: 0x141d2e, roughness: 0.85, metalness: 0.1 })
+);
+ground.rotation.x = -Math.PI / 2;
+ground.receiveShadow = true;
+scene.add(ground);
+const grid = new THREE.GridHelper(8, 40, 0x35506d, 0x1a243a);
+grid.material.opacity = 0.5;
+grid.material.transparent = true;
+scene.add(grid);
+const axes = new THREE.AxesHelper(0.4);
+axes.position.y = 0.005;
+scene.add(axes);
+
+// safety zone (cylinder)
+const safetyZone = new THREE.Mesh(
+  new THREE.CylinderGeometry(1.4, 1.4, 0.01, 64, 1, true),
+  new THREE.MeshBasicMaterial({ color: 0xff7adf, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
+);
+safetyZone.position.y = 0.005;
+scene.add(safetyZone);
+
+// workbench
+const bench = new THREE.Mesh(
+  new THREE.BoxGeometry(1.0, 0.04, 0.6),
+  new THREE.MeshStandardMaterial({ color: 0x202c3f, roughness: 0.6, metalness: 0.2 })
+);
+bench.position.set(0, 0.02, 0);
+bench.receiveShadow = true;
+scene.add(bench);
+
+// ── Robot construction ───────────────────────────────────────────────
+const ARM = new THREE.Group();
+scene.add(ARM);
+
+// DH-ish lengths
+const L = {
+  base: 0.10,    // base height
+  shoulder: 0.30, // upper arm
+  elbow: 0.30,    // forearm
+  wrist1: 0.12,
+  wrist2: 0.10,
+  gripper: 0.08
+};
+
+// joint limits (deg)
+const LIMITS = [
+  [-170, 170],  // base yaw
+  [-100,  60],  // shoulder pitch
+  [-150, 150],  // elbow
+  [-170, 170],  // forearm roll
+  [-120, 120],  // wrist pitch
+  [-170, 170]   // gripper roll
+];
+
+const JOINT_COUNT = 6;
+const joints = []; // {pivot, axis, angle, min, max}
+const jointNodes = [];
+
+function mat(c, opts = {}) {
+  return new THREE.MeshStandardMaterial({ color: c, roughness: opts.r ?? 0.5, metalness: opts.m ?? 0.45 });
+}
+const matShell = mat(0x2b3a55, { r: 0.45, m: 0.55 });
+const matJoint = mat(0xff7adf, { r: 0.3, m: 0.55 });
+const matAccent = mat(0x6affff, { r: 0.3, m: 0.5 });
+const matCable = mat(0x161616, { r: 0.7, m: 0.05 });
+
+// base
+const baseMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, L.base, 24), matShell);
+baseMesh.position.y = L.base / 2;
+baseMesh.castShadow = true;
+ARM.add(baseMesh);
+
+const baseServo = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.10, 16), matJoint);
+baseServo.position.y = L.base + 0.05;
+baseServo.castShadow = true;
+ARM.add(baseServo);
+
+const j0 = new THREE.Group();
+j0.position.y = L.base + 0.10;
+ARM.add(j0);
+jointNodes.push(j0);
+
+const upperArm = new THREE.Mesh(
+  new THREE.BoxGeometry(0.10, L.shoulder, 0.10),
+  matShell
+);
+upperArm.position.y = L.shoulder / 2;
+upperArm.castShadow = true;
+j0.add(upperArm);
+
+// shoulder servo (visual at top of j0)
+const shoulderServo = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.085, 0.085, 0.14, 16),
+  matJoint
+);
+shoulderServo.position.y = L.shoulder + 0.04;
+shoulderServo.castShadow = true;
+j0.add(shoulderServo);
+
+const j1 = new THREE.Group();
+j1.position.y = L.shoulder + 0.08;
+j0.add(j1);
+jointNodes.push(j1);
+
+// elbow link (forearm)
+const foreArm = new THREE.Mesh(
+  new THREE.BoxGeometry(0.085, L.elbow, 0.085),
+  matShell
+);
+foreArm.position.y = L.elbow / 2;
+foreArm.castShadow = true;
+j1.add(foreArm);
+
+const elbowServo = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.07, 0.07, 0.12, 16),
+  matJoint
+);
+elbowServo.position.y = L.elbow + 0.03;
+elbowServo.castShadow = true;
+j1.add(elbowServo);
+
+const j2 = new THREE.Group();
+j2.position.y = L.elbow + 0.06;
+j1.add(j2);
+jointNodes.push(j2);
+
+// wrist1
+const wrist1Link = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.045, 0.045, L.wrist1, 16),
+  matShell
+);
+wrist1Link.position.y = L.wrist1 / 2;
+wrist1Link.castShadow = true;
+j2.add(wrist1Link);
+
+const wrist1Servo = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.05, 0.05, 0.08, 12),
+  matJoint
+);
+wrist1Servo.position.y = L.wrist1 + 0.02;
+wrist1Servo.castShadow = true;
+j2.add(wrist1Servo);
+
+const j3 = new THREE.Group();
+j3.position.y = L.wrist1 + 0.04;
+j2.add(j3);
+jointNodes.push(j3);
+
+// wrist2
+const wrist2Link = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.035, 0.035, L.wrist2, 12),
+  matShell
+);
+wrist2Link.position.y = L.wrist2 / 2;
+wrist2Link.castShadow = true;
+j3.add(wrist2Link);
+
+const wrist2Servo = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.04, 0.04, 0.06, 12),
+  matJoint
+);
+wrist2Servo.position.y = L.wrist2 + 0.02;
+wrist2Servo.castShadow = true;
+j3.add(wrist2Servo);
+
+const j4 = new THREE.Group();
+j4.position.y = L.wrist2 + 0.03;
+j3.add(j4);
+jointNodes.push(j4);
+
+// gripper
+const gripperBase = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.04, 0.06), matShell);
+gripperBase.position.y = 0.03;
+gripperBase.castShadow = true;
+j4.add(gripperBase);
+const fingerL = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.04), matAccent);
+fingerL.position.set(-0.04, 0.06, 0);
+fingerL.castShadow = true;
+j4.add(fingerL);
+const fingerR = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.06, 0.04), matAccent);
+fingerR.position.set(0.04, 0.06, 0);
+fingerR.castShadow = true;
+j4.add(fingerR);
+
+const tipOffset = new THREE.Group();
+tipOffset.position.y = 0.10;
+j4.add(tipOffset);
+// mark the tip
+const tipMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(0.015, 12, 8),
+  new THREE.MeshBasicMaterial({ color: 0xffd84a })
+);
+tipOffset.add(tipMesh);
+
+// joint angle storage (radians). axis convention:
+// 0: y (base yaw)
+// 1: x (shoulder pitch)
+// 2: x (elbow)
+// 3: y (forearm roll)
+// 4: x (wrist pitch)
+// 5: y (gripper roll)
+const axesJ = ['y', 'x', 'x', 'y', 'x', 'y'];
+const angles = anglesDeg().map(d => d * Math.PI / 180);
+function anglesDeg() { return [0, -30, 60, 0, 20, 0]; }
+
+function applyJointAngles() {
+  for (let i = 0; i < JOINT_COUNT; i++) {
+    const n = jointNodes[i];
+    n.rotation.set(0, 0, 0);
+    n.rotation[axesJ[i]] = angles[i];
+  }
+  // gripper open/close not part of IK; we just keep finger simple
+  const open = 1 - 0.5 * (Math.sin(performance.now() * 0.001) > 0 ? 1 : 0);
+  fingerL.position.x = -0.04 - 0.005 * (1 - open);
+  fingerR.position.x =  0.04 + 0.005 * (1 - open);
+}
+applyJointAngles();
+
+// ── Forward kinematics helpers ────────────────────────────────────────
+const _v = new THREE.Vector3();
+function jointPos(i) {
+  const n = jointNodes[i];
+  n.updateWorldMatrix(true, false);
+  return _v.setFromMatrixPosition(n.matrixWorld);
+}
+function tipPos() {
+  tipOffset.updateWorldMatrix(true, false);
+  return _v.setFromMatrixPosition(tipOffset.matrixWorld);
+}
+function tipDir() {
+  // forward direction = local +Y of tipOffset in world
+  const m = new THREE.Matrix4().extractRotation(tipOffset.matrixWorld);
+  const dir = new THREE.Vector3(0, 1, 0).applyMatrix4(m);
+  return dir;
+}
+
+// ── IK solvers ────────────────────────────────────────────────────────
+function fabrikSolve(target, iterations) {
+  // joints[i] = position of joint i in world (chain order: 0..5 + tip)
+  const pts = [];
+  for (let i = 0; i < JOINT_COUNT; i++) pts.push(jointPos(i).clone());
+  pts.push(tipPos().clone());
+  const lengths = [];
+  for (let i = 0; i < pts.length - 1; i++) lengths.push(pts[i].distanceTo(pts[i + 1]));
+  const total = lengths.reduce((a, b) => a + b, 0);
+  const root = pts[0].clone();
+  const dist = pts[pts.length - 1].distanceTo(target);
+
+  // unreachability: clamp target on the segment root->target
+  let targetEff = target.clone();
+  if (dist > total) {
+    const dir = target.clone().sub(root).normalize();
+    targetEff = root.clone().add(dir.multiplyScalar(total - 0.001));
+  }
+
+  for (let iter = 0; iter < iterations; iter++) {
+    // backward
+    pts[pts.length - 1].copy(targetEff);
+    for (let i = pts.length - 2; i >= 0; i--) {
+      const dir = pts[i].clone().sub(pts[i + 1]).normalize();
+      pts[i].copy(pts[i + 1]).add(dir.multiplyScalar(lengths[i]));
+    }
+    // forward
+    pts[0].copy(root);
+    for (let i = 1; i < pts.length; i++) {
+      const dir = pts[i].clone().sub(pts[i - 1]).normalize();
+      pts[i].copy(pts[i - 1]).add(dir.multiplyScalar(lengths[i - 1]));
+    }
+  }
+  // reconstruct joint angles from points
+  for (let i = 0; i < JOINT_COUNT; i++) {
+    setJointFromWorldPos(i, pts[i]);
+  }
+  applyJointAngles();
+  return { reached: dist <= total };
+}
+
+function setJointFromWorldPos(i, wp) {
+  // joint i's parent in world: parentNode world position; we set joint local position
+  // by computing the local offset from parent world transform.
+  const n = jointNodes[i];
+  const parent = n.parent;
+  parent.updateWorldMatrix(true, false);
+  const local = wp.clone();
+  // subtract parent world pos
+  const pwp = new THREE.Vector3().setFromMatrixPosition(parent.matrixWorld);
+  local.sub(pwp);
+  // parent inverse rotation
+  const parentInv = new THREE.Quaternion().setFromRotationMatrix(parent.matrixWorld).invert();
+  local.applyQuaternion(parentInv);
+  // For joints, only one DOF axis — clamp to that axis
+  const axis = axesJ[i];
+  // For Y joints, position offset is X/Z; for X joints, position offset is Y/Z.
+  // Compute required angle to produce this local position from origin given the next-link length.
+  // For FABRIK we just snap the joint to point at the next world point (constraint y-link direction).
+  const next = (i + 1 < JOINT_COUNT) ? jointNodes[i + 1] : tipOffset;
+  next.updateWorldMatrix(true, false);
+  const nwp = new THREE.Vector3().setFromMatrixPosition(next.matrixWorld);
+  const nLocal = nwp.clone().sub(pwp).applyQuaternion(parentInv);
+  // vector from joint to next in local
+  let vx = nLocal.x, vy = nLocal.y, vz = nLocal.z;
+  let desiredAngle;
+  if (axis === 'y') {
+    // yaw: rotate in XZ plane
+    desiredAngle = Math.atan2(vx, vz) - Math.atan2(0, 1);
+  } else {
+    // pitch: rotate in YZ plane (around X)
+    desiredAngle = Math.atan2(vy, vz);
+  }
+  // clamp to limits
+  const [a, b] = LIMITS[i];
+  const limA = a * Math.PI / 180, limB = b * Math.PI / 180;
+  let clamped = false;
+  if (desiredAngle < limA) { desiredAngle = limA; clamped = true; }
+  if (desiredAngle > limB) { desiredAngle = limB; clamped = true; }
+  angles[i] = desiredAngle;
+}
+
+function ccdSolve(target, iterations, damping) {
+  for (let iter = 0; iter < iterations; iter++) {
+    for (let i = JOINT_COUNT - 1; i >= 0; i--) {
+      const jp = jointPos(i);
+      const tp = tipPos();
+      const toTip = tp.clone().sub(jp);
+      const toTgt = target.clone().sub(jp);
+      const tipLen = toTip.length();
+      const tgtLen = toTgt.length();
+      if (tipLen < 1e-6 || tgtLen < 1e-6) continue;
+      // axis: project to plane perpendicular to joint axis
+      const axis = axesJ[i];
+      const axisWorld = new THREE.Vector3();
+      const m = new THREE.Matrix4().extractRotation(jointNodes[i].matrixWorld);
+      if (axis === 'x') axisWorld.set(1, 0, 0).applyMatrix4(m);
+      else if (axis === 'y') axisWorld.set(0, 1, 0).applyMatrix4(m);
+      else axisWorld.set(0, 0, 1).applyMatrix4(m);
+      // angle between (projected)
+      const proj = (v) => {
+        const p = v.clone().sub(axisWorld.clone().multiplyScalar(v.dot(axisWorld)));
+        return p;
+      };
+      const a = proj(toTip).normalize();
+      const b = proj(toTgt).normalize();
+      let ang = Math.atan2(
+        new THREE.Vector3().crossVectors(a, b).dot(axisWorld),
+        a.dot(b)
+      );
+      // damping
+      ang *= (1 - damping * 0.5);
+      // clamp within limits
+      const newAng = angles[i] + ang;
+      const [lo, hi] = LIMITS[i];
+      const limLo = lo * Math.PI / 180, limHi = hi * Math.PI / 180;
+      if (newAng < limLo) ang = limLo - angles[i];
+      else if (newAng > limHi) ang = limHi - angles[i];
+      angles[i] += ang;
+      applyJointAngles();
+    }
+  }
+}
+
+// ── Reachability / singularity ────────────────────────────────────────
+const MAX_REACH = L.shoulder + L.elbow + L.wrist1 + L.wrist2 + 0.10;
+const MIN_REACH = 0.05;
+function evaluateState(target) {
+  const tp = tipPos();
+  const dist = tp.distanceTo(target);
+  const err = dist;
+  const reach = (err < 0.015) ? '✓ 到达' : (err < 0.05) ? '~ 接近' : '✗ 不可达';
+  let sing = false;
+  // detect singularity: J2+J3 near 0 or 180 (elbow straight)
+  const j2 = angles[1], j3 = angles[2];
+  if (Math.abs(j2 + j3) < 0.05 || Math.abs(j2 + j3 - Math.PI) < 0.05) sing = true;
+  // also: base + shoulder near aligned vertically
+  if (Math.abs(angles[0]) < 0.02 && Math.abs(j2 + j3) < 0.05) sing = true;
+  return { err, reach, sing, tp };
+}
+
+// ── Target gizmo ──────────────────────────────────────────────────────
+const target = new THREE.Group();
+const tgtSphere = new THREE.Mesh(
+  new THREE.SphereGeometry(0.05, 24, 16),
+  new THREE.MeshStandardMaterial({ color: 0xff7adf, emissive: 0xff7adf, emissiveIntensity: 1.4, roughness: 0.3, metalness: 0.2 })
+);
+target.add(tgtSphere);
+const tgtHalo = new THREE.Mesh(
+  new THREE.RingGeometry(0.06, 0.075, 32),
+  new THREE.MeshBasicMaterial({ color: 0x6affff, transparent: true, opacity: 0.6, side: THREE.DoubleSide })
+);
+tgtHalo.rotation.x = -Math.PI / 2;
+target.add(tgtHalo);
+scene.add(target);
+target.position.set(0.7, 0.5, 0);
+
+// ── Trajectory line ───────────────────────────────────────────────────
+const trajMax = 600;
+const trajGeo = new THREE.BufferGeometry();
+const trajPos = new Float32Array(trajMax * 3);
+trajGeo.setAttribute('position', new THREE.BufferAttribute(trajPos, 3));
+const trajMat = new THREE.LineBasicMaterial({ color: 0x6affff, transparent: true, opacity: 0.7 });
+const trajLine = new THREE.Line(trajGeo, trajMat);
+trajLine.frustumCulled = false;
+scene.add(trajLine);
+let trajCount = 0;
+
+// ── Interaction: drag target on a plane parallel to ground ────────────
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let dragging = false;
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+const dragOffset = new THREE.Vector3();
+
+renderer.domElement.addEventListener('pointerdown', (e) => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hit = raycaster.intersectObject(tgtSphere);
+  if (hit.length) {
+    dragging = true;
+    // compute offset from hit point to target center
+    dragOffset.copy(target.position).sub(hit[0].point);
+    controls.enabled = false;
+  }
+});
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hit = new THREE.Vector3();
+  raycaster.ray.intersectPlane(dragPlane, hit);
+  if (hit) {
+    target.position.copy(hit).add(dragOffset);
+    target.position.y = Math.max(0.1, Math.min(1.6, target.position.y));
+    syncSliders();
+  }
+});
+addEventListener('pointerup', () => { dragging = false; controls.enabled = true; });
+
+// ── UI ────────────────────────────────────────────────────────────────
+const btnMode = document.getElementById('btnMode');
+const solverSel = document.getElementById('solver');
+const iter = document.getElementById('iter');
+const damp = document.getElementById('damp');
+const vIter = document.getElementById('vIter');
+const vDamp = document.getElementById('vDamp');
+const manualGroup = document.getElementById('manualGroup');
+const mSliders = [0,1,2,3,4,5].map(i => document.getElementById('m' + i));
+const tX = document.getElementById('tX'), tY = document.getElementById('tY'), tZ = document.getElementById('tZ');
+const vX = document.getElementById('vX'), vY = document.getElementById('vY'), vZ = document.getElementById('vZ');
+const btnPreset1 = document.getElementById('btnPreset1');
+const btnPreset2 = document.getElementById('btnPreset2');
+const btnPreset3 = document.getElementById('btnPreset3');
+const btnRec = document.getElementById('btnRec');
+const btnPlay = document.getElementById('btnPlay');
+const btnClear = document.getElementById('btnClear');
+const vPts = document.getElementById('vPts');
+
+const jBars = [0,1,2,3,4,5].map(i => document.getElementById('j' + i));
+const jVals = jBars.map(b => b.querySelector('.val'));
+const jBarsIn = jBars.map(b => b.querySelector('i'));
+const errEl = document.getElementById('err');
+const reachEl = document.getElementById('reach');
+const statEl = document.getElementById('stat');
+
+let mode = 'ik'; // 'ik' or 'manual'
+btnMode.addEventListener('click', () => {
+  mode = (mode === 'ik') ? 'manual' : 'ik';
+  btnMode.textContent = '模式: ' + (mode === 'ik' ? 'IK 拖拽' : '手动关节');
+  btnMode.setAttribute('aria-pressed', mode === 'manual' ? 'true' : 'false');
+  manualGroup.hidden = (mode !== 'manual');
+});
+iter.addEventListener('input', () => vIter.textContent = iter.value);
+damp.addEventListener('input', () => vDamp.textContent = parseFloat(damp.value).toFixed(2));
+
+mSliders.forEach((s, i) => {
+  s.addEventListener('input', () => {
+    if (mode !== 'manual') return;
+    angles[i] = parseFloat(s.value) * Math.PI / 180;
+    applyJointAngles();
+  });
+});
+
+function setTarget(x, y, z) {
+  target.position.set(x, y, z);
+  tX.value = x; tY.value = y; tZ.value = z;
+  vX.textContent = x.toFixed(2); vY.textContent = y.toFixed(2); vZ.textContent = z.toFixed(2);
+}
+[tX, tY, tZ].forEach((s, i) => {
+  s.addEventListener('input', () => {
+    const x = parseFloat(tX.value), y = parseFloat(tY.value), z = parseFloat(tZ.value);
+    target.position.set(x, y, z);
+    vX.textContent = x.toFixed(2); vY.textContent = y.toFixed(2); vZ.textContent = z.toFixed(2);
+  });
+});
+function syncSliders() {
+  tX.value = target.position.x; tY.value = target.position.y; tZ.value = target.position.z;
+  vX.textContent = target.position.x.toFixed(2);
+  vY.textContent = target.position.y.toFixed(2);
+  vZ.textContent = target.position.z.toFixed(2);
+}
+btnPreset1.addEventListener('click', () => setTarget(0.7, 0.5, 0));
+btnPreset2.addEventListener('click', () => setTarget(0.3, 1.1, -0.6));
+btnPreset3.addEventListener('click', () => setTarget(0, 0.92, 0)); // straight up = singular
+
+// recording
+const pathPts = [];
+let recording = false;
+btnRec.addEventListener('click', () => {
+  recording = !recording;
+  btnRec.textContent = recording ? '■ 停止' : '● 录制';
+  btnRec.setAttribute('aria-pressed', recording ? 'true' : 'false');
+});
+btnClear.addEventListener('click', () => {
+  pathPts.length = 0;
+  trajCount = 0;
+  trajGeo.setDrawRange(0, 0);
+  vPts.textContent = '0';
+});
+let playing = false, playT = 0;
+btnPlay.addEventListener('click', () => {
+  if (pathPts.length < 2) return;
+  playing = !playing;
+  playT = 0;
+  btnPlay.textContent = playing ? '❚❚ 暂停' : '▶ 播放';
+  btnPlay.setAttribute('aria-pressed', playing ? 'true' : 'false');
+});
+
+// keyboard
+addEventListener('keydown', (e) => {
+  if (e.key === '1') btnMode.click();
+  if (e.key === '2') btnMode.click();
+  if (e.key.toLowerCase() === 'c') btnClear.click();
+  if (e.key.toLowerCase() === 'r') setTarget(0.7, 0.5, 0);
+  if (e.code === 'Space') { btnRec.click(); e.preventDefault(); }
+});
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// mobile
+document.getElementById('mA').addEventListener('click', () => setTarget(0.7, 0.5, 0));
+document.getElementById('mB').addEventListener('click', () => setTarget(0.3, 1.1, -0.6));
+document.getElementById('mC').addEventListener('click', () => setTarget(0, 0.92, 0));
+document.getElementById('mR').addEventListener('click', () => setTarget(0.7, 0.5, 0));
+
+// ── Main loop ─────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (mode === 'ik') {
+    const solver = solverSel.value;
+    if (solver === 'fabrik') fabrikSolve(target.position, +iter.value);
+    else ccdSolve(target.position, +iter.value, +damp.value);
+  } else {
+    applyJointAngles();
+  }
+  if (recording && mode === 'ik') {
+    const tp = tipPos();
+    if (pathPts.length === 0 || tp.distanceTo(pathPts[pathPts.length - 1]) > 0.02) {
+      pathPts.push(tp.clone());
+      vPts.textContent = pathPts.length;
+      if (trajCount < trajMax) {
+        trajPos[trajCount * 3] = tp.x;
+        trajPos[trajCount * 3 + 1] = tp.y;
+        trajPos[trajCount * 3 + 2] = tp.z;
+        trajCount++;
+        trajGeo.setDrawRange(0, trajCount);
+        trajGeo.attributes.position.needsUpdate = true;
+      }
+    }
+  }
+  if (playing) {
+    playT += dt * 0.4;
+    const segs = pathPts.length;
+    if (segs >= 2) {
+      const u = (playT % 1) * (segs - 1);
+      const i = Math.floor(u);
+      const f = u - i;
+      const a = pathPts[Math.min(segs - 1, i)];
+      const b = pathPts[Math.min(segs - 1, i + 1)];
+      const p = new THREE.Vector3().lerpVectors(a, b, f);
+      setTarget(p.x, p.y, p.z);
+    }
+  }
+  // status
+  const ev = evaluateState(target.position);
+  errEl.textContent = (ev.err * 1000).toFixed(1) + ' mm';
+  errEl.className = (ev.err > 0.05) ? 'warn-line' : (ev.err < 0.015 ? 'ok-line' : '');
+  reachEl.textContent = ev.reach;
+  reachEl.className = ev.reach.startsWith('✓') ? 'ok-line' : (ev.reach.startsWith('~') ? '' : 'warn-line');
+  let stateStr = mode === 'ik' ? 'IK' : '手动';
+  stateStr += ' · ' + (solverSel.value.toUpperCase());
+  if (ev.sing) stateStr += ' · ⚠ 奇异';
+  statEl.textContent = stateStr;
+  statEl.className = ev.sing ? 'warn-line' : '';
+  // joint readouts
+  for (let i = 0; i < JOINT_COUNT; i++) {
+    const deg = angles[i] * 180 / Math.PI;
+    const [lo, hi] = LIMITS[i];
+    const t = (deg - lo) / (hi - lo);
+    jBarsIn[i].style.left = (Math.max(0, Math.min(1, t)) * 50 - 0) + '%';
+    jBarsIn[i].style.width = '4px';
+    jVals[i].textContent = deg.toFixed(0) + '°';
+    const atLimit = Math.abs(deg - lo) < 0.5 || Math.abs(deg - hi) < 0.5;
+    jBars[i].classList.toggle('limit', atLimit);
+    jVals[i].style.color = atLimit ? 'var(--warn)' : 'var(--fg)';
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

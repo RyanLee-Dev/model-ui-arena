@@ -25,6 +25,14 @@ Required themes:
 9. `dslr-camera`
 10. `schwarzschild-black-hole`
 11. `carwash-decision`
+12. `hexapod-robot-lab`
+13. `industrial-arm-ik`
+14. `complete-shelf`
+15. `cel-shaded-boat-race`
+16. `synthwave-spaceflight`
+17. `floating-island`
+18. `turbofan-flow`
+19. `animated-svg-logo`
 
 For each requested model, agent must generate and save one submission per theme.
 
@@ -58,6 +66,14 @@ Themes:
 8. `cheetah-trophy-run`
 9. `dslr-camera`
 10. `schwarzschild-black-hole`
+11. `hexapod-robot-lab`
+12. `industrial-arm-ik`
+13. `complete-shelf`
+14. `cel-shaded-boat-race`
+15. `synthwave-spaceflight`
+16. `floating-island`
+17. `turbofan-flow`
+18. `animated-svg-logo`
 
 File name must be:
 
@@ -90,7 +106,7 @@ For every new task:
 3. Run `npm run tasks:sync && npm run check:tasks`.
 4. Place works in `public/submissions/<task-id>/<model>/<submission-file>` and run `npm run manifest`.
 
-Required fields are `id`, `label`, `objective`, `renderKind` (`html` or `text`), `submissionFiles`, `lineLimit` (positive integer or `null`), `forbidBitmap`, `promptProfile` (`standard` / `reasoning` / `svg` / `replica` / `webgl`), and `language`.
+Required fields are `id`, `label`, `objective`, `renderKind` (`html` or `text`), `submissionFiles`, `lineLimit` (positive integer or `null`), `forbidBitmap`, `promptProfile` (`standard` / `reasoning` / `svg` / `replica` / `webgl` / `threejs`), and `language`.
 
 Never edit `lib/generated-task-prompts.ts` or `lib/generated-submissions.json` by hand; generate them through the commands above.
 
@@ -158,6 +174,20 @@ Generation command:
 npm run prompt -- --theme schwarzschild-black-hole --model <model_name> --language "HTML + CSS + WebGL2 + JavaScript"
 ```
 
+### Procedural Three.js themes prompt base
+
+Use this for `hexapod-robot-lab`, `industrial-arm-ik`, `complete-shelf`, `cel-shaded-boat-race`, `synthwave-spaceflight`, `floating-island`, and `turbofan-flow`:
+1. `tasks/profiles/threejs.md`
+2. `tasks/<theme>/prompt.md`
+
+No line limit. The fixed Three.js module plus official OrbitControls are the only allowed remote dependency; all geometry, materials and effects remain procedural with no external assets.
+
+Generation command:
+
+```bash
+npm run prompt -- --theme <theme> --model <model_name> --language "HTML + CSS + JavaScript + Three.js"
+```
+
 ## 5. Constraint Defaults
 
 ### Visual themes
@@ -196,6 +226,14 @@ npm run prompt -- --theme schwarzschild-black-hole --model <model_name> --langua
 3. No code line limit; preserve the complete numerical integrator, HDR passes, interaction, adaptive quality, and error handling
 4. Zero dependencies and zero external assets; the file must run by double-clicking it
 5. Geodesic bending must be produced by fragment-shader numerical integration, never by screen-space lens distortion
+
+### Procedural Three.js themes
+
+1. Themes: `hexapod-robot-lab`, `industrial-arm-ik`, `complete-shelf`, `cel-shaded-boat-race`, `synthwave-spaceflight`, `floating-island`, `turbofan-flow`
+2. Single file: `index.html`
+3. No code line limit; permit only pinned Three.js and official OrbitControls as a remote module
+4. No external images, textures, 3D models, audio, fonts or libraries; generate all assets procedurally
+5. Provide a responsive WebGL/load failure state and touch-accessible controls
 
 ## 6. Render Behavior (Already Implemented)
 
@@ -247,6 +285,14 @@ Create:
 9. `public/submissions/dslr-camera/gpt-5.3-codex/index.html`
 10. `public/submissions/schwarzschild-black-hole/gpt-5.3-codex/index.html`
 11. `public/submissions/carwash-decision/gpt-5.3-codex/response.md`
+12. `public/submissions/hexapod-robot-lab/gpt-5.3-codex/index.html`
+13. `public/submissions/industrial-arm-ik/gpt-5.3-codex/index.html`
+14. `public/submissions/complete-shelf/gpt-5.3-codex/index.html`
+15. `public/submissions/cel-shaded-boat-race/gpt-5.3-codex/index.html`
+16. `public/submissions/synthwave-spaceflight/gpt-5.3-codex/index.html`
+17. `public/submissions/floating-island/gpt-5.3-codex/index.html`
+18. `public/submissions/turbofan-flow/gpt-5.3-codex/index.html`
+19. `public/submissions/animated-svg-logo/gpt-5.3-codex/index.html`
 
 ### Example B: Single custom reasoning task
 
@@ -267,3 +313,4 @@ If `<custom-theme>` is new, agent should:
 6. Anti-cheating rule: never read or inspect other model directories under `public/submissions/<theme>/`; only write to the current target model directory.
 7. Replica anti-cheat (`dslr-camera` and replica tasks): hand-draw with HTML + CSS + inline SVG only; no `<img>`, base64 / `data:` images, `<canvas>` bitmaps, emoji, or ready-made SVG/icon assets. Submissions using bitmaps are flagged 贴图 in the dashboard.
 8. Physics WebGL anti-cheat (`schwarzschild-black-hole`): lensing must come from numerical null-geodesic integration inside the fragment shader; screen-space distortion or handcrafted photon rings are disqualifying.
+9. Procedural Three.js tasks: only fixed-version Three.js and official OrbitControls may be loaded remotely; all visible assets and effects must be code-generated.

@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>VECTOR / 26 — Animated Festival Identity</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { width: 100%; min-height: 100%; margin: 0; }
+    body {
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: #050713;
+    }
+    svg { display: block; width: min(100vw, 1440px); height: auto; max-height: 100vh; }
+    .static-scene { display: none; }
+    @media (prefers-color-scheme: light) {
+      body { background: #eaf0ff; }
+      .outer-frame { stroke: #17325d; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .motion-scene { display: none; }
+      .static-scene { display: inline; }
+    }
+  </style>
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" role="img" aria-labelledby="work-title work-desc" preserveAspectRatio="xMidYMid meet">
+  <title id="work-title">VECTOR / 26 animated creative technology festival logo</title>
+  <desc id="work-desc">A luminous abstract V draws itself, assembles from crystalline facets, reveals a custom VECTOR / 26 wordmark, then expands and transforms before returning to its blueprint origin. Reduced-motion users see the completed identity.</desc>
+
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071227"/>
+      <stop offset="0.52" stop-color="#090a1b"/>
+      <stop offset="1" stop-color="#160726"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="42%" r="55%">
+      <stop offset="0" stop-color="#4437ff" stop-opacity=".34"/>
+      <stop offset=".45" stop-color="#00e7ff" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#02040d" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="spectrum" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#70f6ff"/>
+      <stop offset=".32" stop-color="#2aa8ff"/>
+      <stop offset=".65" stop-color="#9254ff"/>
+      <stop offset="1" stop-color="#ff4fd8"/>
+    </linearGradient>
+    <linearGradient id="spectrumReverse" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7ff9ff"/>
+      <stop offset=".5" stop-color="#8a62ff"/>
+      <stop offset="1" stop-color="#ff5ccd"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f8fdff"/>
+      <stop offset=".45" stop-color="#aeeeff"/>
+      <stop offset="1" stop-color="#7d76ff"/>
+    </linearGradient>
+    <pattern id="microGrid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#83a8d7" stroke-width="1" stroke-opacity=".08"/>
+      <circle cx="0" cy="0" r="1.5" fill="#7eeaff" fill-opacity=".18"/>
+    </pattern>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feFlood flood-color="#45dfff" flood-opacity=".7" result="color"/>
+      <feComposite in="color" in2="blur" operator="in" result="lit"/>
+      <feMerge><feMergeNode in="lit"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#000616" flood-opacity=".75"/>
+    </filter>
+    <clipPath id="logoClip">
+      <path d="M392 184H508L600 382 692 184H808L650 500H550Z"/>
+    </clipPath>
+    <path id="orbitPath" d="M255 340C255 190 410 94 600 94S945 190 945 340 790 526 600 526 255 490 255 340Z"/>
+  </defs>
+
+  <g id="environment" aria-label="Festival stage background">
+    <rect width="1200" height="780" rx="38" fill="url(#bg)"/>
+    <rect x="1.5" y="1.5" width="1197" height="777" rx="36.5" fill="none" stroke="#aac8ff" stroke-opacity=".28" stroke-width="3" class="outer-frame"/>
+    <rect x="24" y="24" width="1152" height="732" rx="24" fill="url(#microGrid)"/>
+    <ellipse cx="600" cy="335" rx="480" ry="330" fill="url(#halo)"/>
+    <path d="M82 122V82h40M1078 82h40v40M82 658v40h40M1078 698h40v-40" fill="none" stroke="#8edfff" stroke-width="2" stroke-opacity=".38"/>
+    <g fill="#b9d9ff" fill-opacity=".68">
+      <circle cx="82" cy="82" r="3"/><circle cx="1118" cy="82" r="3"/>
+      <circle cx="82" cy="698" r="3"/><circle cx="1118" cy="698" r="3"/>
+    </g>
+    <path d="M118 690H340M860 690h222" stroke="#87a7d5" stroke-width="2" stroke-opacity=".25"/>
+    <g fill="#8cf5ff" fill-opacity=".7">
+      <path d="M367 686h8v8h-8zM387 686h8v8h-8zM407 686h8v8h-8z"/>
+      <path d="M785 686h8v8h-8zM805 686h8v8h-8zM825 686h8v8h-8z"/>
+    </g>
+  </g>
+
+  <g class="motion-scene" aria-label="Animated identity sequence">
+    <g id="ambient-motion">
+      <ellipse cx="600" cy="340" rx="320" ry="215" fill="#4d42ff" fill-opacity=".11" filter="url(#softGlow)">
+        <animate attributeName="rx" values="270;350;300;270" keyTimes="0;.38;.76;1" dur="12s" repeatCount="indefinite"/>
+        <animate attributeName="fill-opacity" values=".04;.18;.1;.04" keyTimes="0;.32;.75;1" dur="12s" repeatCount="indefinite"/>
+      </ellipse>
+      <g opacity="0">
+        <animate attributeName="opacity" values="0;0;1;.55;0;0" keyTimes="0;.18;.28;.72;.94;1" dur="12s" repeatCount="indefinite"/>
+        <path d="M170 426H1030" stroke="url(#spectrum)" stroke-width="1" stroke-dasharray="3 16"/>
+        <path d="M260 154L940 515M260 515L940 154" stroke="#6fdfff" stroke-width="1" stroke-opacity=".18" stroke-dasharray="2 14"/>
+      </g>
+      <g fill="#8cf8ff">
+        <circle r="5" opacity="0">
+          <animateMotion dur="12s" repeatCount="indefinite" keyTimes="0;.2;.75;1" keyPoints="0;0;.8;1" calcMode="linear"><mpath href="#orbitPath"/></animateMotion>
+          <animate attributeName="opacity" values="0;0;.9;0" keyTimes="0;.2;.72;1" dur="12s" repeatCount="indefinite"/>
+        </circle>
+        <circle r="3" opacity="0">
+          <animateMotion dur="12s" repeatCount="indefinite" keyTimes="0;.26;.84;1" keyPoints=".5;.5;1;1" calcMode="linear"><mpath href="#orbitPath"/></animateMotion>
+          <animate attributeName="opacity" values="0;0;.8;0" keyTimes="0;.24;.82;1" dur="12s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+    </g>
+
+    <g id="construction-guides" fill="none" stroke="#8bdfff">
+      <path d="M392 184H508L600 382 692 184H808L650 500H550Z" stroke-width="2" stroke-opacity=".28" stroke-dasharray="8 11">
+        <animate attributeName="opacity" values=".8;.8;.16;.16;0;0" keyTimes="0;.18;.3;.78;.94;1" dur="12s" repeatCount="indefinite"/>
+      </path>
+      <g stroke-width="1.5" stroke-opacity=".5">
+        <path d="M370 184H830M600 132V518M365 500H835"/>
+        <circle cx="392" cy="184" r="7"/><circle cx="808" cy="184" r="7"/>
+        <circle cx="600" cy="382" r="7"/><circle cx="600" cy="500" r="7"/>
+        <animate attributeName="opacity" values=".65;.65;0;0;0" keyTimes="0;.17;.29;.95;1" dur="12s" repeatCount="indefinite"/>
+      </g>
+    </g>
+
+    <g id="mark" aria-label="Abstract V symbol" filter="url(#shadow)">
+      <path d="M392 184H508L600 382 692 184H808L650 500H550Z" fill="none" stroke="url(#spectrum)" stroke-width="7" stroke-linejoin="bevel" stroke-dasharray="1500" stroke-dashoffset="1500" filter="url(#glow)">
+        <animate attributeName="stroke-dashoffset" values="1500;1500;0;0;-1500;-1500" keyTimes="0;.025;.22;.81;.975;1" dur="12s" repeatCount="indefinite"/>
+        <animate attributeName="stroke-width" values="3;7;7;10;3" keyTimes="0;.22;.72;.82;1" dur="12s" repeatCount="indefinite"/>
+      </path>
+      <g clip-path="url(#logoClip)">
+        <path d="M360 150H520L602 386 551 503Z" fill="url(#spectrum)" opacity="0">
+          <animate attributeName="opacity" values="0;0;1;1;1;0" keyTimes="0;.18;.29;.78;.9;1" dur="12s" repeatCount="indefinite"/>
+          <animateTransform attributeName="transform" type="translate" values="-120 -35;-120 -35;0 0;0 0;-22 0;0 65" keyTimes="0;.18;.29;.72;.84;1" dur="12s" repeatCount="indefinite"/>
+        </path>
+        <path d="M680 150H840L649 503 598 386Z" fill="url(#spectrumReverse)" opacity="0">
+          <animate attributeName="opacity" values="0;0;1;1;1;0" keyTimes="0;.18;.29;.78;.9;1" dur="12s" repeatCount="indefinite"/>
+          <animateTransform attributeName="transform" type="translate" values="120 -35;120 -35;0 0;0 0;22 0;0 65" keyTimes="0;.18;.29;.72;.84;1" dur="12s" repeatCount="indefinite"/>
+        </path>
+        <path d="M508 184H692L600 382Z" fill="#b6fbff" fill-opacity=".88" opacity="0">
+          <animate attributeName="opacity" values="0;0;.9;.72;.95;0" keyTimes="0;.2;.3;.68;.82;1" dur="12s" repeatCount="indefinite"/>
+          <animateTransform attributeName="transform" type="translate" values="0 -90;0 -90;0 0;0 0;0 -12;0 70" keyTimes="0;.2;.3;.7;.84;1" dur="12s" repeatCount="indefinite"/>
+        </path>
+        <path d="M382 224L783 430" stroke="#fff" stroke-width="18" stroke-opacity="0" transform="rotate(-13 600 340)">
+          <animate attributeName="stroke-opacity" values="0;0;.75;0;0" keyTimes="0;.31;.36;.47;1" dur="12s" repeatCount="indefinite"/>
+          <animateTransform attributeName="transform" additive="sum" type="translate" values="-250 0;-250 0;340 0;340 0" keyTimes="0;.3;.47;1" dur="12s" repeatCount="indefinite"/>
+        </path>
+      </g>
+      <path d="M512 190L600 380 688 190" fill="none" stroke="#efffff" stroke-width="3" stroke-linecap="round" opacity="0">
+        <animate attributeName="opacity" values="0;0;.9;.35;.9;0" keyTimes="0;.22;.32;.65;.82;1" dur="12s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="scale" values="1 1;1 1;1 1;1.08 .92;1 1;1 1" keyTimes="0;.3;.55;.7;.84;1" dur="12s" repeatCount="indefinite" additive="sum"/>
+      </path>
+    </g>
+
+    <g id="signal-burst" transform="translate(600 382)" stroke-linecap="round">
+      <g stroke="url(#spectrum)" stroke-width="4" opacity="0">
+        <path d="M0-150V-196"/><path d="M0 150V196"/><path d="M-150 0H-196"/><path d="M150 0H196"/>
+        <path d="M-106-106l-33-33"/><path d="M106-106l33-33"/><path d="M-106 106l-33 33"/><path d="M106 106l33 33"/>
+        <animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;.765;.79;.86;1" dur="12s" repeatCount="indefinite"/>
+        <animateTransform attributeName="transform" type="scale" values=".55;.55;1.15;1.45;1.45" keyTimes="0;.765;.79;.86;1" dur="12s" repeatCount="indefinite"/>
+      </g>
+      <circle r="82" fill="none" stroke="#8efaff" stroke-width="3" opacity="0">
+        <animate attributeName="r" values="82;82;220;270" keyTimes="0;.765;.85;1" dur="12s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0;0;.7;0" keyTimes="0;.765;.8;1" dur="12s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <g id="wordmark" aria-label="VECTOR slash 26" fill="none" stroke="url(#metal)" stroke-width="15" stroke-linecap="square" stroke-linejoin="bevel" filter="url(#glow)">
+      <g opacity="0">
+        <animate attributeName="opacity" values="0;0;1;1;1;0" keyTimes="0;.24;.34;.82;.91;1" dur="12s" repeatCount="indefinite"/>
+        <g id="letter-v">
+          <path d="M245 536L285 620 325 536" stroke-dasharray="220" stroke-dashoffset="220">
+            <animate attributeName="stroke-dashoffset" values="220;220;0;0;-220" keyTimes="0;.24;.34;.88;1" dur="12s" repeatCount="indefinite"/>
+          </path>
+          <animateTransform attributeName="transform" type="translate" values="0 36;0 36;0 0;0 0;-12 0;0 30" keyTimes="0;.24;.34;.62;.72;1" dur="12s" repeatCount="indefinite"/>
+        </g>
+        <g id="letter-e">
+          <path d="M410 536H345V620H410M345 578H398" stroke-dasharray="300" stroke-dashoffset="300">
+            <animate attributeName="stroke-dashoffset" values="300;300;0;0;-300" keyTimes="0;.26;.36;.88;1" dur="12s" repeatCount="indefinite"/>
+          </path>
+          <animateTransform attributeName="transform" type="translate" values="0 36;0 36;0 0;0 0;-7 0;0 30" keyTimes="0;.26;.36;.62;.72;1" dur="12s" repeatCount="indefinite"/>
+        </g>
+        <g id="letter-c">
+          <path d="M500 550C486 531 451 529 431 546 411 564 413 594 433 611 452 627 485 622 500 605" stroke-dasharray="260" stroke-dashoffset="260">
+            <animate attributeName="stroke-dashoffset" values="260;260;0;0;-260" keyTimes="0;.28;.38;.88;1" dur="12s" repeatCount="indefinite"/>
+          </path>
+          <animateTransform attributeName="transform" type="translate" values="0 36;0 36;0 0;0 0;-2 0;0 30" keyTimes="0;.28;.38;.62;.72;1" dur="12s" repeatCount="indefinite"/>
+        </g>
+        <g id="letter-t">
+          <path d="M520 536H600M560 536V620" stroke-dasharray="190" stroke-dashoffset="190">
+            <animate attributeName="stroke-dashoffset" values="190;190;0;0;-190" keyTimes="0;.3;.4;.88;1" dur="12s" repeatCount="indefinite"/>
+          </path>
+          <animateTransform attributeName="transform" type="translate" values="0 36;0 36;0 0;0 0;3 0;0 30" keyTimes="0;.3;.4;.62;.72;1" dur="12s" repeatCount="indefinite"/>
+        </g>
+        <g id="letter-o">
+          <path d="M620 578C620 551 640 531 666 531C692 531 712 551 712 578C712 605 692 625 666 625C640 625 620 605 620 578Z" stroke-dasharray="330" stroke-dashoffset="330">
+            <animate attributeName="stroke-dashoffset" values="330;330;0;0;-330" keyTimes="0;.32;.42;.88;1" dur="12s" repeatCount="indefinite"/>
+            <animate attributeName="d" values="M620 578C620 551 640 531 666 531C692 531 712 551 712 578C712 605 692 625 666 625C640 625 620 605 620 578Z;M620 578C620 551 640 531 666 531C692 531 712 551 712 578C712 605 692 625 666 625C640 625 620 605 620 578Z;M620 578C620 568 632 537 646 531C646 531 686 531 694 539C694 539 712 566 712 578C712 590 700 619 686 625C686 625 646 625 638 617C638 617 620 590 620 578Z;M620 578C620 551 640 531 666 531C692 531 712 551 712 578C712 605 692 625 666 625C640 625 620 605 620 578Z;M620 578C620 551 640 531 666 531C692 531 712 551 712 578C712 605 692 625 666 625C640 625 620 605 620 578Z" keyTimes="0;.54;.68;.82;1" dur="12s" repeatCount="indefinite"/>
+          </path>
+          <animateTransform attributeName="transform" type="translate" values="0 36;0 36;0 0;0 0;8 0;0 30" keyTimes="0;.32;.42;.62;.72;1" dur="12s" repeatCount="indefinite"/>
+        </g>
+        <g id="letter-r">
+          <path d="M741 620V536H775C802 536 802 578 775 578H741M773 578L807 620" stroke-dasharray="340" stroke-dashoffset="340">
+            <animate attributeName="stroke-dashoffset" values="340;340;0;0;-340" keyTimes="0;.34;.44;.88;1" dur="12s" repeatCount="indefinite"/>
+          </path>
+          <animateTransform attributeName="transform" type="translate" values="0 36;0 36;0 0;0 0;13 0;0 30" keyTimes="0;.34;.44;.62;.72;1" dur="12s" repeatCount="indefinite"/>
+        </g>
+        <g id="slash-26">
+          <path d="M836 626L870 528" stroke="#ff6cda"/>
+          <path d="M903 557C905 528 959 528 959 557C959 577 919 594 902 620H962M1045 541C1017 527 984 548 982 584C980 615 1010 629 1035 613C1059 597 1045 567 1021 567C1000 567 984 582 983 594"/>
+          <animate attributeName="stroke-dasharray" values="0 700;0 700;700 0;700 0;0 700" keyTimes="0;.36;.49;.88;1" dur="12s" repeatCount="indefinite"/>
+          <animateTransform attributeName="transform" type="translate" values="34 36;34 36;0 0;0 0;18 0;0 30" keyTimes="0;.36;.49;.62;.72;1" dur="12s" repeatCount="indefinite"/>
+        </g>
+      </g>
+    </g>
+
+    <g id="phase-label" fill="none" stroke="#90c8ed" stroke-width="2" opacity="0">
+      <path d="M486 662H714"/><circle cx="600" cy="662" r="5" fill="#86f6ff" stroke="none"/>
+      <animate attributeName="opacity" values="0;0;.6;.6;0;0" keyTimes="0;.38;.46;.78;.9;1" dur="12s" repeatCount="indefinite"/>
+      <animateTransform attributeName="transform" type="scale" values=".2 1;.2 1;1 1;1 1;.2 1" keyTimes="0;.38;.46;.8;1" dur="12s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <g class="static-scene" aria-label="Static completed festival identity">
+    <g filter="url(#shadow)">
+      <path d="M392 184H508L600 382 692 184H808L650 500H550Z" fill="url(#spectrum)" stroke="url(#metal)" stroke-width="6" stroke-linejoin="bevel"/>
+      <path d="M508 184H692L600 382Z" fill="#c9fcff" fill-opacity=".84"/>
+      <path d="M512 190L600 380 688 190" fill="none" stroke="#fff" stroke-width="3"/>
+    </g>
+    <g aria-label="VECTOR slash 26" fill="none" stroke="url(#metal)" stroke-width="15" stroke-linecap="square" stroke-linejoin="bevel" filter="url(#glow)">
+      <path d="M245 536L285 620 325 536M410 536H345V620H410M345 578H398M500 550C486 531 451 529 431 546 411 564 413 594 433 611 452 627 485 622 500 605M520 536H600M560 536V620M620 578C620 551 640 531 666 531C692 531 712 551 712 578C712 605 692 625 666 625C640 625 620 605 620 578ZM741 620V536H775C802 536 802 578 775 578H741M773 578L807 620"/>
+      <path d="M836 626L870 528" stroke="#ff6cda"/>
+      <path d="M903 557C905 528 959 528 959 557C959 577 919 594 902 620H962M1045 541C1017 527 984 548 982 584C980 615 1010 629 1035 613C1059 597 1045 567 1021 567C1000 567 984 582 983 594"/>
+    </g>
+    <path d="M486 662H714" stroke="#90c8ed" stroke-width="2" opacity=".6"/>
+    <circle cx="600" cy="662" r="5" fill="#86f6ff"/>
+  </g>
+</svg>
+</body>
+</html>

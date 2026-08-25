@@ -16,7 +16,7 @@
 - `submissionFiles`：按优先顺序接受的文件名；视觉任务通常为 `["index.html"]`。
 - `lineLimit`：数字代表行数上限；`null` 代表不限。
 - `forbidBitmap`：`true` 时会检查 `<img>`、data image 和常见位图 CSS URL。
-- `promptProfile`：`standard`、`reasoning`、`svg`、`replica` 或 `webgl`，决定基础约束模板。
+- `promptProfile`：`standard`、`reasoning`、`svg`、`replica`、`webgl` 或 `threejs`，决定基础约束模板。
 - `language`：填入基础 prompt 的运行语言说明。
 
 例子：

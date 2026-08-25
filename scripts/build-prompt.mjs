@@ -6,7 +6,8 @@ const baseFiles = {
   reasoning: "reasoning.md",
   replica: "replica.md",
   svg: "svg.md",
-  webgl: "webgl.md"
+  webgl: "webgl.md",
+  threejs: "threejs.md"
 };
 
 function parseArgs(argv) {

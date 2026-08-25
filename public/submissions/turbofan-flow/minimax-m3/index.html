@@ -1,0 +1,880 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>涡扇发动机气流模拟器 · Turbofan Flow</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg-0: #050810;
+    --bg-1: #0d1626;
+    --fg: #e0eaff;
+    --accent: #6af0ff;
+    --accent-2: #ff7adf;
+    --cold: #4a9aff;
+    --cold-2: #88ccff;
+    --hot: #ff7a3a;
+    --hot-2: #ffd84a;
+    --warn: #ffd84a;
+    --good: #66ffa1;
+    --dim: #93a4c2;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  .panel {
+    position: fixed;
+    background: rgba(5, 8, 16, 0.78);
+    border: 1px solid rgba(106, 240, 255, 0.2);
+    border-radius: 12px;
+    padding: 12px 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 14px 40px -16px rgba(106, 240, 255, 0.3);
+    font-size: 12px;
+    line-height: 1.55;
+  }
+  .panel h3 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .panel button {
+    background: rgba(106, 240, 255, 0.08);
+    color: var(--fg);
+    border: 1px solid rgba(106, 240, 255, 0.25);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font: inherit;
+    cursor: pointer;
+  }
+  .panel button:hover, .panel button:focus-visible { background: rgba(106, 240, 255, 0.2); outline: none; }
+  .panel button[aria-pressed="true"] { background: rgba(106, 240, 255, 0.3); border-color: var(--accent); }
+  .panel input[type="range"] { width: 130px; accent-color: var(--accent); }
+  .panel label { display: flex; gap: 6px; align-items: center; color: var(--dim); }
+
+  #controls { top: 14px; left: 14px; width: 280px; }
+  #controls .group { margin-bottom: 10px; display: grid; gap: 6px; }
+  #legend { top: 14px; right: 14px; width: 220px; font-size: 11px; }
+  #legend .swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+  #legend .cold { background: linear-gradient(135deg, var(--cold), var(--cold-2)); }
+  #legend .hot { background: linear-gradient(135deg, var(--hot), var(--hot-2)); }
+  #legend .flow { background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+  #stats { bottom: 14px; right: 14px; min-width: 220px; }
+  #stats .row { display: flex; justify-content: space-between; padding: 2px 0; gap: 8px; }
+  #stats .label { color: var(--dim); letter-spacing: 0.1em; font-size: 10px; text-transform: uppercase; }
+  #stats .val { font-family: ui-monospace, monospace; color: var(--fg); }
+  #stats .row.hot .val { color: var(--hot); }
+  #stats .row.cold .val { color: var(--cold); }
+  #stats .row.warn .val { color: var(--warn); }
+  #stats .bar { width: 100%; height: 6px; background: rgba(255,255,255,.05); border-radius: 3px; overflow: hidden; margin: 4px 0 8px; }
+  #stats .bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--cold), var(--accent), var(--hot)); border-radius: 3px; }
+  #help { bottom: 14px; left: 14px; font-size: 11px; color: var(--dim); }
+  #help kbd {
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.15);
+    border-radius: 4px; padding: 1px 5px;
+    font-family: ui-monospace, monospace; color: var(--fg);
+  }
+  #info-bubble {
+    position: fixed; pointer-events: none;
+    background: rgba(5, 8, 16, 0.92);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--fg);
+    font-size: 11px;
+    max-width: 240px;
+    box-shadow: 0 8px 24px -8px var(--accent);
+    z-index: 10;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  #info-bubble.show { opacity: 1; }
+  #info-bubble .name { color: var(--accent); font-weight: 700; letter-spacing: 0.1em; }
+  #info-bubble .desc { color: var(--dim); font-size: 10px; margin-top: 4px; line-height: 1.5; }
+  #info-bubble .stat { font-family: ui-monospace, monospace; font-size: 10px; color: var(--hot-2); margin-top: 4px; }
+
+  @media (max-width: 720px) {
+    #controls { width: calc(100vw - 28px); }
+    #legend { width: calc(100vw - 28px); top: auto; bottom: 380px; right: 14px; }
+    #stats { width: calc(100vw - 28px); }
+    #help { display: none; }
+  }
+
+  #fallback {
+    position: fixed; inset: 0;
+    display: none; align-items: center; justify-content: center;
+    background: var(--bg-0); color: var(--fg);
+    padding: 24px; text-align: center;
+  }
+  #fallback.show { display: flex; }
+  #fallback h1 { color: var(--accent); letter-spacing: 0.12em; }
+  #fallback pre {
+    text-align: left; background: rgba(0,0,0,.4); padding: 12px;
+    border-radius: 8px; font-size: 11px; color: #ff5470;
+    max-width: 520px; overflow: auto;
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<aside id="controls" class="panel" aria-label="控制面板">
+  <h3>涡扇发动机 · 气流模拟</h3>
+  <div class="group">
+    <label>油门 <input id="rThrottle" type="range" min="0" max="1" step="0.01" value="0.5" /> <span id="vThrottle">50%</span></label>
+    <label>流量 <input id="rFlow" type="range" min="0.3" max="2" step="0.05" value="1" /> <span id="vFlow">1.0×</span></label>
+  </div>
+  <div class="group">
+    <div class="row" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button id="btnPause" aria-pressed="false">⏸ 暂停</button>
+      <button id="btnStep">⏭ 单步</button>
+      <button id="btnReset">↺ 重置</button>
+    </div>
+  </div>
+  <div class="group">
+    <label><input id="cCross" type="checkbox" checked /> 剖切视图</label>
+    <label><input id="cStream" type="checkbox" checked /> 流线</label>
+    <label><input id="cPart" type="checkbox" checked /> 粒子</label>
+    <label><input id="cExplode" type="checkbox" /> 爆炸视图</label>
+  </div>
+  <div class="group">
+    <div class="row" style="display:flex;gap:6px;flex-wrap:wrap">
+      <button id="btnIdle" aria-pressed="false">怠速</button>
+      <button id="btnCruise" aria-pressed="true">巡航</button>
+      <button id="btnTOGA" aria-pressed="false">起飞</button>
+    </div>
+  </div>
+</aside>
+
+<aside id="legend" class="panel">
+  <h3>图例</h3>
+  <div><span class="swatch cold"></span>冷旁通流 (Bypass)</div>
+  <div><span class="swatch hot"></span>热核心流 (Core)</div>
+  <div><span class="swatch flow"></span>涡轮做功</div>
+  <div style="margin-top:6px;color:var(--dim);font-size:10px">将鼠标悬停于部件上可查看详情。<br>拖动旋转视角，滚轮缩放。</div>
+</aside>
+
+<aside id="stats" class="panel" aria-live="polite">
+  <h3>实时遥测</h3>
+  <div class="bar"><i id="thrustBar" style="width:50%"></i></div>
+  <div class="row"><span class="label">推力</span><span class="val" id="sThrust">— kN</span></div>
+  <div class="row"><span class="label">风扇转速</span><span class="val" id="sN1">— RPM</span></div>
+  <div class="row"><span class="label">高压转速</span><span class="val" id="sN2">— RPM</span></div>
+  <div class="row hot"><span class="label">排气温度 EGT</span><span class="val" id="sEGT">— °C</span></div>
+  <div class="row"><span class="label">总压比 OPR</span><span class="val" id="sOPR">—</span></div>
+  <div class="row"><span class="label">旁通比 BPR</span><span class="val" id="sBPR">—</span></div>
+  <div class="row cold"><span class="label">空气质量流量</span><span class="val" id="sMFR">— kg/s</span></div>
+  <div class="row warn"><span class="label">模式</span><span class="val" id="sMode">CRUISE</span></div>
+  <div style="margin-top:6px;color:var(--dim);font-size:10px">* 教学近似 · 非真实 CFD 数据</div>
+</aside>
+
+<aside id="help" class="panel">
+  <div><kbd>↑</kbd>/<kbd>↓</kbd> 油门 &nbsp; <kbd>Space</kbd> 暂停</div>
+  <div><kbd>C</kbd> 剖切 &nbsp; <kbd>E</kbd> 爆炸 &nbsp; <kbd>R</kbd> 重置</div>
+</aside>
+
+<div id="info-bubble" aria-hidden="true">
+  <div class="name" id="bName"></div>
+  <div class="stat" id="bStat"></div>
+  <div class="desc" id="bDesc"></div>
+</div>
+
+<div id="fallback" role="alert">
+  <div>
+    <h1>三维环境暂不可用</h1>
+    <p id="fbMsg">本页面需要 WebGL2 与 Three.js 0.181。</p>
+    <pre id="fbTrace" hidden></pre>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.181.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.181.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+const FB = document.getElementById('fallback');
+const FB_MSG = document.getElementById('fbMsg');
+const FB_TRACE = document.getElementById('fbTrace');
+function showFallback(msg, err) {
+  FB_MSG.textContent = msg;
+  if (err) { FB_TRACE.hidden = false; FB_TRACE.textContent = (err && err.stack) ? err.stack : String(err); }
+  FB.classList.add('show');
+}
+function hasWebGL() { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; } }
+if (!hasWebGL()) { showFallback('未检测到 WebGL。'); throw new Error('No WebGL'); }
+
+let THREE, OrbitControls;
+try {
+  THREE = await import('three');
+  ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+} catch (err) { showFallback('Three.js 加载失败。', err); throw err; }
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: !reduceMotion });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.shadowMap.enabled = !reduceMotion;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x050810);
+scene.fog = new THREE.FogExp2(0x050810, 0.003);
+
+const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 500);
+camera.position.set(8, 4, 12);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 6;
+controls.maxDistance = 30;
+controls.maxPolarAngle = Math.PI * 0.85;
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+
+scene.add(new THREE.HemisphereLight(0x88aaff, 0x101820, 0.6));
+const key = new THREE.DirectionalLight(0xc0d8ff, 0.9);
+key.position.set(10, 15, 8);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0x6af0ff, 0.4);
+fill.position.set(-8, 4, -6);
+scene.add(fill);
+
+// ── Engine model ──────────────────────────────────────────────
+const ENGINE_LEN = 12;
+const FAN_R = 2.0;
+const CORE_R = 1.2;
+const BYPASS_R = 1.7;
+const engine = new THREE.Group();
+scene.add(engine);
+
+function mat(c, { r = 0.4, m = 0.6, e = 0x000000, ei = 0, t = false } = {}) {
+  return new THREE.MeshStandardMaterial({
+    color: c, roughness: r, metalness: m,
+    emissive: e, emissiveIntensity: ei,
+    transparent: t, opacity: t ? 0.35 : 1, side: THREE.DoubleSide
+  });
+}
+const matCase = mat(0x6a7888, { r: 0.45, m: 0.7 });
+const matBlade = mat(0xbbd0e0, { r: 0.3, m: 0.8 });
+const matHot = mat(0xff8a3a, { r: 0.7, m: 0.4, e: 0xff5500, ei: 1.0 });
+const matCore = mat(0x9a8870, { r: 0.6, m: 0.5, e: 0xff3300, ei: 0.6 });
+const matLabel = mat(0x6af0ff, { r: 0.4, m: 0.2, e: 0x224488, ei: 0.3 });
+
+// ── Components ─────────────────────────────────────────────────
+const components = [];
+
+function makeBladeRing(radius, length, count, twist = 0.3) {
+  const g = new THREE.Group();
+  for (let i = 0; i < count; i++) {
+    const blade = new THREE.Mesh(
+      new THREE.BoxGeometry(0.04, length, 0.06),
+      matBlade
+    );
+    blade.position.x = radius;
+    blade.rotation.x = i / count * Math.PI * 2;
+    blade.rotation.z = twist;
+    g.add(blade);
+  }
+  return g;
+}
+
+// 1. Intake (front ring)
+{
+  const intake = new THREE.Mesh(
+    new THREE.TorusGeometry(FAN_R, 0.15, 12, 32),
+    matCase
+  );
+  intake.rotation.y = Math.PI / 2;
+  intake.position.x = -ENGINE_LEN / 2;
+  intake.userData = { name: '进气道', desc: '将迎面气流平稳减速并导向风扇。轻微扩张形。', stat: 'Ma ≈ 0.82' };
+  engine.add(intake);
+  components.push(intake);
+}
+
+// 2. Fan
+const fan = new THREE.Group();
+{
+  const hub = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.3, 0.5, 0.6, 16),
+    matCase
+  );
+  hub.rotation.z = Math.PI / 2;
+  fan.add(hub);
+  // outer bypass fan blades
+  fan.add(makeBladeRing(FAN_R - 0.2, 1.6, 24, 0.4));
+  // inner core fan (smaller)
+  fan.add(makeBladeRing(CORE_R - 0.2, 0.9, 12, 0.3));
+  fan.position.x = -ENGINE_LEN / 2 + 1.0;
+  engine.add(fan);
+  fan.userData = { name: '风扇', desc: '单级或双级风扇；通过低压压气产生大部分推力。', stat: 'N1 转速控制' };
+  components.push(fan);
+}
+
+// 3. Bypass duct (cold)
+{
+  const duct = new THREE.Mesh(
+    new THREE.CylinderGeometry(BYPASS_R, BYPASS_R * 0.95, ENGINE_LEN - 2.5, 24, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0x4a9aff, transparent: true, opacity: 0.08, side: THREE.DoubleSide, depthWrite: false })
+  );
+  duct.rotation.z = Math.PI / 2;
+  duct.position.x = 0;
+  engine.add(duct);
+  duct.userData = { name: '旁通函道', desc: '绕过核心机的冷流通道，安静且高效。', stat: 'BPR ≈ 5–8' };
+  components.push(duct);
+}
+
+// 4. LP compressor
+const lpComp = new THREE.Group();
+{
+  const stages = 3;
+  for (let s = 0; s < stages; s++) {
+    lpComp.add(makeBladeRing(CORE_R - 0.05, 0.35, 14, 0.2 + s * 0.05));
+  }
+  lpComp.position.x = -ENGINE_LEN / 2 + 2.4;
+  engine.add(lpComp);
+  lpComp.userData = { name: '低压压气机', desc: '3–6 级轴流级，与风扇同轴由 LP 涡轮驱动。', stat: '压比 ≈ 1.8' };
+  components.push(lpComp);
+}
+
+// 5. HP compressor
+const hpComp = new THREE.Group();
+{
+  const stages = 5;
+  for (let s = 0; s < stages; s++) {
+    hpComp.add(makeBladeRing(CORE_R - 0.1 - s * 0.02, 0.32, 16, 0.15 + s * 0.06));
+  }
+  hpComp.position.x = -1.5;
+  engine.add(hpComp);
+  hpComp.userData = { name: '高压压气机', desc: '5–10 级，高压比的核心组件。', stat: '压比 ≈ 8' };
+  components.push(hpComp);
+}
+
+// 6. Combustor (annular)
+{
+  const c = new THREE.Group();
+  const casing = new THREE.Mesh(
+    new THREE.CylinderGeometry(CORE_R + 0.2, CORE_R + 0.2, 1.5, 24, 1, true),
+    mat(0x4a3a2a, { r: 0.7, m: 0.5 })
+  );
+  casing.rotation.z = Math.PI / 2;
+  c.add(casing);
+  // inner glow
+  const glow = new THREE.Mesh(
+    new THREE.CylinderGeometry(CORE_R - 0.05, CORE_R - 0.05, 1.4, 24, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xffaa44, transparent: true, opacity: 0.6, side: THREE.DoubleSide, depthWrite: false })
+  );
+  glow.rotation.z = Math.PI / 2;
+  glow.userData.isCombustorGlow = true;
+  c.add(glow);
+  const light = new THREE.PointLight(0xff7733, 2, 4);
+  light.position.x = 0;
+  c.add(light);
+  c.position.x = 0;
+  engine.add(c);
+  c.userData = { name: '燃烧室', desc: '环形回流燃烧室，燃油喷入后燃烧产生高温高压燃气。', stat: 'T3 ≈ 850°C' };
+  components.push(c);
+}
+
+// 7. HP turbine
+const hpTurb = new THREE.Group();
+{
+  const stages = 2;
+  for (let s = 0; s < stages; s++) {
+    const ring = new THREE.Group();
+    for (let i = 0; i < 14; i++) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.3, 0.04), matBlade);
+      b.position.x = CORE_R - 0.1 - s * 0.03;
+      b.rotation.x = i / 14 * Math.PI * 2;
+      b.rotation.z = -0.5; // turbine blades twist opposite
+      ring.add(b);
+    }
+    hpTurb.add(ring);
+  }
+  hpTurb.position.x = 1.8;
+  engine.add(hpTurb);
+  hpTurb.userData = { name: '高压涡轮', desc: '提取燃烧室燃气能量驱动 HP 压气机。', stat: 'T4 ≈ 1100°C' };
+  components.push(hpTurb);
+}
+
+// 8. LP turbine
+const lpTurb = new THREE.Group();
+{
+  const stages = 2;
+  for (let s = 0; s < stages; s++) {
+    const ring = new THREE.Group();
+    for (let i = 0; i < 16; i++) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.4, 0.04), matBlade);
+      b.position.x = CORE_R - 0.05 - s * 0.03;
+      b.rotation.x = i / 16 * Math.PI * 2;
+      b.rotation.z = -0.4;
+      ring.add(b);
+    }
+    lpTurb.add(ring);
+  }
+  lpTurb.position.x = 3.0;
+  engine.add(lpTurb);
+  lpTurb.userData = { name: '低压涡轮', desc: '提取剩余能量驱动风扇和 LP 压气机。', stat: 'T5 ≈ 600°C' };
+  components.push(lpTurb);
+}
+
+// 9. Core nozzle (hot)
+{
+  const n = new THREE.Mesh(
+    new THREE.CylinderGeometry(CORE_R - 0.1, CORE_R * 0.7, 1.4, 24, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xff7733, transparent: true, opacity: 0.4, side: THREE.DoubleSide, depthWrite: false })
+  );
+  n.rotation.z = Math.PI / 2;
+  n.position.x = ENGINE_LEN / 2 - 0.6;
+  engine.add(n);
+  n.userData = { name: '核心喷口', desc: '高温燃气加速喷出产生反推力。', stat: 'Vjet ≈ 450 m/s' };
+  components.push(n);
+}
+
+// 10. Bypass nozzle (cold)
+{
+  const n = new THREE.Mesh(
+    new THREE.CylinderGeometry(BYPASS_R - 0.05, BYPASS_R * 0.7, 1.2, 24, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0x4a9aff, transparent: true, opacity: 0.3, side: THREE.DoubleSide, depthWrite: false })
+  );
+  n.rotation.z = Math.PI / 2;
+  n.position.x = ENGINE_LEN / 2 - 0.5;
+  engine.add(n);
+  n.userData = { name: '旁通喷口', desc: '冷流加速喷出，与核心流混合降低噪音。', stat: 'Vfan ≈ 320 m/s' };
+  components.push(n);
+}
+
+// 11. Outer casing (skinned — top half visible when not cross-sectioned)
+const outerCase = new THREE.Mesh(
+  new THREE.CylinderGeometry(FAN_R + 0.3, FAN_R + 0.1, ENGINE_LEN, 24, 1, false, 0, Math.PI),
+  mat(0x4a5868, { r: 0.4, m: 0.6 })
+);
+outerCase.rotation.z = Math.PI / 2;
+outerCase.userData = { name: '外壳 (上半部)', desc: '发动机结构外壳，可见剖面后内部组件暴露。' };
+engine.add(outerCase);
+components.push(outerCase);
+
+// ── Labels ────────────────────────────────────────────────────
+function makeLabel(text, x, color = 0x6af0ff) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 64;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000a14';
+  g.fillRect(0, 0, 256, 64);
+  g.strokeStyle = '#' + color.toString(16).padStart(6, '0');
+  g.lineWidth = 2;
+  g.strokeRect(1, 1, 254, 62);
+  g.fillStyle = g.strokeStyle;
+  g.font = '600 24px ui-monospace, monospace';
+  g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(text, 128, 32);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: t, transparent: true }));
+  m.position.set(x, FAN_R + 1.2, 0);
+  m.userData.isLabel = true;
+  engine.add(m);
+  return m;
+}
+const labelData = [
+  { text: '进气道', x: -ENGINE_LEN / 2, color: 0x6af0ff },
+  { text: '风扇', x: -ENGINE_LEN / 2 + 1.0, color: 0x6af0ff },
+  { text: '低压压气', x: -ENGINE_LEN / 2 + 2.4, color: 0x88ccff },
+  { text: '高压压气', x: -1.5, color: 0x88ccff },
+  { text: '燃烧室', x: 0, color: 0xff7a3a },
+  { text: '高压涡轮', x: 1.8, color: 0xff5500 },
+  { text: '低压涡轮', x: 3.0, color: 0xff7733 },
+  { text: '核心喷口', x: ENGINE_LEN / 2 - 0.6, color: 0xff7a3a }
+];
+const labels = labelData.map(l => makeLabel(l.text, l.x));
+
+// ── Particle system ──────────────────────────────────────────
+const PARTICLES_PER_STREAM = 80;
+const streamCount = 6;
+const streams = []; // { points, type, path, speed }
+
+function makePath(kind, radius) {
+  // path through engine: intake → core bypass or core core
+  const pts = [];
+  const startX = -ENGINE_LEN / 2 - 2;
+  if (kind === 'bypass') {
+    // bypass: outer
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const x = startX + t * (ENGINE_LEN + 3);
+      const y = Math.cos(t * Math.PI * 0.4) * radius;
+      const z = Math.sin(t * Math.PI * 0.4) * radius;
+      pts.push(new THREE.Vector3(x, y, z));
+    }
+  } else {
+    // core: through center, but deviate around combustor
+    for (let i = 0; i <= 20; i++) {
+      const t = i / 20;
+      const x = startX + t * (ENGINE_LEN + 3);
+      let y = 0, z = 0;
+      if (t < 0.3) {
+        y = Math.cos((t / 0.3) * Math.PI * 0.5) * (CORE_R - 0.2);
+        z = Math.sin((t / 0.3) * Math.PI * 0.5) * (CORE_R - 0.2);
+      } else if (t < 0.6) {
+        // through combustor
+        y = (CORE_R - 0.2) * Math.cos((t - 0.3) / 0.3 * Math.PI * 0.3);
+        z = (CORE_R - 0.2) * Math.sin((t - 0.3) / 0.3 * Math.PI * 0.3);
+      } else {
+        y = Math.cos((t - 0.6) / 0.4 * Math.PI * 0.5) * (CORE_R - 0.2) * (1 - (t - 0.6) / 0.4);
+        z = Math.sin((t - 0.6) / 0.4 * Math.PI * 0.5) * (CORE_R - 0.2) * (1 - (t - 0.6) / 0.4);
+      }
+      pts.push(new THREE.Vector3(x, y, z));
+    }
+  }
+  return pts;
+}
+
+function makeStream(kind, radius, color) {
+  const path = makePath(kind, radius);
+  const positions = new Float32Array(PARTICLES_PER_STREAM * 3);
+  const colors = new Float32Array(PARTICLES_PER_STREAM * 3);
+  const ages = new Float32Array(PARTICLES_PER_STREAM);
+  const speeds = new Float32Array(PARTICLES_PER_STREAM);
+  for (let i = 0; i < PARTICLES_PER_STREAM; i++) {
+    const t = i / PARTICLES_PER_STREAM;
+    positions[i * 3] = path[Math.floor(t * (path.length - 1))].x;
+    positions[i * 3 + 1] = path[Math.floor(t * (path.length - 1))].y;
+    positions[i * 3 + 2] = path[Math.floor(t * (path.length - 1))].z;
+    ages[i] = t;
+    speeds[i] = 0.6 + Math.random() * 0.4;
+    const c = new THREE.Color(color);
+    colors[i * 3] = c.r; colors[i * 3 + 1] = c.g; colors[i * 3 + 2] = c.b;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  const mat = new THREE.PointsMaterial({
+    size: 0.18, vertexColors: true, transparent: true, opacity: 0.95,
+    sizeAttenuation: true, depthWrite: false, blending: THREE.AdditiveBlending
+  });
+  const pts = new THREE.Points(geo, mat);
+  scene.add(pts);
+  return { points: pts, geo, path, ages, speeds, kind, radius, baseColor: new THREE.Color(color) };
+}
+
+// bypass streams (cold)
+for (let i = 0; i < 3; i++) {
+  const a = (i / 3) * Math.PI * 2;
+  streams.push(makeStream('bypass', BYPASS_R - 0.3, i % 2 === 0 ? 0x4a9aff : 0x88ccff));
+}
+// core streams (hot)
+for (let i = 0; i < 3; i++) {
+  const a = (i / 3) * Math.PI * 2;
+  streams.push(makeStream('core', 0.0, 0xff7733));
+}
+
+// streamlines (thin lines)
+const streamlines = [];
+function makeStreamline(kind, radius) {
+  const path = makePath(kind, radius);
+  const geo = new THREE.BufferGeometry().setFromPoints(path);
+  const mat = new THREE.LineBasicMaterial({
+    color: kind === 'bypass' ? 0x6af0ff : 0xff7a3a,
+    transparent: true, opacity: 0.15, depthWrite: false
+  });
+  const line = new THREE.Line(geo, mat);
+  scene.add(line);
+  return line;
+}
+for (let i = 0; i < 6; i++) {
+  streamlines.push(makeStreamline(i < 3 ? 'bypass' : 'core', i < 3 ? BYPASS_R - 0.4 - (i * 0.1) : (i - 3) * 0.3));
+}
+
+// ── State ─────────────────────────────────────────────────────
+const state = {
+  throttle: 0.5,
+  flow: 1,
+  paused: false,
+  stepOnce: false,
+  stepAccum: 0,
+  cross: true,
+  streamlines: true,
+  particles: true,
+  explode: 0,
+  n1: 0, n2: 0,
+  throttleTarget: 0.5,
+  mode: 'CRUISE'
+};
+
+// ── UI ────────────────────────────────────────────────────────
+const rThrottle = document.getElementById('rThrottle');
+const vThrottle = document.getElementById('vThrottle');
+const rFlow = document.getElementById('rFlow');
+const vFlow = document.getElementById('vFlow');
+const btnPause = document.getElementById('btnPause');
+const btnStep = document.getElementById('btnStep');
+const btnReset = document.getElementById('btnReset');
+const cCross = document.getElementById('cCross');
+const cStream = document.getElementById('cStream');
+const cPart = document.getElementById('cPart');
+const cExplode = document.getElementById('cExplode');
+const btnIdle = document.getElementById('btnIdle');
+const btnCruise = document.getElementById('btnCruise');
+const btnTOGA = document.getElementById('btnTOGA');
+const sThrust = document.getElementById('sThrust');
+const sN1 = document.getElementById('sN1');
+const sN2 = document.getElementById('sN2');
+const sEGT = document.getElementById('sEGT');
+const sOPR = document.getElementById('sOPR');
+const sBPR = document.getElementById('sBPR');
+const sMFR = document.getElementById('sMFR');
+const sMode = document.getElementById('sMode');
+const thrustBar = document.getElementById('thrustBar');
+
+const infoBubble = document.getElementById('info-bubble');
+const bName = document.getElementById('bName');
+const bStat = document.getElementById('bStat');
+const bDesc = document.getElementById('bDesc');
+
+function setThrottle(t) {
+  state.throttleTarget = Math.max(0, Math.min(1, t));
+  rThrottle.value = state.throttleTarget;
+  vThrottle.textContent = Math.round(state.throttleTarget * 100) + '%';
+}
+function setMode(m) {
+  state.mode = m;
+  sMode.textContent = m;
+  [btnIdle, btnCruise, btnTOGA].forEach(b => b.setAttribute('aria-pressed', 'false'));
+  if (m === 'IDLE') { btnIdle.setAttribute('aria-pressed', 'true'); setThrottle(0.18); }
+  else if (m === 'CRUISE') { btnCruise.setAttribute('aria-pressed', 'true'); setThrottle(0.5); }
+  else { btnTOGA.setAttribute('aria-pressed', 'true'); setThrottle(0.95); }
+}
+btnIdle.addEventListener('click', () => setMode('IDLE'));
+btnCruise.addEventListener('click', () => setMode('CRUISE'));
+btnTOGA.addEventListener('click', () => setMode('TOGA'));
+
+rThrottle.addEventListener('input', () => {
+  state.throttleTarget = parseFloat(rThrottle.value);
+  vThrottle.textContent = Math.round(state.throttleTarget * 100) + '%';
+  // also clear mode preset selection
+  [btnIdle, btnCruise, btnTOGA].forEach(b => b.setAttribute('aria-pressed', 'false'));
+  sMode.textContent = 'MANUAL';
+});
+rFlow.addEventListener('input', () => { state.flow = parseFloat(rFlow.value); vFlow.textContent = state.flow.toFixed(2) + '×'; });
+btnPause.addEventListener('click', () => {
+  state.paused = !state.paused;
+  btnPause.textContent = state.paused ? '▶ 继续' : '⏸ 暂停';
+  btnPause.setAttribute('aria-pressed', state.paused ? 'true' : 'false');
+});
+btnStep.addEventListener('click', () => { state.stepOnce = true; });
+btnReset.addEventListener('click', () => {
+  state.throttle = 0.5; state.throttleTarget = 0.5;
+  state.n1 = 0; state.n2 = 0;
+  setThrottle(0.5);
+});
+cCross.addEventListener('change', () => { state.cross = cCross.checked; });
+cStream.addEventListener('change', () => {
+  state.streamlines = cStream.checked;
+  streamlines.forEach(s => s.visible = state.streamlines);
+});
+cPart.addEventListener('change', () => {
+  state.particles = cPart.checked;
+  streams.forEach(s => s.points.visible = state.particles);
+});
+cExplode.addEventListener('change', () => {
+  // animate explode from 0 to 1
+  const target = cExplode.checked ? 1 : 0;
+  animateExplode(target);
+});
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowUp') setThrottle(state.throttleTarget + 0.05);
+  if (e.key === 'ArrowDown') setThrottle(state.throttleTarget - 0.05);
+  if (e.code === 'Space') btnPause.click();
+  if (e.key.toLowerCase() === 'c') cCross.click();
+  if (e.key.toLowerCase() === 'e') cExplode.click();
+  if (e.key.toLowerCase() === 'r') btnReset.click();
+});
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ── Hover info ────────────────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+renderer.domElement.addEventListener('pointermove', (e) => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(components, true);
+  if (hits.length) {
+    let obj = hits[0].object;
+    while (obj && !obj.userData.name) obj = obj.parent;
+    if (obj && obj.userData.name) {
+      infoBubble.classList.add('show');
+      infoBubble.style.left = (e.clientX + 14) + 'px';
+      infoBubble.style.top = (e.clientY + 14) + 'px';
+      bName.textContent = obj.userData.name;
+      bStat.textContent = obj.userData.stat || '';
+      bDesc.textContent = obj.userData.desc || '';
+    }
+  } else {
+    infoBubble.classList.remove('show');
+  }
+});
+renderer.domElement.addEventListener('pointerleave', () => infoBubble.classList.remove('show'));
+
+// ── Explode animation ─────────────────────────────────────────
+let explodeTarget = 0;
+function animateExplode(target) { explodeTarget = target; }
+
+setMode('CRUISE');
+
+// ── Main loop ─────────────────────────────────────────────────
+const clock = new THREE.Clock();
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  if (!state.paused || state.stepOnce) {
+    state.stepOnce = false;
+
+    // throttle lerp
+    state.throttle += (state.throttleTarget - state.throttle) * 1.5 * dt;
+
+    // RPM physics (very approximate)
+    const targetN1 = state.throttle * 100; // %
+    const targetN2 = state.throttle * 100;
+    state.n1 += (targetN1 - state.n1) * 0.8 * dt;
+    state.n2 += (targetN2 - state.n2) * 1.5 * dt;
+
+    // stats
+    const thrust = 30 + state.throttle * 240; // kN approx
+    const egt = 380 + state.throttle * 540; // °C
+    const opr = 5 + state.throttle * 28;
+    const bpr = 5.5;
+    const mfr = 100 + state.throttle * 700;
+
+    sThrust.textContent = thrust.toFixed(1) + ' kN';
+    sN1.textContent = (state.n1 * 35).toFixed(0) + ' RPM';
+    sN2.textContent = (state.n2 * 110).toFixed(0) + ' RPM';
+    sEGT.textContent = egt.toFixed(0) + ' °C';
+    sOPR.textContent = opr.toFixed(1) + ':1';
+    sBPR.textContent = bpr.toFixed(1) + ':1';
+    sMFR.textContent = mfr.toFixed(1) + ' kg/s';
+    thrustBar.style.width = (state.throttle * 100) + '%';
+
+    // combustor glow
+    const glowTarget = state.throttle;
+    const glow = engine.children.find(c => c.children && c.children.some(g => g.userData.isCombustorGlow));
+    if (glow) {
+      const glowMesh = glow.children.find(g => g.userData.isCombustorGlow);
+      if (glowMesh) {
+        glowMesh.material.opacity = 0.3 + glowTarget * 0.6;
+        glowMesh.material.color.setHSL(0.05 + (1 - glowTarget) * 0.1, 1, 0.4 + glowTarget * 0.3);
+      }
+    }
+
+    // fan rotation
+    fan.rotation.x += state.n1 * 0.4 * dt;
+    lpComp.rotation.x += state.n1 * 0.4 * dt;
+    hpComp.rotation.x += state.n2 * 0.7 * dt;
+    hpTurb.rotation.x -= state.n2 * 0.5 * dt;
+    lpTurb.rotation.x -= state.n1 * 0.3 * dt;
+
+    // update streams
+    if (state.particles) {
+      streams.forEach(s => {
+        for (let i = 0; i < PARTICLES_PER_STREAM; i++) {
+          s.ages[i] += dt * s.speeds[i] * (0.4 + state.throttle * 1.5) * state.flow;
+          if (s.ages[i] > 1) s.ages[i] -= 1;
+          const pathT = s.ages[i] * (s.path.length - 1);
+          const idx = Math.floor(pathT);
+          const frac = pathT - idx;
+          const a = s.path[idx];
+          const b = s.path[Math.min(idx + 1, s.path.length - 1)];
+          const pos = s.geo.attributes.position.array;
+          pos[i * 3] = a.x + (b.x - a.x) * frac;
+          pos[i * 3 + 1] = a.y + (b.y - a.y) * frac;
+          pos[i * 3 + 2] = a.z + (b.z - a.z) * frac;
+          // color shift with stage (cold→hot)
+          const tColor = s.ages[i];
+          const col = s.geo.attributes.color.array;
+          const c = new THREE.Color();
+          if (s.kind === 'bypass') {
+            // bypass stays cool but accelerates after fan
+            const intensity = 0.4 + Math.min(1, tColor * 1.2) * 0.6;
+            c.setHSL(0.58, 0.8, 0.4 + intensity * 0.4);
+          } else {
+            // core: cool blue → combustor yellow → red
+            const hotStart = 0.25, hotEnd = 0.55;
+            if (tColor < hotStart) {
+              c.setHSL(0.58, 0.6, 0.5 - tColor * 0.5);
+            } else if (tColor < hotEnd) {
+              const t2 = (tColor - hotStart) / (hotEnd - hotStart);
+              c.setHSL(0.58 - t2 * 0.5, 1, 0.4 + t2 * 0.4);
+            } else {
+              c.setHSL(0.05 + (tColor - hotEnd) * 0.05, 1, 0.5);
+            }
+          }
+          col[i * 3] = c.r;
+          col[i * 3 + 1] = c.g;
+          col[i * 3 + 2] = c.b;
+        }
+        s.geo.attributes.position.needsUpdate = true;
+        s.geo.attributes.color.needsUpdate = true;
+      });
+    }
+  }
+
+  // cross section visibility (always on if enabled — already half-removed)
+  outerCase.visible = state.cross;
+
+  // explode animation
+  if (state.explode < explodeTarget) state.explode = Math.min(explodeTarget, state.explode + dt);
+  else if (state.explode > explodeTarget) state.explode = Math.max(explodeTarget, state.explode - dt);
+  const ex = state.explode * 4;
+  engine.children.forEach(child => {
+    if (child.userData.name && child.userData.explodeOffset !== undefined) {
+      const off = child.userData.explodeOffset;
+      child.position.x = child.userData.baseX + off * ex;
+    }
+  });
+  // assign base positions if not yet
+  engine.children.forEach(child => {
+    if (child.userData.name && child.userData.explodeOffset === undefined) {
+      child.userData.baseX = child.position.x;
+      const len = Math.abs(child.position.x);
+      child.userData.explodeOffset = Math.sign(child.position.x) * len * 0.15;
+    }
+  });
+
+  // labels face camera
+  labels.forEach(l => l.lookAt(camera.position));
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

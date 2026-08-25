@@ -4,9 +4,10 @@ import reasoningPrompt from "@/tasks/profiles/reasoning.md";
 import replicaPrompt from "@/tasks/profiles/replica.md";
 import svgPrompt from "@/tasks/profiles/svg.md";
 import webglPrompt from "@/tasks/profiles/webgl.md";
+import threejsPrompt from "@/tasks/profiles/threejs.md";
 import { taskPrompts } from "@/lib/generated-task-prompts";
 
-export type PromptProfile = "standard" | "reasoning" | "replica" | "svg" | "webgl";
+export type PromptProfile = "standard" | "reasoning" | "replica" | "svg" | "webgl" | "threejs";
 export type RenderKind = "html" | "text";
 
 export type TaskSpec = {
@@ -30,7 +31,8 @@ const basePrompts: Record<PromptProfile, string> = {
   reasoning: reasoningPrompt,
   replica: replicaPrompt,
   svg: svgPrompt,
-  webgl: webglPrompt
+  webgl: webglPrompt,
+  threejs: threejsPrompt
 };
 
 export const TASKS: TaskSpec[] = definitions.tasks.map((definition) => {

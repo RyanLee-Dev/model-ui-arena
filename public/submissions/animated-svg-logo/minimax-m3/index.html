@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VECTOR / 26 — 自绘制标志</title>
+<style>
+  :root{
+    --bg:#0a0a14;--fg:#e8e2d6;--accent:#ff5cf0;--accent2:#00f0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,"PingFang SC","Microsoft YaHei",sans-serif;display:flex;align-items:center;justify-content:center;overflow:hidden}
+  @media (prefers-color-scheme: light){
+    :root{--bg:#f3eee5;--fg:#1a1410;--accent:#c83a98;--accent2:#0a8a9a}
+  }
+  main{width:min(92vw, 1100px);height:auto;display:flex;flex-direction:column;align-items:center;gap:14px;padding:20px}
+  .stage{width:100%;aspect-ratio: 16/9;max-height:60vh;background:radial-gradient(circle at 50% 60%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 60%);border-radius:18px;border:1px solid color-mix(in oklab, var(--fg) 12%, transparent);display:flex;align-items:center;justify-content:center}
+  .stage svg{width:92%;height:92%}
+  .meta{display:flex;gap:24px;flex-wrap:wrap;font-size:11px;color:color-mix(in oklab, var(--fg) 60%, transparent);letter-spacing:1px;text-transform:uppercase}
+  .meta b{color:var(--accent);font-weight:600}
+  footer{font-size:10px;color:color-mix(in oklab, var(--fg) 50%, transparent);text-align:center;max-width:680px;line-height:1.6}
+  @media (prefers-reduced-motion: reduce){
+    /* SMIL itself can be controlled via JS-less styling, but pure SMIL won't be paused.
+       We still keep static first frame visible. */
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="stage" role="img" aria-labelledby="title desc">
+    <svg id="logoSvg" viewBox="0 0 1200 600" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+      <title id="title">VECTOR / 26 — 创意科技节主视觉</title>
+      <desc id="desc">抽象 V 形标志与标题通过 SMIL 路径描边、形变与位移动画循环呈现</desc>
+
+      <defs>
+        <!-- 主渐变：紫粉到青 -->
+        <linearGradient id="gMain" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#ff5cf0"/>
+          <stop offset="50%" stop-color="#c878ff"/>
+          <stop offset="100%" stop-color="#00f0ff"/>
+        </linearGradient>
+        <linearGradient id="gWarm" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#ffd86b"/>
+          <stop offset="100%" stop-color="#ff5cf0"/>
+        </linearGradient>
+        <linearGradient id="gBg" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#ff5cf0" stop-opacity="0.18"/>
+          <stop offset="100%" stop-color="#00f0ff" stop-opacity="0.06"/>
+        </linearGradient>
+        <radialGradient id="gHalo" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ff5cf0" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="#ff5cf0" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="4" result="b1"/>
+          <feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+        <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="2" result="b1"/>
+          <feMerge><feMergeNode in="b1"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+
+      <!-- 背景圆环（径向描边旋转） -->
+      <g id="ringGroup" transform="translate(600 320)">
+        <circle cx="0" cy="0" r="260" fill="url(#gHalo)" opacity="0">
+          <animate attributeName="opacity" values="0;0.6;0.6;0.6;0" keyTimes="0 0.15 0.7 0.9 1" dur="9s" repeatCount="indefinite"/>
+        </circle>
+        <g id="ring1" stroke="url(#gMain)" fill="none" stroke-width="1" opacity="0.45">
+          <circle cx="0" cy="0" r="220" stroke-dasharray="6 8">
+            <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="22s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="0" cy="0" r="195" stroke-dasharray="3 12" opacity="0.7">
+            <animateTransform attributeName="transform" type="rotate" from="360" to="0" dur="28s" repeatCount="indefinite"/>
+          </circle>
+        </g>
+      </g>
+
+      <!-- 装饰小角标 -->
+      <g id="deco" font-family="ui-monospace, Menlo, monospace" font-size="14" fill="#9ab" opacity="0">
+        <animate attributeName="opacity" values="0;0;0.6;0.6" keyTimes="0 0.05 0.25 1" dur="9s" repeatCount="indefinite"/>
+        <text x="40" y="40">[ VECTOR · 26 · CREATIVE TECH FEST ]</text>
+        <text x="40" y="60" opacity="0.7">// self-drawn animated logo — pure SMIL</text>
+        <text x="1160" y="40" text-anchor="end">v.26.0</text>
+        <text x="1160" y="60" text-anchor="end" opacity="0.7">estd 2026</text>
+      </g>
+
+      <!-- 几何装饰点 -->
+      <g id="dots" fill="url(#gMain)">
+        <circle cx="220" cy="320" r="2">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="3.2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="980" cy="320" r="2">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="3.5s" begin="0.4s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="600" cy="80" r="2">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="2.8s" begin="0.8s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx="600" cy="540" r="2">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="3.0s" begin="1.2s" repeatCount="indefinite"/>
+        </circle>
+      </g>
+
+      <!-- V 形标志 —— 通过 stroke-dasharray 自绘制 -->
+      <g id="vMark" transform="translate(600 320)">
+        <!-- V 的左侧斜线：先画左半边，再画右半边 -->
+        <path id="vLeft"
+              d="M -150 -150 L 0 150 L 150 -150"
+              fill="none"
+              stroke="url(#gMain)"
+              stroke-width="14"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-dasharray="900"
+              stroke-dashoffset="900"
+              filter="url(#glow)">
+          <animate attributeName="stroke-dashoffset"
+                   values="900; 0; 0; 0; 900"
+                   keyTimes="0; 0.25; 0.7; 0.9; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+          <!-- 形变：轻微拉伸 -->
+          <animateTransform attributeName="transform" type="scale"
+                            values="1 1; 1 1; 1.05 0.95; 1 1; 0.96 1.04; 1 1"
+                            keyTimes="0; 0.25; 0.4; 0.55; 0.7; 1"
+                            dur="9s"
+                            repeatCount="indefinite"
+                            additive="sum"/>
+        </path>
+
+        <!-- 副描边作为内部高亮（延迟开始） -->
+        <path d="M -150 -150 L 0 150 L 150 -150"
+              fill="none"
+              stroke="#ffffff"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-dasharray="900"
+              stroke-dashoffset="900"
+              opacity="0.85"
+              transform="scale(0.7)">
+          <animate attributeName="stroke-dashoffset"
+                   values="900; 900; 0; 0; 900"
+                   keyTimes="0; 0.25; 0.45; 0.9; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+        </path>
+
+        <!-- V 形顶部小横线（技术感角标） -->
+        <line x1="-150" y1="-150" x2="-130" y2="-150" stroke="url(#gWarm)" stroke-width="6" stroke-linecap="round" opacity="0">
+          <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.3;0.4;0.9;1" dur="9s" repeatCount="indefinite"/>
+          <animate attributeName="x2" values="-130; -130; -110; -110" keyTimes="0;0.4;0.5;1" dur="9s" repeatCount="indefinite"/>
+        </line>
+        <line x1="150" y1="-150" x2="130" y2="-150" stroke="url(#gWarm)" stroke-width="6" stroke-linecap="round" opacity="0">
+          <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.3;0.4;0.9;1" dur="9s" repeatCount="indefinite"/>
+          <animate attributeName="x2" values="130; 130; 110; 110" keyTimes="0;0.4;0.5;1" dur="9s" repeatCount="indefinite"/>
+        </line>
+
+        <!-- V 顶点装饰菱形 -->
+        <g id="diamond" transform="translate(0 150)">
+          <polygon points="0,-12 8,0 0,12 -8,0" fill="url(#gWarm)" opacity="0">
+            <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.5;0.6;0.92;1" dur="9s" repeatCount="indefinite"/>
+            <animateTransform attributeName="transform" type="rotate"
+                              from="0" to="360" dur="6s" repeatCount="indefinite" additive="sum"/>
+          </polygon>
+        </g>
+      </g>
+
+      <!-- VECTOR / 26 标题：通过 path morphing 形变进入 -->
+      <g id="titleGroup" transform="translate(600 460)">
+        <!-- 起始：一个模糊的弧线 -->
+        <path id="titleMorph"
+              d="M -300 0 Q -150 -20 0 0 T 300 0"
+              fill="none"
+              stroke="url(#gMain)"
+              stroke-width="3"
+              opacity="0">
+          <animate attributeName="opacity"
+                   values="0; 0; 0.9; 0.9; 0"
+                   keyTimes="0; 0.4; 0.55; 0.9; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+          <!-- Path morph：弧线变直线变字母描边（这里简化，先做线条粗细动画） -->
+          <animate attributeName="stroke-width"
+                   values="3; 3; 18; 22; 22; 6"
+                   keyTimes="0; 0.4; 0.55; 0.65; 0.85; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+          <animate attributeName="d"
+                   values="M -300 0 Q -150 -20 0 0 T 300 0;
+                           M -300 0 Q -150 -20 0 0 T 300 0;
+                           M -300 0 L -300 0 L 300 0 L 300 0;
+                           M -300 0 L 300 0;
+                           M -300 0 L 300 0;
+                           M -300 0 Q -150 -20 0 0 T 300 0"
+                   keyTimes="0; 0.4; 0.55; 0.6; 0.9; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+        </path>
+
+        <!-- 主标题 VECTOR / 26，使用 stroke-dasharray 自绘制 -->
+        <g id="letters" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="700"
+           text-anchor="middle" letter-spacing="6">
+          <!-- V -->
+          <text x="-225" y="0" fill="url(#gMain)" stroke="url(#gMain)" stroke-width="1"
+                stroke-dasharray="120" stroke-dashoffset="120">
+            <animate attributeName="stroke-dashoffset"
+                     values="120; 120; 0; 0; 120"
+                     keyTimes="0; 0.4; 0.55; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            V
+          </text>
+          <text x="-155" y="0" fill="url(#gMain)" stroke-dasharray="120" stroke-dashoffset="120">
+            <animate attributeName="stroke-dashoffset"
+                     values="120; 120; 0; 0; 120"
+                     keyTimes="0; 0.42; 0.57; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            E
+          </text>
+          <text x="-80" y="0" fill="url(#gMain)" stroke-dasharray="120" stroke-dashoffset="120">
+            <animate attributeName="stroke-dashoffset"
+                     values="120; 120; 0; 0; 120"
+                     keyTimes="0; 0.44; 0.59; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            C
+          </text>
+          <text x="-10" y="0" fill="url(#gMain)" stroke-dasharray="120" stroke-dashoffset="120">
+            <animate attributeName="stroke-dashoffset"
+                     values="120; 120; 0; 0; 120"
+                     keyTimes="0; 0.46; 0.61; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            T
+          </text>
+          <text x="60" y="0" fill="url(#gMain)" stroke-dasharray="120" stroke-dashoffset="120">
+            <animate attributeName="stroke-dashoffset"
+                     values="120; 120; 0; 0; 120"
+                     keyTimes="0; 0.48; 0.63; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            O
+          </text>
+          <text x="130" y="0" fill="url(#gMain)" stroke-dasharray="120" stroke-dashoffset="120">
+            <animate attributeName="stroke-dashoffset"
+                     values="120; 120; 0; 0; 120"
+                     keyTimes="0; 0.50; 0.65; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            R
+          </text>
+
+          <!-- 分隔符 / -->
+          <text x="180" y="0" fill="#ff5cf0" font-size="40" font-weight="300" opacity="0">
+            <animate attributeName="opacity"
+                     values="0; 0; 1; 1; 0"
+                     keyTimes="0; 0.55; 0.65; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            /
+          </text>
+          <!-- 26 -->
+          <text x="230" y="0" fill="url(#gWarm)" stroke-dasharray="100" stroke-dashoffset="100" font-size="50">
+            <animate attributeName="stroke-dashoffset"
+                     values="100; 100; 0; 0; 100"
+                     keyTimes="0; 0.58; 0.7; 0.9; 1"
+                     dur="9s"
+                     repeatCount="indefinite"/>
+            26
+          </text>
+        </g>
+
+        <!-- 副标题：CRT 风格小字 -->
+        <text x="0" y="32" font-family="ui-monospace, Menlo, monospace" font-size="12"
+              text-anchor="middle" fill="#9ab" letter-spacing="3" opacity="0">
+          <animate attributeName="opacity"
+                   values="0; 0; 0.9; 0.9; 0"
+                   keyTimes="0; 0.6; 0.7; 0.9; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+          &gt; SIGNAL RECEIVED — DRAW YOUR VECTOR
+        </text>
+      </g>
+
+      <!-- 底部装饰线（扫描效果） -->
+      <g id="scanLine">
+        <line x1="0" y1="0" x2="1200" y2="0" stroke="url(#gMain)" stroke-width="1" opacity="0">
+          <animate attributeName="y1"
+                   values="-20; 620; -20"
+                   keyTimes="0; 0.5; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+          <animate attributeName="y2"
+                   values="-20; 620; -20"
+                   keyTimes="0; 0.5; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+          <animate attributeName="opacity"
+                   values="0; 0.5; 0"
+                   keyTimes="0; 0.5; 1"
+                   dur="9s"
+                   repeatCount="indefinite"/>
+        </line>
+      </g>
+
+      <!-- 角落装饰：括号状 -->
+      <g stroke="#ff5cf0" stroke-width="2" fill="none" opacity="0">
+        <animate attributeName="opacity" values="0;0.4;0.4;0" keyTimes="0;0.2;0.85;1" dur="9s" repeatCount="indefinite"/>
+        <path d="M 20 20 L 20 60 M 20 20 L 60 20"/>
+        <path d="M 1180 20 L 1180 60 M 1180 20 L 1140 20"/>
+        <path d="M 20 580 L 20 540 M 20 580 L 60 580"/>
+        <path d="M 1180 580 L 1180 540 M 1180 580 L 1140 580"/>
+      </g>
+    </svg>
+  </div>
+  <div class="meta">
+    <span><b>VECTOR</b> · 自绘制</span>
+    <span><b>26</b> · 二〇二六</span>
+    <span><b>SMIL</b> · 纯矢量</span>
+    <span><b>9s</b> · 循环周期</span>
+  </div>
+  <footer>本作品仅使用内联 SVG 与 SMIL 动画，无 JavaScript 与 CSS 动画。打开或嵌入到任意容器时将自动播放。</footer>
+</main>
+
+<noscript>
+  <p style="color:#aaa;text-align:center;padding:20px">本页面不依赖 JavaScript — 动画由 SVG 内置 SMIL 驱动。</p>
+</noscript>
+</body>
+</html>

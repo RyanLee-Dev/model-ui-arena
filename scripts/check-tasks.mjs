@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 const projectRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const definitionsPath = path.join(projectRoot, "tasks", "task-definitions.json");
 const definitions = JSON.parse(await readFile(definitionsPath, "utf8"));
-const profiles = new Set(["standard", "reasoning", "replica", "svg", "webgl"]);
+const profiles = new Set(["standard", "reasoning", "replica", "svg", "webgl", "threejs"]);
 
 if (!Array.isArray(definitions.tasks) || definitions.tasks.length === 0) {
   throw new Error("Task registry must contain at least one task");

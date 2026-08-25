@@ -34,6 +34,6 @@ Required task fields:
 - `submissionFiles`: accepted names in priority order.
 - `lineLimit`: positive integer, or `null` for unlimited.
 - `forbidBitmap`: enables bitmap-asset auditing.
-- `promptProfile`: one of `standard`, `reasoning`, `svg`, `replica`, or `webgl`; profiles live in `tasks/profiles/`.
+- `promptProfile`: one of `standard`, `reasoning`, `svg`, `replica`, `webgl`, or `threejs`; profiles live in `tasks/profiles/`.
 
 Never modify generated files manually: `lib/generated-task-prompts.ts` and `lib/generated-submissions.json`.

@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>六足机器人实验室 · Hexapod IK Lab</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg-0: #06080d;
+    --bg-1: #0c1320;
+    --fg: #e6efff;
+    --dim: #93a4c2;
+    --accent: #6affff;
+    --accent-2: #ff7adf;
+    --warn: #ffd84a;
+    --bad: #ff5470;
+    --good: #66ffa1;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    color: var(--fg);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  .panel {
+    position: fixed;
+    background: rgba(8, 12, 22, 0.72);
+    border: 1px solid rgba(106, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 12px 14px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 12px 40px -16px rgba(106, 255, 255, 0.25);
+    color: var(--fg);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .panel h3 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .panel.row { display: flex; gap: 14px; align-items: center; }
+  .panel button, .panel select {
+    background: rgba(106, 255, 255, 0.08);
+    color: var(--fg);
+    border: 1px solid rgba(106, 255, 255, 0.25);
+    border-radius: 6px;
+    padding: 6px 10px;
+    font: inherit;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .panel button:hover, .panel button:focus-visible {
+    background: rgba(106, 255, 255, 0.18);
+    outline: none;
+  }
+  .panel button[aria-pressed="true"] {
+    background: rgba(106, 255, 255, 0.3);
+    border-color: var(--accent);
+  }
+  .panel input[type="range"] {
+    width: 110px;
+    accent-color: var(--accent);
+  }
+  .panel label { display: flex; gap: 6px; align-items: center; color: var(--dim); }
+
+  #controls { top: 14px; left: 14px; min-width: 280px; }
+  #controls .group {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+  #controls .group:last-child { margin-bottom: 0; }
+  #modes { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  #status { top: 14px; right: 14px; width: 280px; font-size: 11px; }
+  #status .row {
+    display: flex; justify-content: space-between; gap: 6px; padding: 2px 0;
+  }
+  #status .row span:first-child { color: var(--dim); letter-spacing: 0.08em; }
+  #status .row span:last-child { font-family: ui-monospace, monospace; color: var(--fg); }
+  #status .leg-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 6px;
+  }
+  #status .leg {
+    border: 1px solid rgba(106, 255, 255, 0.15);
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    line-height: 1.4;
+    background: rgba(106, 255, 255, 0.04);
+  }
+  #status .leg .id { color: var(--accent); }
+  #status .leg .phase {
+    display: inline-block; width: 100%; height: 3px;
+    background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden;
+    margin-top: 2px;
+  }
+  #status .leg .phase > i { display: block; height: 100%; background: var(--accent); }
+  #status .leg.contact .phase > i { background: var(--good); }
+  #status .leg.swing .phase > i { background: var(--accent-2); }
+  #status .leg.warn { border-color: var(--warn); color: var(--warn); }
+
+  #help { bottom: 14px; left: 14px; font-size: 11px; color: var(--dim); }
+  #help kbd {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-family: ui-monospace, monospace;
+    color: var(--fg);
+  }
+
+  #mobile { bottom: 14px; right: 14px; display: none; gap: 8px; align-items: flex-end; }
+  #mobile .stick {
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    border: 1px solid rgba(106, 255, 255, 0.3);
+    background: rgba(8, 12, 22, 0.5);
+    position: relative;
+    touch-action: none;
+  }
+  #mobile .stick::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: 36px; height: 36px; margin: -18px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, rgba(106,255,255,.9), rgba(106,255,255,.3));
+  }
+  #mobile .btns { display: grid; gap: 6px; }
+  #mobile button {
+    width: 48px; height: 48px;
+    border-radius: 50%;
+    border: 1px solid rgba(106,255,255,.3);
+    background: rgba(8, 12, 22, 0.5);
+    color: var(--accent);
+    font-size: 18px; font-family: ui-monospace, monospace;
+  }
+  @media (max-width: 720px) {
+    #status { width: calc(100vw - 28px); top: auto; bottom: 200px; right: 14px; }
+    #controls { width: calc(100vw - 28px); }
+    #mobile { display: flex; }
+    #help { display: none; }
+  }
+
+  #fallback {
+    position: fixed; inset: 0;
+    display: none;
+    align-items: center; justify-content: center;
+    background: linear-gradient(180deg, var(--bg-0), var(--bg-1));
+    color: var(--fg);
+    padding: 24px; text-align: center;
+  }
+  #fallback.show { display: flex; }
+  #fallback h1 {
+    font-size: 22px; margin: 0 0 8px; color: var(--accent);
+    letter-spacing: 0.12em;
+  }
+  #fallback p { color: var(--dim); max-width: 520px; line-height: 1.6; margin: 6px auto; }
+  #fallback pre {
+    text-align: left; background: rgba(0,0,0,.4); padding: 12px;
+    border-radius: 8px; font-size: 11px; color: var(--bad);
+    max-width: 520px; overflow: auto;
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<aside id="controls" class="panel" aria-label="控制面板">
+  <h3>六足机器人实验室</h3>
+  <div class="group" role="group" aria-label="运行控制">
+    <div class="row">
+      <button id="btnStart" aria-pressed="true">⏵ 开始</button>
+      <button id="btnReset" aria-label="重置姿态">↺ 重置</button>
+    </div>
+  </div>
+  <div class="group" role="group" aria-label="运动模式">
+    <div id="modes" role="tablist" aria-label="运动模式">
+      <button data-mode="idle" aria-pressed="true">原地站立</button>
+      <button data-mode="forward">前进</button>
+      <button data-mode="back">后退</button>
+      <button data-mode="strafe">横移</button>
+      <button data-mode="turn">转向</button>
+    </div>
+  </div>
+  <div class="group">
+    <label>速度 <input id="rSpeed" type="range" min="0" max="1.6" step="0.05" value="0.7" /> <span id="vSpeed">0.7</span></label>
+    <label>步高 <input id="rStepH" type="range" min="0" max="0.5" step="0.01" value="0.22" /> <span id="vStepH">0.22</span></label>
+    <label>转向 <input id="rTurn" type="range" min="-1" max="1" step="0.05" value="0" /> <span id="vTurn">0.0</span></label>
+    <label>机身高 <input id="rBodyH" type="range" min="0.35" max="0.75" step="0.01" value="0.55" /> <span id="vBodyH">0.55</span></label>
+  </div>
+  <div class="group row">
+    <label><input id="cTerrain" type="checkbox" checked /> 自适应地形</label>
+    <label><input id="cFoot" type="checkbox" checked /> 足端轨迹</label>
+    <label><input id="cSupport" type="checkbox" checked /> 支撑多边形</label>
+    <label><input id="cRec" type="checkbox" /> 录制步态</label>
+  </div>
+</aside>
+
+<aside id="status" class="panel" aria-label="实时状态" aria-live="polite">
+  <h3>实时状态</h3>
+  <div class="row"><span>状态</span><span id="sState">站立</span></div>
+  <div class="row"><span>机身高度</span><span id="sBodyH">0.55 m</span></div>
+  <div class="row"><span>速度</span><span id="sSpd">0.0 m/s</span></div>
+  <div class="row"><span>航向</span><span id="sYaw">0°</span></div>
+  <div class="row"><span>质心投影</span><span id="sCom">—</span></div>
+  <div class="row"><span>支撑多边形</span><span id="sPoly">—</span></div>
+  <div class="row"><span>警告</span><span id="sWarn">无</span></div>
+  <div class="leg-grid" id="legGrid"></div>
+</aside>
+
+<aside id="help" class="panel" aria-label="键盘控制">
+  <h3>键盘</h3>
+  <div><kbd>W</kbd>/<kbd>↑</kbd> 前进 &nbsp; <kbd>S</kbd>/<kbd>↓</kbd> 后退</div>
+  <div><kbd>A</kbd>/<kbd>↓</kbd> 左移 &nbsp; <kbd>D</kbd>/<kbd>→</kbd> 右移</div>
+  <div><kbd>Q</kbd>/<kbd>E</kbd> 转向 &nbsp; <kbd>Space</kbd> 站立</div>
+  <div><kbd>R</kbd> 重置 &nbsp; 鼠标拖动旋转视角</div>
+</aside>
+
+<div id="mobile">
+  <div class="stick" id="stick" aria-label="移动摇杆"></div>
+  <div class="btns">
+    <button id="mTurnL" aria-label="左转">⟲</button>
+    <button id="mTurnR" aria-label="右转">⟳</button>
+  </div>
+</div>
+
+<div id="fallback" role="alert">
+  <div>
+    <h1>三维环境暂不可用</h1>
+    <p>本页面需要 WebGL2 与 Three.js（0.181）。请检查浏览器（Chrome 90+ / Firefox 90+ / Safari 16+）或确认网络是否允许加载 ES 模块。</p>
+    <p id="fbMsg">—</p>
+    <pre id="fbTrace" hidden></pre>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.181.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.181.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+const FB = document.getElementById('fallback');
+const FB_MSG = document.getElementById('fbMsg');
+const FB_TRACE = document.getElementById('fbTrace');
+function showFallback(msg, err) {
+  FB_MSG.textContent = msg;
+  if (err) {
+    FB_TRACE.hidden = false;
+    FB_TRACE.textContent = (err && err.stack) ? err.stack : String(err);
+  }
+  FB.classList.add('show');
+}
+function hasWebGL() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+  } catch { return false; }
+}
+if (!hasWebGL()) {
+  showFallback('当前浏览器未启用 WebGL，无法运行三维场景。');
+  throw new Error('No WebGL');
+}
+
+let THREE, OrbitControls;
+try {
+  THREE = await import('three');
+  ({ OrbitControls } = await import('three/addons/controls/OrbitControls.js'));
+} catch (err) {
+  showFallback('Three.js 模块加载失败，请检查网络或刷新。', err);
+  throw err;
+}
+
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: !reduceMotion, alpha: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.shadowMap.enabled = !reduceMotion;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x06080d);
+scene.fog = new THREE.Fog(0x06080d, 14, 38);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 200);
+camera.position.set(4.5, 3.2, 5.0);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.5, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 2.4;
+controls.maxDistance = 14;
+controls.maxPolarAngle = Math.PI * 0.49;
+controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+
+// ── Lights ─────────────────────────────────────────────────────────────
+const hemi = new THREE.HemisphereLight(0x8fb6ff, 0x223044, 0.55);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff1d2, 1.6);
+sun.position.set(6, 8, 4);
+sun.castShadow = !reduceMotion;
+sun.shadow.mapSize.set(1024, 1024);
+sun.shadow.camera.left = -6;
+sun.shadow.camera.right = 6;
+sun.shadow.camera.top = 6;
+sun.shadow.camera.bottom = -6;
+sun.shadow.camera.near = 0.5;
+sun.shadow.camera.far = 22;
+sun.shadow.bias = -0.0008;
+scene.add(sun);
+const fill = new THREE.DirectionalLight(0x6affff, 0.45);
+fill.position.set(-4, 3, -3);
+scene.add(fill);
+
+// ── Ground / heightmap ────────────────────────────────────────────────
+const GROUND_SIZE = 14;
+const SEG = 48;
+const groundGeo = new THREE.PlaneGeometry(GROUND_SIZE, GROUND_SIZE, SEG, SEG);
+groundGeo.rotateX(-Math.PI / 2);
+const heights = new Float32Array((SEG + 1) * (SEG + 1));
+function heightAt(x, z) {
+  // smooth low-freq bumps for terrain adaptation demo
+  const r = Math.sqrt(x * x + z * z);
+  const radial = Math.max(0, 1.6 - r) * 0.04;
+  const a = Math.sin(x * 0.45) * Math.cos(z * 0.35) * 0.08;
+  const b = Math.sin(x * 1.2 + 1.1) * Math.sin(z * 1.05 - 0.4) * 0.04;
+  const c = Math.cos(x * 0.18 - z * 0.22) * 0.05;
+  return a + b + c + radial;
+}
+for (let i = 0; i <= SEG; i++) {
+  for (let j = 0; j <= SEG; j++) {
+    const x = (i / SEG - 0.5) * GROUND_SIZE;
+    const z = (j / SEG - 0.5) * GROUND_SIZE;
+    heights[j * (SEG + 1) + i] = heightAt(x, z);
+  }
+}
+groundGeo.setAttribute('position', new THREE.BufferAttribute(
+  (() => {
+    const p = groundGeo.attributes.position.array;
+    for (let i = 0; i < p.length; i += 3) {
+      const x = p[i];
+      const z = p[i + 2];
+      const idx = (i / 3);
+      p[i + 1] = heights[idx];
+    }
+    groundGeo.computeVertexNormals();
+    return p;
+  })(),
+  3
+));
+
+const groundMat = new THREE.MeshStandardMaterial({
+  color: 0x1a2236,
+  roughness: 0.92,
+  metalness: 0.0,
+  flatShading: false
+});
+const ground = new THREE.Mesh(groundGeo, groundMat);
+ground.receiveShadow = true;
+scene.add(ground);
+
+// grid overlay
+const grid = new THREE.GridHelper(GROUND_SIZE, SEG, 0x2a3654, 0x182138);
+grid.position.y = 0.001;
+grid.material.opacity = 0.55;
+grid.material.transparent = true;
+scene.add(grid);
+
+// axis helper at body origin
+const axis = new THREE.AxesHelper(0.6);
+axis.position.y = 0.005;
+scene.add(axis);
+
+// ── Robot construction ─────────────────────────────────────────────────
+const ROBOT = new THREE.Group();
+scene.add(ROBOT);
+
+// body chassis
+const bodyGroup = new THREE.Group();
+ROBOT.add(bodyGroup);
+
+function mat(c, opts = {}) {
+  return new THREE.MeshStandardMaterial({ color: c, roughness: opts.r ?? 0.55, metalness: opts.m ?? 0.25 });
+}
+const matShell = mat(0x2b3a55, { r: 0.45, m: 0.55 });
+const matAccent = mat(0x6affff, { r: 0.4, m: 0.5 });
+const matJoint = mat(0xff7adf, { r: 0.35, m: 0.6 });
+const matServo = mat(0x12181f, { r: 0.55, m: 0.4 });
+const matPad = mat(0x161616, { r: 0.85, m: 0.05 });
+
+const chassis = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.55, 0.6, 0.22, 8),
+  matShell
+);
+chassis.castShadow = true;
+chassis.receiveShadow = true;
+bodyGroup.add(chassis);
+
+// top dome
+const dome = new THREE.Mesh(
+  new THREE.SphereGeometry(0.32, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2),
+  matShell
+);
+dome.position.y = 0.11;
+dome.castShadow = true;
+bodyGroup.add(dome);
+
+// antenna / sensor mast
+const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.28, 8), matAccent);
+mast.position.set(0, 0.34, 0);
+mast.castShadow = true;
+bodyGroup.add(mast);
+const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 16, 12), matAccent);
+eye.position.set(0, 0.49, 0);
+bodyGroup.add(eye);
+eye.material.emissive = new THREE.Color(0x6affff);
+eye.material.emissiveIntensity = 0.7;
+
+// status LEDs on chassis
+const leds = [];
+for (let i = 0; i < 6; i++) {
+  const led = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 8), mat(0x66ffa1));
+  led.position.set(Math.cos(i / 6 * Math.PI * 2) * 0.5, 0.12, Math.sin(i / 6 * Math.PI * 2) * 0.5);
+  bodyGroup.add(led);
+  led.material.emissive = new THREE.Color(0x66ffa1);
+  led.material.emissiveIntensity = 1.4;
+  leds.push(led);
+}
+
+// ── Legs ──────────────────────────────────────────────────────────────
+// 6 legs around body: angles 0..2π every 60°, indexed 0..5
+// each leg has 3 actuated joints + foot
+// 0: front-right, 1: mid-right, 2: rear-right, 3: rear-left, 4: mid-left, 5: front-left
+const LEG_ANGLES = [0, 60, 120, 180, 240, 300].map(d => d * Math.PI / 180);
+const L_COXA = 0.18;       // hip length along body radius
+const L_FEMUR = 0.5;       // upper leg
+const L_TIBIA = 0.55;      // lower leg
+const FOOT_R = 0.07;
+
+const legs = [];
+for (let i = 0; i < 6; i++) {
+  const ang = LEG_ANGLES[i];
+  const root = new THREE.Group();
+  root.position.set(Math.cos(ang) * (0.5 + L_COXA), 0.05, Math.sin(ang) * (0.5 + L_COXA));
+  // orient so local +X points outward
+  root.rotation.y = -ang + Math.PI / 2;
+  bodyGroup.add(root);
+
+  const coxaJoint = new THREE.Group();
+  root.add(coxaJoint);
+  const coxaBox = new THREE.Mesh(new THREE.BoxGeometry(L_COXA, 0.09, 0.09), matServo);
+  coxaBox.position.x = -L_COXA / 2;
+  coxaBox.castShadow = true;
+  coxaJoint.add(coxaBox);
+
+  const hipJoint = new THREE.Group();
+  hipJoint.position.x = -L_COXA;
+  coxaJoint.add(hipJoint);
+
+  // coxa servo housing
+  const coxaServo = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.1, 12), matJoint);
+  coxaServo.rotation.z = Math.PI / 2;
+  coxaServo.position.x = L_COXA * 0.5;
+  coxaServo.castShadow = true;
+  root.add(coxaServo);
+
+  // femur
+  const femur = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, L_FEMUR, 12), matShell);
+  femur.position.y = -L_FEMUR / 2;
+  femur.castShadow = true;
+  hipJoint.add(femur);
+  // knee servo
+  const kneeServo = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.08, 12), matJoint);
+  kneeServo.position.y = -L_FEMUR;
+  kneeServo.castShadow = true;
+  hipJoint.add(kneeServo);
+
+  const knee = new THREE.Group();
+  knee.position.y = -L_FEMUR;
+  hipJoint.add(knee);
+
+  // tibia
+  const tibia = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, L_TIBIA, 12), matShell);
+  tibia.position.y = -L_TIBIA / 2;
+  tibia.castShadow = true;
+  knee.add(tibia);
+
+  const foot = new THREE.Mesh(new THREE.CylinderGeometry(FOOT_R, FOOT_R * 0.85, 0.04, 16), matPad);
+  foot.position.y = -L_TIBIA;
+  foot.castShadow = true;
+  knee.add(foot);
+
+  // ground contact shadow (separate small disc, lerped y)
+  const footShadow = new THREE.Mesh(new THREE.CircleGeometry(FOOT_R * 1.2, 16),
+    new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false }));
+  footShadow.rotation.x = -Math.PI / 2;
+  footShadow.position.y = 0.003;
+  scene.add(footShadow);
+
+  // foot trail (line)
+  const trailLen = 60;
+  const trailGeo = new THREE.BufferGeometry();
+  const trailPos = new Float32Array(trailLen * 3);
+  trailGeo.setAttribute('position', new THREE.BufferAttribute(trailPos, 3));
+  const trailMat = new THREE.LineBasicMaterial({ color: 0x6affff, transparent: true, opacity: 0.6 });
+  const trail = new THREE.Line(trailGeo, trailMat);
+  trail.frustumCulled = false;
+  scene.add(trail);
+
+  legs.push({
+    i, root, coxaJoint, hipJoint, knee, foot, footShadow, trail,
+    trailPos, trailWrite: 0,
+    // state
+    mode: 'stance', // stance / swing
+    phase: 0,       // 0..1 within current mode
+    plantedWorld: new THREE.Vector3(), // last planted foot world pos
+    plantedBody: new THREE.Vector3(),  // planted foot in body frame
+    swingFrom: new THREE.Vector3(),
+    swingTo: new THREE.Vector3(),
+    angles: { coxa: 0, hip: 0, knee: 0 },
+    warn: ''
+  });
+}
+
+// ── Support polygon visualization ──────────────────────────────────────
+const polyGeo = new THREE.BufferGeometry();
+polyGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(18), 3));
+const polyMat = new THREE.LineBasicMaterial({ color: 0x66ffa1, transparent: true, opacity: 0.85 });
+const polyLine = new THREE.LineLoop(polyGeo, polyMat);
+scene.add(polyLine);
+const comMarker = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 8),
+  new THREE.MeshBasicMaterial({ color: 0xffd84a }));
+scene.add(comMarker);
+
+// ── Terrain sampling ──────────────────────────────────────────────────
+function sampleGroundY(x, z) {
+  const ix = ((x / GROUND_SIZE) + 0.5) * SEG;
+  const iz = ((z / GROUND_SIZE) + 0.5) * SEG;
+  const i0 = Math.max(0, Math.min(SEG - 1, Math.floor(ix)));
+  const j0 = Math.max(0, Math.min(SEG - 1, Math.floor(iz)));
+  const fx = ix - i0, fz = iz - j0;
+  const h00 = heights[j0 * (SEG + 1) + i0];
+  const h10 = heights[j0 * (SEG + 1) + i0 + 1];
+  const h01 = heights[(j0 + 1) * (SEG + 1) + i0];
+  const h11 = heights[(j0 + 1) * (SEG + 1) + i0 + 1];
+  const a = h00 * (1 - fx) + h10 * fx;
+  const b = h01 * (1 - fx) + h11 * fx;
+  return a * (1 - fz) + b * fz;
+}
+
+// ── IK: 2-link analytic (femur + tibia) in leg plane ──────────────────
+const IK_LIMITS = {
+  coxa: { min: -Math.PI * 0.45, max: Math.PI * 0.45 },
+  hip:  { min: -Math.PI * 0.55, max: Math.PI * 0.55 },
+  knee: { min: -Math.PI * 0.85, max: 0.05 } // knee bends backward (joint extension)
+};
+function solveIK(target, current) {
+  // target is in leg's root frame (root at hip, x outward, y up, z forward)
+  // 2-link IK in XY plane (forward / up). Coxa yaw rotates around Y.
+  const tx = target[0], ty = target[1];
+  const r2 = tx * tx + ty * ty;
+  const reach = L_FEMUR + L_TIBIA;
+  const minR = Math.abs(L_FEMUR - L_TIBIA) + 0.02;
+  let clamped = false, limit = '';
+  let r = Math.sqrt(r2);
+  if (r > reach - 0.02) { r = reach - 0.02; clamped = true; limit = 'reach'; }
+  if (r < minR) { r = minR; clamped = true; limit = 'reach'; }
+
+  const cosK = (L_FEMUR * L_FEMUR + L_TIBIA * L_TIBIA - r * r) / (2 * L_FEMUR * L_TIBIA);
+  const kneeInner = Math.acos(Math.max(-1, Math.min(1, cosK)));
+  const alpha = Math.atan2(ty, tx);
+  const cosB = (L_FEMUR * L_FEMUR + r * r - L_TIBIA * L_TIBIA) / (2 * L_FEMUR * r);
+  const beta = Math.acos(Math.max(-1, Math.min(1, cosB)));
+
+  let coxa = 0; // coxa yaw (rotate around Y axis)
+  let hip = -(beta - alpha); // hip pitch; femur hangs down so positive bends down
+  let knee = Math.PI - kneeInner; // knee angle; positive = straight, bends to <π
+
+  // limits
+  if (hip < IK_LIMITS.hip.min) { hip = IK_LIMITS.hip.min; limit = limit || 'hip-min'; clamped = true; }
+  if (hip > IK_LIMITS.hip.max) { hip = IK_LIMITS.hip.max; limit = limit || 'hip-max'; clamped = true; }
+  if (knee < IK_LIMITS.knee.min) { knee = IK_LIMITS.knee.min; limit = limit || 'knee-min'; clamped = true; }
+  if (knee > IK_LIMITS.knee.max) { knee = IK_LIMITS.knee.max; limit = limit || 'knee-max'; clamped = true; }
+  if (coxa < IK_LIMITS.coxa.min) { coxa = IK_LIMITS.coxa.min; limit = limit || 'coxa-min'; clamped = true; }
+  if (coxa > IK_LIMITS.coxa.max) { coxa = IK_LIMITS.coxa.max; limit = limit || 'coxa-max'; clamped = true; }
+
+  // smooth blend toward previous angles to avoid jitter
+  const blend = (a, b) => a + (b - a) * 0.6;
+  return {
+    coxa: blend(current.coxa, coxa),
+    hip:  blend(current.hip, hip),
+    knee: blend(current.knee, knee),
+    clamped, limit
+  };
+}
+
+// ── Gait state machine ────────────────────────────────────────────────
+const state = {
+  mode: 'idle',
+  running: true,
+  speed: 0.7,           // body linear speed magnitude
+  stepHeight: 0.22,
+  turn: 0,              // -1..1 angular velocity
+  bodyHeight: 0.55,
+  lateral: 0,
+  followTerrain: true,
+  showFootTrails: true,
+  showSupport: true,
+  recording: false,
+  bodyPos: new THREE.Vector3(0, 0, 0),
+  bodyYaw: 0,
+  bodyVel: new THREE.Vector3(),
+  cycleT: 0,
+  cycleDur: 1.4,
+  // keyboard / touch input
+  inputFwd: 0, inputSide: 0, inputTurn: 0
+};
+
+// Tripod gait: legs 0,2,4 swing together; legs 1,3,5 swing together
+const TRIPOD_A = [0, 2, 4];
+const TRIPOD_B = [1, 3, 5];
+
+function stanceFootBodyTarget(leg, tNorm) {
+  // tNorm goes 0..1 across stance duration; foot slides backward in body frame
+  const stride = 0.18;
+  const off = (tNorm - 0.5) * stride * 2; // -stride..+stride
+  // base foot position in body frame: outward along root axis
+  const ang = LEG_ANGLES[leg.i];
+  const bx = Math.cos(ang) * (0.5 + L_COXA + 0.08);
+  const bz = Math.sin(ang) * (0.5 + L_COXA + 0.08);
+  const by = -state.bodyHeight + 0.05;
+  return new THREE.Vector3(bx + off * Math.cos(leg.root.rotation.y + Math.PI / 2) * 0, bz + off * Math.sin(0), by);
+  // simpler: stride is along body-x (forward). We use leg.root world rotation's inverse to express in body.
+}
+
+function computeFootTargetInBody(leg, t, dt) {
+  // returns target {pos:Vec3 in body frame, mode: 'stance'|'swing'}
+  const ang = LEG_ANGLES[leg.i];
+  const outR = 0.5 + L_COXA + 0.06;
+  const base = new THREE.Vector3(Math.cos(ang) * outR, -state.bodyHeight + 0.05, Math.sin(ang) * outR);
+
+  const cycleFrac = (state.cycleT / state.cycleDur) % 1;
+  const swingFrac = 0.42;
+  const inTripodA = TRIPOD_A.includes(leg.i);
+  const localPhase = inTripodA ? cycleFrac : (cycleFrac + 0.5) % 1;
+
+  if (localPhase < swingFrac) {
+    // swing
+    const p = localPhase / swingFrac;
+    // swing from world pos at swing start (last planted) -> world pos at swing end
+    // we work in body frame: from "back foot pos" to "forward foot pos"
+    const stride = 0.5 * Math.hypot(state.bodyVel.x, state.bodyVel.z) * state.cycleDur + 0.18;
+    const yawFwd = state.bodyYaw;
+    const fx = Math.cos(yawFwd), fz = -Math.sin(yawFwd);
+    const start = base.clone().add(new THREE.Vector3(-fx * stride * 0.5, 0, -fz * stride * 0.5));
+    const end   = base.clone().add(new THREE.Vector3( fx * stride * 0.5, 0,  fz * stride * 0.5));
+    // parabolic lift
+    const lift = Math.sin(p * Math.PI) * state.stepHeight;
+    const pos = new THREE.Vector3().lerpVectors(start, end, p);
+    pos.y += lift;
+    return { pos, mode: 'swing', localPhase: p };
+  } else {
+    const p = (localPhase - swingFrac) / (1 - swingFrac);
+    // stance: foot slides from forward-plant to back-plant in body frame
+    const stride = 0.5 * Math.hypot(state.bodyVel.x, state.bodyVel.z) * state.cycleDur + 0.18;
+    const yawFwd = state.bodyYaw;
+    const fx = Math.cos(yawFwd), fz = -Math.sin(yawFwd);
+    const start = base.clone().add(new THREE.Vector3( fx * stride * 0.5, 0,  fz * stride * 0.5));
+    const end   = base.clone().add(new THREE.Vector3(-fx * stride * 0.5, 0, -fz * stride * 0.5));
+    const pos = new THREE.Vector3().lerpVectors(start, end, p);
+    return { pos, mode: 'stance', localPhase: p };
+  }
+}
+
+// convert body-frame target to leg-root frame
+function toLegFrame(leg, bodyPos) {
+  // leg.root world rotation encodes outward direction; body frame has +X forward (yaw=0)
+  const out = bodyPos.clone();
+  // subtract bodyPos (body origin) — both in body frame
+  out.sub(state.bodyPos);
+  // rotate by -bodyYaw
+  out.applyAxisAngle(new THREE.Vector3(0, 1, 0), -state.bodyYaw);
+  // now in body-aligned world; convert to leg-local: leg frame x points outward, y up
+  // local x = outward direction in world; local z = forward in world
+  const ang = LEG_ANGLES[leg.i];
+  const outX = Math.cos(ang), outZ = Math.sin(ang);
+  // project onto outward
+  const rx = out.x * outX + out.z * outZ;
+  const rz = -out.x * Math.sin(ang) + out.z * Math.cos(ang);
+  // for IK we work in 2D rx vs ry (forward+up). ry = out.y, but z is "forward" in leg.
+  // actually leg frame: x = outward, y = up, z = forward (perpendicular). After root.rotation.y = -ang + π/2,
+  // local x = world (cos ang, 0, sin ang), local z = world (-sin ang, 0, cos ang)
+  // we need tx (along outward in leg frame) and ty (along up). tz is forward.
+  // For 2-link IK we consider forward (z) and up (y).
+  return { tx: rz, ty: out.y };
+}
+
+// ── UI ────────────────────────────────────────────────────────────────
+const btnStart = document.getElementById('btnStart');
+const btnReset = document.getElementById('btnReset');
+const rSpeed = document.getElementById('rSpeed');
+const rStepH = document.getElementById('rStepH');
+const rTurn = document.getElementById('rTurn');
+const rBodyH = document.getElementById('rBodyH');
+const cTerrain = document.getElementById('cTerrain');
+const cFoot = document.getElementById('cFoot');
+const cSupport = document.getElementById('cSupport');
+const cRec = document.getElementById('cRec');
+const vSpeed = document.getElementById('vSpeed');
+const vStepH = document.getElementById('vStepH');
+const vTurn = document.getElementById('vTurn');
+const vBodyH = document.getElementById('vBodyH');
+const sState = document.getElementById('sState');
+const sBodyH = document.getElementById('sBodyH');
+const sSpd = document.getElementById('sSpd');
+const sYaw = document.getElementById('sYaw');
+const sCom = document.getElementById('sCom');
+const sPoly = document.getElementById('sPoly');
+const sWarn = document.getElementById('sWarn');
+const legGrid = document.getElementById('legGrid');
+
+const legCells = [];
+for (let i = 0; i < 6; i++) {
+  const div = document.createElement('div');
+  div.className = 'leg';
+  div.innerHTML = `
+    <div><span class="id">L${i}</span> <span class="mode">—</span></div>
+    <div class="phase"><i style="width:0%"></i></div>
+    <div class="angs">—</div>`;
+  legGrid.appendChild(div);
+  legCells.push(div);
+}
+
+document.querySelectorAll('#modes button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#modes button').forEach(b => b.setAttribute('aria-pressed', 'false'));
+    btn.setAttribute('aria-pressed', 'true');
+    state.mode = btn.dataset.mode;
+    if (state.mode === 'idle') { state.bodyVel.set(0,0,0); state.inputFwd = 0; state.inputSide = 0; }
+    if (state.mode === 'forward') { state.inputFwd = 1; state.inputSide = 0; }
+    if (state.mode === 'back')    { state.inputFwd = -1; state.inputSide = 0; }
+    if (state.mode === 'strafe')  { state.inputFwd = 0; state.inputSide = 1; }
+    if (state.mode === 'turn')    { state.inputTurn = 0.6; }
+    else state.inputTurn = 0;
+  });
+});
+btnStart.addEventListener('click', () => {
+  state.running = !state.running;
+  btnStart.textContent = state.running ? '⏸ 暂停' : '⏵ 开始';
+  btnStart.setAttribute('aria-pressed', state.running ? 'true' : 'false');
+});
+btnReset.addEventListener('click', () => {
+  state.bodyPos.set(0, 0, 0); state.bodyYaw = 0;
+  state.bodyVel.set(0, 0, 0); state.cycleT = 0;
+  legs.forEach(l => l.angles = { coxa: 0, hip: 0.4, knee: 0.6 });
+});
+function bindRange(r, span, key, format) {
+  r.addEventListener('input', () => {
+    state[key] = parseFloat(r.value);
+    span.textContent = format ? format(state[key]) : r.value;
+  });
+}
+bindRange(rSpeed, vSpeed, 'speed', v => v.toFixed(2));
+bindRange(rStepH, vStepH, 'stepHeight', v => v.toFixed(2));
+bindRange(rTurn, vTurn, 'turn', v => v.toFixed(1));
+bindRange(rBodyH, vBodyH, 'bodyHeight', v => v.toFixed(2));
+cTerrain.addEventListener('change', () => state.followTerrain = cTerrain.checked);
+cFoot.addEventListener('change', () => state.showFootTrails = cFoot.checked);
+cSupport.addEventListener('change', () => { state.showSupport = cSupport.checked; polyLine.visible = state.showSupport; comMarker.visible = state.showSupport; });
+cRec.addEventListener('change', () => state.recording = cRec.checked);
+
+// keyboard
+const keys = {};
+addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+  if (e.key.toLowerCase() === 'r') btnReset.click();
+  if (e.code === 'Space') { btnStart.click(); e.preventDefault(); }
+});
+addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+// mobile joystick
+const stick = document.getElementById('stick');
+const mTurnL = document.getElementById('mTurnL');
+const mTurnR = document.getElementById('mTurnR');
+let stickActive = false, stickId = -1, stickX = 0, stickY = 0;
+function stickStart(e) { const t = e.changedTouches ? e.changedTouches[0] : e; stickActive = true; stickId = t.identifier ?? 0; stickMove(e); }
+function stickMove(e) {
+  if (!stickActive) return;
+  const t = e.changedTouches ? e.changedTouches[0] : e;
+  const r = stick.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  let dx = (t.clientX - cx) / (r.width / 2);
+  let dy = (t.clientY - cy) / (r.height / 2);
+  const m = Math.hypot(dx, dy);
+  if (m > 1) { dx /= m; dy /= m; }
+  stickX = dx; stickY = dy;
+  e.preventDefault();
+}
+function stickEnd() { stickActive = false; stickX = 0; stickY = 0; }
+stick.addEventListener('touchstart', stickStart, { passive: false });
+stick.addEventListener('touchmove', stickMove, { passive: false });
+stick.addEventListener('touchend', stickEnd);
+stick.addEventListener('mousedown', stickStart);
+stick.addEventListener('mousemove', stickMove);
+stick.addEventListener('mouseup', stickEnd);
+stick.addEventListener('mouseleave', stickEnd);
+mTurnL.addEventListener('touchstart', e => { state.inputTurn = -0.7; e.preventDefault(); });
+mTurnL.addEventListener('touchend', () => { state.inputTurn = 0; });
+mTurnR.addEventListener('touchstart', e => { state.inputTurn = 0.7; e.preventDefault(); });
+mTurnR.addEventListener('touchend', () => { state.inputTurn = 0; });
+mTurnL.addEventListener('mousedown', () => state.inputTurn = -0.7);
+mTurnL.addEventListener('mouseup', () => state.inputTurn = 0);
+mTurnR.addEventListener('mousedown', () => state.inputTurn = 0.7);
+mTurnR.addEventListener('mouseup', () => state.inputTurn = 0);
+
+// ── Resize ────────────────────────────────────────────────────────────
+addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ── Animation loop ────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+const tmpV = new THREE.Vector3();
+const bodyAxis = new THREE.Vector3(0, 1, 0);
+const COM_OFFSET = new THREE.Vector3(0, -0.05, 0); // simulated center of mass under body origin
+
+function frame() {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  // ── keyboard overrides
+  const fwdKey = (keys['w'] || keys['arrowup'] ? 1 : 0) - (keys['s'] || keys['arrowdown'] ? 1 : 0);
+  const sideKey = (keys['d'] || keys['arrowright'] ? 1 : 0) - (keys['a'] || keys['arrowleft'] ? 1 : 0);
+  const turnKey = (keys['e'] ? 1 : 0) - (keys['q'] ? 1 : 0);
+  if (fwdKey || sideKey || turnKey) {
+    state.inputFwd = fwdKey;
+    state.inputSide = sideKey;
+    state.inputTurn = turnKey * 0.7;
+  }
+  if (stickActive) {
+    state.inputFwd = -stickY;
+    state.inputSide = stickX;
+  }
+
+  // ── body motion
+  const baseSpeed = state.speed * (state.running ? 1 : 0.35);
+  const fwd = state.inputFwd * baseSpeed;
+  const side = state.inputSide * baseSpeed;
+  const angVel = (state.inputTurn + state.turn) * (state.running ? 1 : 0.3);
+
+  state.bodyYaw += angVel * dt;
+  const cosY = Math.cos(state.bodyYaw), sinY = Math.sin(state.bodyYaw);
+  state.bodyVel.set(
+    fwd * cosY + side * sinY,
+    0,
+    -fwd * sinY + side * cosY
+  );
+  state.bodyPos.x += state.bodyVel.x * dt;
+  state.bodyPos.z += state.bodyVel.z * dt;
+
+  if (state.followTerrain) {
+    state.bodyPos.y = sampleGroundY(state.bodyPos.x, state.bodyPos.z);
+  } else {
+    state.bodyPos.y = 0;
+  }
+
+  // ── gait cycle
+  const cycleSpeed = 0.6 + baseSpeed * 1.6;
+  state.cycleDur = Math.max(0.4, 1.2 - baseSpeed * 0.4);
+  state.cycleT = (state.cycleT + dt * cycleSpeed) % 1.0;
+
+  // apply body transform
+  ROBOT.position.copy(state.bodyPos);
+  ROBOT.position.y += state.bodyHeight;
+  ROBOT.rotation.y = state.bodyYaw;
+
+  // ── update legs
+  let anyWarn = false;
+  let supportPoints = [];
+  legs.forEach(leg => {
+    const tgt = computeFootTargetInBody(leg, t, dt);
+    leg.mode = tgt.mode;
+    // apply terrain to foot target Y
+    if (state.followTerrain) {
+      // approximate foot world pos: bodyPos + R(tgt.pos)
+      const worldFoot = tmpV.copy(tgt.pos).applyAxisAngle(bodyAxis, state.bodyYaw).add(state.bodyPos);
+      const groundY = sampleGroundY(worldFoot.x, worldFoot.z);
+      const minY = groundY + 0.02;
+      if (tgt.pos.y > minY) tgt.pos.y = minY;
+    }
+    // transform to leg-root frame
+    const local = toLegFrame(leg, tgt.pos);
+    const sol = solveIK([local.tx, local.ty], leg.angles);
+    leg.angles = { coxa: sol.coxa, hip: sol.hip, knee: sol.knee };
+    leg.coxaJoint.rotation.y = sol.coxa;
+    leg.hipJoint.rotation.z = sol.hip;
+    leg.knee.rotation.z = sol.knee;
+    leg.warn = sol.clamped ? sol.limit : '';
+
+    // collect support points (foot tip world)
+    leg.foot.updateWorldMatrix(true, false);
+    const tip = new THREE.Vector3().setFromMatrixPosition(leg.foot.matrixWorld);
+    if (leg.mode === 'stance') supportPoints.push(tip);
+    // foot shadow
+    if (state.followTerrain) {
+      leg.footShadow.position.set(tip.x, sampleGroundY(tip.x, tip.z) + 0.003, tip.z);
+    } else {
+      leg.footShadow.position.set(tip.x, 0.003, tip.z);
+    }
+    leg.footShadow.material.opacity = leg.mode === 'stance' ? 0.4 : 0.15;
+
+    // trail
+    if (state.showFootTrails) {
+      const arr = leg.trailPos;
+      const w = leg.trailWrite;
+      arr[w * 3] = tip.x;
+      arr[w * 3 + 1] = tip.y;
+      arr[w * 3 + 2] = tip.z;
+      leg.trailWrite = (w + 1) % arr.length;
+      // rebuild line: keep order; we'll render as cyclic by recentering
+      const recentered = new Float32Array(arr.length);
+      for (let k = 0; k < arr.length / 3; k++) {
+        const idx = ((w + k) % arr.length / 3) | 0;
+        recentered[k * 3] = arr[idx * 3];
+        recentered[k * 3 + 1] = arr[idx * 3 + 1];
+        recentered[k * 3 + 2] = arr[idx * 3 + 2];
+      }
+      leg.trail.geometry.attributes.position.array.set(recentered);
+      leg.trail.geometry.attributes.position.needsUpdate = true;
+      leg.trail.geometry.setDrawRange(0, arr.length / 3);
+      leg.trail.visible = true;
+    } else leg.trail.visible = false;
+
+    if (leg.warn) anyWarn = true;
+  });
+
+  // ── support polygon
+  if (state.showSupport && supportPoints.length >= 3) {
+    // convex hull (gift wrap) in XZ
+    const pts = supportPoints.map(p => ({ x: p.x, z: p.z }));
+    pts.sort((a, b) => a.x - b.x || a.z - b.z);
+    const cross = (o, a, b) => (a.x - o.x) * (b.z - o.z) - (a.z - o.z) * (b.x - o.x);
+    const lower = [];
+    for (const p of pts) {
+      while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+      lower.push(p);
+    }
+    const upper = [];
+    for (let i = pts.length - 1; i >= 0; i--) {
+      const p = pts[i];
+      while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+      upper.push(p);
+    }
+    upper.pop(); lower.pop();
+    const hull = lower.concat(upper);
+    const arr = polyGeo.attributes.position.array;
+    for (let i = 0; i < hull.length && i < 6; i++) {
+      arr[i * 3] = hull[i].x;
+      arr[i * 3 + 1] = sampleGroundY(hull[i].x, hull[i].z) + 0.005;
+      arr[i * 3 + 2] = hull[i].z;
+    }
+    polyGeo.attributes.position.needsUpdate = true;
+    polyGeo.setDrawRange(0, hull.length);
+    polyLine.visible = true;
+    // COM
+    const cx = hull.reduce((a, b) => a + b.x, 0) / hull.length;
+    const cz = hull.reduce((a, b) => a + b.z, 0) / hull.length;
+    comMarker.position.set(cx, sampleGroundY(cx, cz) + 0.04, cz);
+    sCom.textContent = `${cx.toFixed(2)}, ${cz.toFixed(2)}`;
+    sPoly.textContent = `${hull.length} 顶点`;
+  } else {
+    polyLine.visible = false;
+    comMarker.visible = false;
+    sCom.textContent = '—'; sPoly.textContent = '—';
+  }
+
+  // ── LEDs
+  leds.forEach((led, idx) => {
+    const swing = legs[idx].mode === 'swing';
+    led.material.color.set(swing ? 0xff7adf : 0x66ffa1);
+    led.material.emissive.set(swing ? 0xff7adf : 0x66ffa1);
+  });
+
+  // ── UI updates
+  sState.textContent = state.running ? (state.mode === 'idle' ? '运行/站立' : `运行/${state.mode}`) : '暂停';
+  sBodyH.textContent = `${state.bodyHeight.toFixed(2)} m`;
+  sSpd.textContent = `${state.bodyVel.length().toFixed(2)} m/s`;
+  sYaw.textContent = `${((state.bodyYaw * 180 / Math.PI) % 360).toFixed(0)}°`;
+  sWarn.textContent = anyWarn ? 'IK 限位生效' : '无';
+  sWarn.style.color = anyWarn ? 'var(--warn)' : 'var(--good)';
+
+  legs.forEach((leg, idx) => {
+    const cell = legCells[idx];
+    cell.classList.toggle('swing', leg.mode === 'swing');
+    cell.classList.toggle('contact', leg.mode === 'stance');
+    cell.classList.toggle('warn', !!leg.warn);
+    cell.querySelector('.mode').textContent = leg.mode === 'swing' ? 'SWING' : 'STANCE';
+    cell.querySelector('.mode').style.color = leg.mode === 'swing' ? 'var(--accent-2)' : 'var(--good)';
+    cell.querySelector('.phase > i').style.width = (leg.mode === 'swing' ? tgt_localPhase(leg) : tgt_localPhase(leg)) + '%';
+    cell.querySelector('.phase > i').style.background = leg.mode === 'swing' ? 'var(--accent-2)' : 'var(--good)';
+    cell.querySelector('.angs').textContent =
+      `C${(leg.angles.coxa * 57.3).toFixed(0)}° H${(leg.angles.hip * 57.3).toFixed(0)}° K${(leg.angles.knee * 57.3).toFixed(0)}°` +
+      (leg.warn ? ` ⚠${leg.warn}` : '');
+  });
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(frame);
+}
+// helper (we use it in UI only)
+function tgt_localPhase(leg) {
+  const inA = TRIPOD_A.includes(leg.i);
+  const frac = (state.cycleT) % 1;
+  const lp = inA ? frac : (frac + 0.5) % 1;
+  return Math.round(lp * 100);
+}
+
+requestAnimationFrame(frame);
+
+// announce readiness
+console.info('[hexapod-lab] ready · legs:', legs.length);
+</script>
+</body>
+</html>

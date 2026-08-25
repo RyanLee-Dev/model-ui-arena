@@ -10,6 +10,14 @@ import prompt7 from "@/tasks/cheetah-trophy-run/prompt.md";
 import prompt8 from "@/tasks/dslr-camera/prompt.md";
 import prompt9 from "@/tasks/schwarzschild-black-hole/prompt.md";
 import prompt10 from "@/tasks/carwash-decision/prompt.md";
+import prompt11 from "@/tasks/hexapod-robot-lab/prompt.md";
+import prompt12 from "@/tasks/industrial-arm-ik/prompt.md";
+import prompt13 from "@/tasks/complete-shelf/prompt.md";
+import prompt14 from "@/tasks/cel-shaded-boat-race/prompt.md";
+import prompt15 from "@/tasks/synthwave-spaceflight/prompt.md";
+import prompt16 from "@/tasks/floating-island/prompt.md";
+import prompt17 from "@/tasks/turbofan-flow/prompt.md";
+import prompt18 from "@/tasks/animated-svg-logo/prompt.md";
 
 export const taskPrompts: Record<string, string> = {
   "clock": prompt0,
@@ -22,5 +30,13 @@ export const taskPrompts: Record<string, string> = {
   "cheetah-trophy-run": prompt7,
   "dslr-camera": prompt8,
   "schwarzschild-black-hole": prompt9,
-  "carwash-decision": prompt10
+  "carwash-decision": prompt10,
+  "hexapod-robot-lab": prompt11,
+  "industrial-arm-ik": prompt12,
+  "complete-shelf": prompt13,
+  "cel-shaded-boat-race": prompt14,
+  "synthwave-spaceflight": prompt15,
+  "floating-island": prompt16,
+  "turbofan-flow": prompt17,
+  "animated-svg-logo": prompt18
 };
