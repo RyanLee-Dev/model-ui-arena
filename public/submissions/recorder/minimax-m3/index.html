@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>录音机 · Studio</title>
+<style>
+  :root{--bg:#0e0f14;--panel:#181a22;--ink:#e8e9ef;--mute:#7a7c89;--acc:#ff5c5c;--ok:#5ce1c5;--warn:#f5b04a}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(120% 80% at 50% 0%,#1a1d28 0%,var(--bg) 70%);
+    color:var(--ink);font-family:-apple-system,"SF Pro Display","PingFang SC",sans-serif;
+    display:flex;align-items:center;justify-content:center;padding:24px;-webkit-font-smoothing:antialiased;
+  }
+  .deck{
+    width:min(420px,100%);background:linear-gradient(160deg,#1c1f2a,#101218);
+    border:1px solid #2a2d39;border-radius:24px;padding:22px;
+    box-shadow:0 30px 80px -30px #000c,inset 0 1px 0 #ffffff0a;
+  }
+  .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .title{font-size:13px;letter-spacing:4px;color:var(--mute);text-transform:uppercase}
+  .led{display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:2px;color:var(--mute)}
+  .led .dot{width:8px;height:8px;border-radius:50%;background:#3a3d4a;box-shadow:inset 0 0 4px #000a;transition:.25s}
+  body.rec .led .dot{background:var(--acc);box-shadow:0 0 10px var(--acc);animation:blink 1.4s infinite}
+  body.rec .led{color:var(--acc)}
+  body.pause .led .dot{background:var(--warn);box-shadow:0 0 10px var(--warn)}
+  body.pause .led{color:var(--warn)}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+  .timer{font-variant-numeric:tabular-nums;font-size:54px;font-weight:200;letter-spacing:4px;text-align:center;color:#fff;text-shadow:0 0 30px #ff5c5c33}
+  .sub{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);letter-spacing:2px;margin:6px 4px 18px}
+  .wave{height:88px;display:flex;align-items:center;justify-content:center;gap:3px;margin:0 0 22px;background:#0a0b11;border-radius:14px;padding:14px;overflow:hidden;border:1px solid #ffffff08}
+  .bar{flex:1;width:6px;min-height:6px;border-radius:3px;background:linear-gradient(180deg,#5ce1c5,#ff5c5c);transform-origin:center;transform:scaleY(.08);transition:transform .12s ease}
+  body.rec .bar{animation:none}
+  body.idle .bar{opacity:.25}
+  .ctl{display:flex;justify-content:center;gap:18px;margin-bottom:18px}
+  .btn{
+    width:64px;height:64px;border-radius:50%;border:0;cursor:pointer;color:#fff;
+    background:linear-gradient(160deg,#262936,#15161e);box-shadow:inset 0 1px 0 #ffffff14,0 8px 24px -8px #000c;
+    display:flex;align-items:center;justify-content:center;transition:.2s;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{width:78px;height:78px;background:linear-gradient(160deg,#ff7373,#c8302e);box-shadow:inset 0 1px 0 #ffffff22,0 12px 30px -10px #ff5c5caa}
+  .btn.primary svg{width:28px;height:28px}
+  .btn svg{width:22px;height:22px;fill:currentColor}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .summary{
+    border-top:1px solid #ffffff0a;padding-top:16px;
+    display:grid;grid-template-columns:1fr 1fr;gap:12px;font-size:12px;color:var(--mute)
+  }
+  .summary .v{color:var(--ink);font-size:18px;font-weight:500;margin-top:2px;letter-spacing:.5px}
+  .confirm{position:fixed;inset:0;background:#00000099;display:none;align-items:center;justify-content:center;backdrop-filter:blur(6px);z-index:20}
+  .confirm.show{display:flex}
+  .modal{background:#161821;border:1px solid #2a2d39;border-radius:18px;padding:24px;width:min(320px,90%);text-align:center}
+  .modal h3{font-size:16px;margin-bottom:6px}
+  .modal p{font-size:13px;color:var(--mute);margin-bottom:18px}
+  .modal .row{display:flex;gap:10px;justify-content:center}
+  .modal button{padding:10px 20px;border-radius:10px;border:0;cursor:pointer;font-size:13px;font-weight:600}
+  .modal .yes{background:var(--acc);color:#fff}
+  .modal .no{background:#262936;color:var(--ink)}
+</style>
+</head>
+<body class="idle">
+<div class="deck">
+  <div class="head">
+    <div class="title">Studio · Recorder</div>
+    <div class="led"><span class="dot"></span><span id="state">就绪</span></div>
+  </div>
+  <div class="timer" id="time">00:00.0</div>
+  <div class="sub"><span id="cap">FORMAT · 48kHz / WAV</span><span id="peak">PEAK -∞dB</span></div>
+  <div class="wave" id="wave"></div>
+  <div class="ctl">
+    <button class="btn" id="btn-pause" disabled aria-label="暂停"></button>
+    <button class="btn primary" id="btn-rec" aria-label="录音"></button>
+    <button class="btn" id="btn-stop" disabled aria-label="停止"></button>
+  </div>
+  <div class="summary">
+    <div>时长<div class="v" id="s-dur">00:00.0</div></div>
+    <div>状态<div class="v" id="s-st">就绪</div></div>
+  </div>
+</div>
+<div class="confirm" id="confirm">
+  <div class="modal">
+    <h3>确定结束本次录音？</h3>
+    <p>停止后无法继续追加音频。</p>
+    <div class="row"><button class="no" id="cf-no">继续录音</button><button class="yes" id="cf-yes">确认停止</button></div>
+  </div>
+</div>
+<script>
+(()=>{
+  const $=id=>document.getElementById(id);
+  const time=$('time'),stateEl=$('state'),peakEl=$('peak'),
+        btnRec=$('btn-rec'),btnPause=$('btn-pause'),btnStop=$('btn-stop'),
+        sDur=$('s-dur'),sSt=$('s-st'),wave=$('wave');
+  const N=42;
+  for(let i=0;i<N;i++){const b=document.createElement('div');b.className='bar';wave.appendChild(b)}
+  const bars=[...wave.children];
+  const pauseSVG='<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/></svg>';
+  const playSVG='<svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>';
+  const stopSVG='<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></svg>';
+  btnRec.innerHTML=pauseSVG;btnPause.innerHTML=playSVG;btnStop.innerHTML=stopSVG;
+  let t0=0,pausedAt=0,acc=0,running=false,paused=false,tick=null,peakHold=0;
+  function fmt(ms){const m=Math.floor(ms/60000),s=Math.floor(ms%60000/1000),d=Math.floor(ms%1000/100);return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`}
+  function setState(name,cls){document.body.classList.remove('idle','rec','pause');document.body.classList.add(cls);stateEl.textContent=name;sSt.textContent=name}
+  function peak(v){peakHold=Math.max(peakHold*.96,v);peakEl.textContent=`PEAK ${(20*Math.log10(Math.max(.001,peakHold))).toFixed(1)}dB`}
+  function loop(){
+    if(running&&!paused){const now=performance.now();time.textContent=fmt(now-t0+acc)}
+    bars.forEach((b,i)=>{const t=performance.now()/1000;let v;
+      if(running&&!paused){const env=Math.sin(t*7+i*.31)*.5+.5;v=.18+env*.6+(Math.random()-.5)*.2;peak(v)}
+      else if(paused){v=parseFloat(b.dataset.v||.08)}
+      else v=.06;
+      b.dataset.v=v;const sc=Math.max(.06,Math.min(1,v*(1+Math.sin(t*3+i*.4)*.12)));b.style.transform=`scaleY(${sc})`});
+    tick=requestAnimationFrame(loop);
+  }
+  loop();
+  btnRec.addEventListener('click',()=>{
+    if(!running){running=true;paused=false;t0=performance.now();acc=0;setState('录制中','rec');btnRec.innerHTML=pauseSVG;btnStop.disabled=false;btnPause.disabled=false;return}
+    if(!paused){paused=true;pausedAt=performance.now();setState('已暂停','pause');btnRec.innerHTML=playSVG;return}
+    paused=false;t0=performance.now();acc+=pausedAt-t0*0;setState('录制中','rec');btnRec.innerHTML=pauseSVG;
+  });
+  btnPause.addEventListener('click',()=>{
+    if(!running)return;
+    if(!paused){paused=true;pausedAt=performance.now();setState('已暂停','pause');btnRec.innerHTML=playSVG}
+    else{paused=false;t0=performance.now();setState('录制中','rec');btnRec.innerHTML=pauseSVG}
+  });
+  btnStop.addEventListener('click',()=>{
+    if(!running)return;
+    if(!paused){$('confirm').classList.add('show');return}
+    stopNow();
+  });
+  $('cf-no').onclick=()=>$('confirm').classList.remove('show');
+  $('cf-yes').onclick=()=>{$('confirm').classList.remove('show');stopNow()};
+  function stopNow(){
+    if(!running)return;
+    const total=paused?(acc+(performance.now()-t0)):performance.now()-t0+acc;
+    running=false;paused=false;sDur.textContent=fmt(total);time.textContent='00:00.0';
+    setState('已保存','idle');peakHold=0;peakEl.textContent='PEAK -∞dB';
+    btnRec.innerHTML=pauseSVG;btnStop.disabled=true;btnPause.disabled=true;
+  }
+})();
+</script>
+</body>
+</html>

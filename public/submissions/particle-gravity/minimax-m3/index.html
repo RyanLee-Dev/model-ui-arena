@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+<title>粒子引力场</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#04050b;overflow:hidden;color:#cfd8ff;font-family:"SF Pro Display","PingFang SC",sans-serif}
+  canvas{position:fixed;inset:0;display:block;cursor:crosshair}
+  .hud{
+    position:fixed;left:14px;top:14px;display:flex;flex-direction:column;gap:6px;
+    font-size:11px;letter-spacing:2px;color:#cfd8ff99;background:#0a0d18cc;
+    border:1px solid #ffffff14;padding:10px 14px;border-radius:14px;backdrop-filter:blur(8px);min-width:180px
+  }
+  .hud b{color:#fff;font-size:14px;font-variant-numeric:tabular-nums;font-weight:500;letter-spacing:.5px}
+  .hud .row{display:flex;justify-content:space-between;align-items:baseline}
+  .badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;background:#5cb6ff;color:#04050b;font-weight:700;margin-left:6px}
+  .ctrls{position:fixed;right:14px;top:14px;display:flex;flex-direction:column;gap:6px;font-size:11px;letter-spacing:2px}
+  .ctrls button{
+    border:1px solid #ffffff22;background:#0a0d18cc;color:#cfd8ff;cursor:pointer;
+    padding:8px 12px;border-radius:10px;font-size:11px;letter-spacing:2px;text-align:left;
+  }
+  .ctrls button.on{background:#5cb6ff;color:#04050b;border-color:#5cb6ff}
+  .ctrls button:hover{background:#ffffff14}
+  .title{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:6px;color:#ffffff40;text-transform:uppercase;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">
+  <div class="row">粒子 <b id="pc">0</b></div>
+  <div class="row">能量 <b id="en">0</b></div>
+  <div class="row">FPS <b id="fps">60</b></div>
+  <div class="row">模式 <b id="md">吸引</b></div>
+</div>
+<div class="ctrls">
+  <button class="on" data-m="attract">吸引</button>
+  <button data-m="repel">排斥</button>
+  <button data-m="vortex">涡旋</button>
+  <button data-m="chaos">混沌</button>
+  <button data-m="reset">重置</button>
+</div>
+<div class="title">PARTICLE GRAVITY · 点击 拖拽 双击 切换引力</div>
+<script>
+(()=>{
+  const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+  const pc=$('#pc'),en=$('#en'),fps=$('#fps'),md=$('#md');
+  let W,H;function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}resize();addEventListener('resize',resize);
+  const N=380;const parts=[];const colors=['#5cb6ff','#ff6ec7','#ffd66b','#7af0a5','#a880ff'];
+  for(let i=0;i<N;i++){
+    const a=Math.random()*Math.PI*2,r=80+Math.random()*Math.min(W,H)*.4;
+    parts.push({x:W/2+Math.cos(a)*r,y:H/2+Math.sin(a)*r,vx:(Math.random()-.5)*1.5,vy:(Math.random()-.5)*1.5,
+      life:600+Math.random()*800,max:600+Math.random()*800,c:colors[i%colors.length],size:.6+Math.random()*1.4,
+      trail:[]});
+  }
+  let mode='attract';
+  const pointers={};let shock=null;
+  cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect();pointers[e.pointerId]={x:e.clientX-r.left,y:e.clientY-r.top}});
+  cv.addEventListener('pointerleave',()=>{for(const k in pointers)delete pointers[k]});
+  cv.addEventListener('pointerdown',e=>{const r=cv.getBoundingClientRect();const x=e.clientX-r.left,y=e.clientY-r.top;pointers[e.pointerId]={x,y,down:true};if(e.detail>=2)shock={x,y,age:0,max:60}});
+  cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();shock={x:e.clientX-r.left,y:e.clientY-r.top,age:0,max:60}});
+  document.querySelectorAll('.ctrls button').forEach(b=>b.addEventListener('click',()=>{const m=b.dataset.m;if(m==='reset'){for(let p of parts){p.x=W/2;p.y=H/2;p.vx=(Math.random()-.5)*2;p.vy=(Math.random()-.5)*2;p.life=p.max;}}else{mode=m;document.querySelectorAll('.ctrls button').forEach(x=>x.classList.toggle('on',x===b));md.textContent={attract:'吸引',repel:'排斥',vortex:'涡旋',chaos:'混沌'}[mode]}}));
+  function step(t){
+    requestAnimationFrame(step);
+    ctx.fillStyle='rgba(4,5,11,0.18)';ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    let totalE=0;
+    for(let p of parts){
+      let fx=0,fy=0;
+      if(shock&&shock.age<shock.max){const dx=p.x-shock.x,dy=p.y-shock.y,d=Math.sqrt(dx*dx+dy*dy)+1;const f=(1-shock.age/shock.max)*1800/(d*.5);fx+=dx/d*f;fy+=dy/d*f}
+      for(const id in pointers){const P=pointers[id];const dx=P.x-p.x,dy=P.y-p.y,d2=dx*dx+dy*dy+30;const d=Math.sqrt(d2);const F=9000/d2;if(mode==='attract'){fx+=dx/d*F;fy+=dy/d*F}else if(mode==='repel'){fx-=dx/d*F;fy-=dy/d*F}else if(mode==='vortex'){fx+=-dy/d*F*.5+dx/d*F*.2;fy+=dx/d*F*.5+dy/d*F*.2}else{const n=Math.sin(t*.001+p.x*.01);fx+=dx/d*F*(n);fy+=dy/d*F*(n)}}
+      p.vx+=fx*.0008;p.vy+=fy*.0008;p.vx*=.985;p.vy*=.985;p.x+=p.vx;p.y+=p.vy;
+      p.trail.push([p.x,p.y]);if(p.trail.length>6)p.trail.shift();
+      totalE+=Math.abs(p.vx)+Math.abs(p.vy);
+      if(p.x<0||p.x>W||p.y<0||p.y>H){p.x=W/2;p.y=H/2;p.vx=(Math.random()-.5)*1;p.vy=(Math.random()-.5)*1}
+      ctx.strokeStyle=p.c+'55';ctx.lineWidth=.8;ctx.beginPath();
+      for(let i=0;i<p.trail.length-1;i++){ctx.moveTo(p.trail[i][0],p.trail[i][1]);ctx.lineTo(p.trail[i+1][0],p.trail[i+1][1])}
+      ctx.stroke();
+      ctx.fillStyle=p.c;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fill();
+    }
+    if(shock){shock.age++;const r=shock.age*8;ctx.strokeStyle='#ff6ec7'+(80-shock.age)+'';ctx.lineWidth=2;ctx.beginPath();ctx.arc(shock.x,shock.y,r,0,Math.PI*2);ctx.stroke();if(shock.age>=shock.max)shock=null}
+    if(Object.keys(pointers).length){for(const id in pointers){const P=pointers[id];ctx.strokeStyle='#5cb6ff66';ctx.lineWidth=1;ctx.beginPath();ctx.arc(P.x,P.y,28+Math.sin(t*.005)*4,0,Math.PI*2);ctx.stroke()}}
+    pc.textContent=parts.length;en.textContent=(totalE|0);
+    fps.textContent=Math.round(1000/Math.max(1,t-(step.last||t)));step.last=t;
+  }
+  function $(s){return document.querySelector(s)}
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>

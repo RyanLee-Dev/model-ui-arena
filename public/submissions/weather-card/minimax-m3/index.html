@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Weather · 天象</title>
+<style>
+  :root{
+    --day-1:#5cb6ff; --day-2:#82dcff; --night-1:#0a1238; --night-2:#1a2358;
+    --rain-1:#1c2440; --rain-2:#3a4868;
+    --snow-1:#d7e2ee; --snow-2:#8fa1bb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{font-family:-apple-system,"SF Pro Display","PingFang SC",sans-serif;background:#06080f;color:#fff;overflow:hidden;-webkit-font-smoothing:antialiased}
+  .sky{position:fixed;inset:0;background:linear-gradient(180deg,var(--c1),var(--c2));transition:background 1.2s}
+  .fx{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+  .fx i{position:absolute;top:-10vh;display:block;animation:fall linear infinite}
+  .fx.rain i{width:1.4px;height:18px;background:linear-gradient(180deg,transparent,#cfe6ffaa);border-radius:2px}
+  .fx.snow i{width:6px;height:6px;background:#fff;border-radius:50%;box-shadow:0 0 6px #fff8}
+  @keyframes fall{to{transform:translateY(120vh)}}
+  .sun{position:fixed;top:14%;right:14%;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,#ffd66b 0%,#ffae45 40%,transparent 70%);filter:blur(6px);opacity:0;transition:opacity 1s}
+  .sun.on{opacity:.9;animation:pulse 4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  .moon{position:fixed;top:14%;right:18%;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#f1ecd6,#c2bb9c 70%,#7d7860);box-shadow:inset -10px -6px 0 #00000040,0 0 30px #ffffff14;opacity:0;transition:opacity 1s}
+  .moon.on{opacity:1}
+  .shell{position:relative;z-index:5;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:14px}
+  .title{font-size:12px;letter-spacing:6px;opacity:.6;text-transform:uppercase}
+  .tabs{display:flex;gap:6px;background:#ffffff10;border:1px solid #ffffff1a;padding:4px;border-radius:999px;backdrop-filter:blur(10px)}
+  .tab{padding:8px 14px;border-radius:999px;border:0;background:transparent;color:#fff;font-size:12px;letter-spacing:1px;cursor:pointer;transition:.25s}
+  .tab.on{background:#fff;color:#1a1a1a;font-weight:600}
+  .card{
+    width:min(380px,100%);border-radius:28px;padding:24px;
+    background:linear-gradient(160deg,#ffffff22,#ffffff0a);backdrop-filter:blur(18px);
+    border:1px solid #ffffff26;box-shadow:0 30px 80px -20px #000a;
+  }
+  .row{display:flex;justify-content:space-between;align-items:flex-end}
+  .city{font-size:18px;letter-spacing:1px}
+  .desc{font-size:12px;opacity:.7;margin-top:4px}
+  .big{font-size:84px;font-weight:200;line-height:1;letter-spacing:-3px;font-variant-numeric:tabular-nums}
+  .big sup{font-size:24px;font-weight:400;vertical-align:super;margin-left:2px;opacity:.7}
+  .meta{display:flex;gap:14px;margin-top:12px;font-size:12px;opacity:.85}
+  .meta span{display:flex;align-items:center;gap:4px}
+  .bar{display:flex;gap:6px;margin-top:14px;align-items:end}
+  .day{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:11px;opacity:.85}
+  .day .col{width:100%;height:60px;display:flex;align-items:end;justify-content:center;gap:3px}
+  .day .col b{display:block;width:8px;border-radius:4px;background:linear-gradient(180deg,#ffd66b,#ff8b3a)}
+  .day .col i{display:block;width:8px;border-radius:4px;background:linear-gradient(180deg,#7fd0ff,#2680ff)}
+  .icon{width:64px;height:64px;margin:8px 0}
+  .toolbar{display:flex;gap:8px;align-items:center}
+  .toolbar button{padding:6px 12px;font-size:11px;letter-spacing:1px;border-radius:999px;border:1px solid #ffffff33;background:#ffffff10;color:#fff;cursor:pointer}
+  .toolbar button.on{background:#fff;color:#111;font-weight:600}
+</style>
+</head>
+<body>
+<div class="sky" id="sky"></div>
+<div class="sun" id="sun"></div>
+<div class="moon" id="moon"></div>
+<div class="fx" id="fx"></div>
+<div class="shell">
+  <div class="title">天 象 · WEATHER ATELIER</div>
+  <div class="tabs" id="tabs"></div>
+  <div class="card">
+    <div class="row">
+      <div>
+        <div class="city" id="city">上海</div>
+        <div class="desc" id="desc">晴朗</div>
+      </div>
+      <svg class="icon" id="wicon" viewBox="0 0 64 64"></svg>
+    </div>
+    <div class="big"><span id="temp">23</span><sup id="unit">°</sup></div>
+    <div class="meta">
+      <span>💧 湿度 <b id="hum">62%</b></span>
+      <span>🌬 风速 <b id="wind">3.4</b> m/s</span>
+      <span>体感 <b id="feel">22°</b></span>
+    </div>
+    <div class="bar" id="bar"></div>
+  </div>
+  <div class="toolbar">
+    <button id="unitBtn">°C / °F</button>
+    <button id="autoBtn" class="on">AUTO</button>
+  </div>
+</div>
+<script>
+(()=>{
+  const data=[
+    {name:'上海',weather:'sunny',temp:23,hum:62,wind:3.4,days:[
+      {d:'周一',hi:25,lo:18},{d:'周二',hi:27,lo:20},{d:'周三',hi:24,lo:17},{d:'周四',hi:21,lo:15},{d:'周五',hi:23,lo:16}
+    ],desc:'晴朗 微风'},
+    {name:'北京',weather:'snow',temp:-2,hum:48,wind:5.6,days:[
+      {d:'周一',hi:1,lo:-5},{d:'周二',hi:3,lo:-4},{d:'周三',hi:-1,lo:-8},{d:'周四',hi:0,lo:-6},{d:'周五',hi:2,lo:-3}
+    ],desc:'小雪 北风'},
+    {name:'伦敦',weather:'rain',temp:14,hum:84,wind:6.2,days:[
+      {d:'周一',hi:16,lo:11},{d:'周二',hi:14,lo:10},{d:'周三',hi:13,lo:9},{d:'周四',hi:15,lo:11},{d:'周五',hi:17,lo:12}
+    ],desc:'阴雨 阵风'},
+    {name:'东京',weather:'cloud',temp:19,hum:71,wind:2.8,days:[
+      {d:'周一',hi:21,lo:15},{d:'周二',hi:22,lo:16},{d:'周三',hi:20,lo:14},{d:'周四',hi:18,lo:13},{d:'周五',hi:21,lo:15}
+    ],desc:'多云 微风'}
+  ];
+  const sky=$('sky'),fx=$('fx'),sun=$('sun'),moon=$('moon'),tabs=$('tabs');
+  const cityEl=$('city'),descEl=$('desc'),tempEl=$('temp'),unitEl=$('unit');
+  const humEl=$('hum'),windEl=$('wind'),feelEl=$('feel'),bar=$('bar');
+  const icon=$('wicon'),unitBtn=$('unitBtn'),autoBtn=$('autoBtn');
+  const palette={
+    sunny:{c1:'#5cb6ff',c2:'#82dcff'},rain:{c1:'#1c2440',c2:'#3a4868'},
+    snow:{c1:'#7a8aa6',c2:'#c9d3e3'},cloud:{c1:'#536279',c2:'#8b9bb3'},night:{c1:'#0a1238',c2:'#1a2358'}
+  };
+  const ICONS={
+    sunny:'<circle cx="32" cy="32" r="11" fill="#ffd66b"/><g stroke="#ffd66b" stroke-width="3" stroke-linecap="round"><line x1="32" y1="6" x2="32" y2="14"/><line x1="32" y1="50" x2="32" y2="58"/><line x1="6" y1="32" x2="14" y2="32"/><line x1="50" y1="32" x2="58" y2="32"/><line x1="14" y1="14" x2="20" y2="20"/><line x1="44" y1="44" x2="50" y2="50"/><line x1="14" y1="50" x2="20" y2="44"/><line x1="44" y1="20" x2="50" y2="14"/></g>',
+    rain:'<path d="M20 36a12 12 0 1 1 24 0 8 8 0 0 1 0 16H20a8 8 0 0 1 0-16z" fill="#dfe7f3"/><g stroke="#82b6ff" stroke-width="3" stroke-linecap="round"><line x1="22" y1="46" x2="18" y2="58"/><line x1="32" y1="46" x2="28" y2="58"/><line x1="42" y1="46" x2="38" y2="58"/></g>',
+    snow:'<path d="M20 36a12 12 0 1 1 24 0 8 8 0 0 1 0 16H20a8 8 0 0 1 0-16z" fill="#fff"/><g fill="#fff"><circle cx="20" cy="58" r="2"/><circle cx="30" cy="60" r="2"/><circle cx="40" cy="58" r="2"/><circle cx="50" cy="60" r="2"/></g>',
+    cloud:'<path d="M16 36a12 12 0 0 1 24 0 8 8 0 0 1 0 16H16a8 8 0 0 1 0-16z" fill="#fff"/><path d="M14 28a10 10 0 0 1 20-4" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/>'
+  };
+  data.forEach((c,i)=>{const b=document.createElement('button');b.className='tab'+(i===0?' on':'');b.textContent=c.name;b.onclick=()=>select(i);tabs.appendChild(b)});
+  let idx=0,unit='C',displayTemp=0,animT=null;
+  function select(i){
+    idx=i;document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',j===i));
+    const d=data[i];cityEl.textContent=d.name;descEl.textContent=d.desc;humEl.textContent=d.hum+'%';windEl.textContent=d.wind;
+    const target=unit==='C'?d.temp:Math.round(d.temp*9/5+32);
+    feelEl.textContent=Math.round(target-1)+'°';
+    countUp(displayTemp,target,800,v=>{tempEl.textContent=Math.round(v)});
+    icon.innerHTML=ICONS[d.weather];
+    const isNight=new Date().getHours()>=18||new Date().getHours()<6;
+    const p=isNight?palette.night:palette[d.weather];
+    sky.style.setProperty('--c1',p.c1);sky.style.setProperty('--c2',p.c2);
+    sun.classList.toggle('on',d.weather==='sunny'&&!isNight);
+    moon.classList.toggle('on',isNight);
+    fx.className='fx '+d.weather;fx.innerHTML='';
+    const n=d.weather==='snow'?40:d.weather==='rain'?80:0;
+    for(let k=0;k<n;k++){const el=document.createElement('i');el.style.left=Math.random()*100+'%';el.style.animationDuration=(d.weather==='snow'?6+Math.random()*4:.6+Math.random()*1.4)+'s';el.style.animationDelay=Math.random()*5+'s';fx.appendChild(el)}
+    renderBar();
+  }
+  function renderBar(){
+    bar.innerHTML='';const d=data[idx];const max=Math.max(...d.days.map(x=>x.hi)),min=Math.min(...d.days.map(x=>x.lo));
+    d.days.forEach(x=>{const wrap=document.createElement('div');wrap.className='day';wrap.innerHTML=`<div>${x.d}</div><div class="col"><b style="height:${((x.hi-min)/(max-min))*90+10}%"></b><i style="height:${((x.lo-min)/(max-min))*90+10}%"></i></div><div>${unit==='C'?x.hi:Math.round(x.hi*9/5+32)}°/${unit==='C'?x.lo:Math.round(x.lo*9/5+32)}°</div>`;bar.appendChild(wrap)});
+  }
+  function countUp(a,b,dur,cb){
+    if(animT)cancelAnimationFrame(animT);const t0=performance.now();const ease=t=>1-Math.pow(1-t,3);
+    function step(t){const p=Math.min(1,(t-t0)/dur);cb(a+(b-a)*ease(p));if(p<1)animT=requestAnimationFrame(step)}
+    animT=requestAnimationFrame(step);
+  }
+  unitBtn.onclick=()=>{unit=unit==='C'?'F':'C';unitEl.textContent='°'+unit;select(idx)};
+  autoBtn.onclick=()=>{autoBtn.classList.toggle('on')};
+  select(0);
+})();
+</script>
+</body>
+</html>

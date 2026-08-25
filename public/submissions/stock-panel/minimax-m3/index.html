@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Stock · 行情</title>
+<style>
+  :root{--bg:#07090f;--panel:#10131c;--line:#1d2230;--ink:#e9ecf3;--mute:#6b7184;--up:#22c089;--down:#ef4a5e;--acc:#5cb6ff}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(120% 80% at 50% -20%,#141826,#07090f 70%);
+    color:var(--ink);font-family:-apple-system,"SF Pro Display","PingFang SC",sans-serif;
+    padding:24px;display:flex;flex-direction:column;align-items:center;gap:14px;-webkit-font-smoothing:antialiased;
+  }
+  .head{display:flex;justify-content:space-between;align-items:baseline;width:min(440px,100%);font-size:11px;color:var(--mute);letter-spacing:4px;text-transform:uppercase}
+  .head .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--up);margin-right:8px;box-shadow:0 0 10px var(--up);animation:pulse 1.6s infinite}
+  @keyframes pulse{50%{opacity:.4}}
+  .head .t{font-variant-numeric:tabular-nums}
+  .panel{
+    width:min(440px,100%);background:linear-gradient(160deg,#161a26,#0c0f17);
+    border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    box-shadow:0 24px 60px -30px #000c;
+  }
+  .tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}
+  .tab{padding:14px;font-size:13px;letter-spacing:2px;color:var(--mute);cursor:pointer;text-align:center;position:relative;transition:.25s}
+  .tab.on{color:var(--ink)}
+  .tab.on::after{content:"";position:absolute;left:50%;bottom:-1px;width:24px;height:2px;background:var(--acc);transform:translateX(-50%);border-radius:2px}
+  .row{
+    display:grid;grid-template-columns:1fr 90px 80px;
+    padding:14px 16px;border-bottom:1px solid #ffffff08;align-items:center;cursor:pointer;transition:.2s;
+  }
+  .row:hover{background:#ffffff06}
+  .row:last-child{border-bottom:0}
+  .name{display:flex;flex-direction:column}
+  .name b{font-size:14px;font-weight:600;letter-spacing:.5px}
+  .name small{font-size:11px;color:var(--mute);margin-top:2px}
+  .logo{
+    width:34px;height:34px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#26304a,#131826);color:#fff;font-weight:700;font-size:14px;margin-right:10px;
+  }
+  .left{display:flex;align-items:center}
+  .chart{height:32px;width:90px}
+  .num{font-variant-numeric:tabular-nums;font-size:15px;font-weight:600;text-align:right}
+  .chg{font-variant-numeric:tabular-nums;font-size:12px;text-align:right;margin-top:2px}
+  .up{color:var(--up)}
+  .down{color:var(--down)}
+  .detail{
+    padding:18px;display:none;border-top:1px solid var(--line);
+    background:linear-gradient(180deg,#0d111a,#07090f);
+  }
+  .detail.show{display:block}
+  .detail h4{font-size:13px;margin-bottom:12px;color:var(--mute);letter-spacing:2px}
+  .big{height:120px;border-radius:10px;background:#0a0d15;border:1px solid #ffffff0a;position:relative;overflow:hidden}
+  .big svg{width:100%;height:100%}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;font-size:11px;color:var(--mute)}
+  .kpis b{display:block;color:var(--ink);font-size:14px;font-weight:500;margin-top:2px}
+  .risk{margin-top:14px;padding:10px 12px;border-radius:10px;background:#ffffff08;font-size:11px;color:var(--mute);border-left:2px solid var(--warn,#f5b04a)}
+</style>
+</head>
+<body>
+<div class="head"><span><span class="dot"></span>LIVE · 实时模拟</span><span class="t" id="clock">--:--:--</span></div>
+<div class="panel">
+  <div class="tabs" id="tabs"></div>
+  <div id="rows"></div>
+</div>
+<script>
+(()=>{
+  const tick=[]=[
+    {sym:'AAPL',cn:'苹果',logo:'A',price:189.43,chg:+1.27,hi:191.20,lo:185.10,pe:28.4,mcap:'2.91T'},
+    {sym:'NVDA',cn:'英伟达',logo:'N',price:121.78,chg:+3.84,hi:124.50,lo:118.10,pe:62.1,mcap:'2.99T'},
+    {sym:'TSLA',cn:'特斯拉',logo:'T',price:236.12,chg:-1.86,hi:241.00,lo:233.40,pe:72.8,mcap:'751B'},
+    {sym:'BTC',cn:'比特币',logo:'₿',price:67412,chg:+2.41,hi:68100,lo:66200,pe:0,mcap:'1.32T'},
+    {sym:'PDD',cn:'拼多多',logo:'P',price:148.20,chg:-0.94,hi:150.10,lo:145.00,pe:14.2,mcap:'205B'},
+    {sym:'MSFT',cn:'微软',logo:'M',price:415.62,chg:+0.34,hi:418.10,lo:412.80,pe:35.6,mcap:'3.09T'}
+  ];
+  const tabs=$('#tabs'),rows=$('#rows');
+  tick.forEach((s,i)=>{const t=document.createElement('div');t.className='tab'+(i===0?' on':'');t.textContent=s.cn;t.onclick=()=>open(i);tabs.appendChild(t)});
+  function svgLine(points,color,w){const d=points.map((p,i)=>`${i?'L':'M'}${p[0]},${p[1]}`).join(' ');return `<svg viewBox="0 0 90 32" preserveAspectRatio="none"><path d="${d}" stroke="${color}" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>`}
+  function mini(seed,up){const pts=[];let y=16+seed%6;for(let i=0;i<12;i++){y+=((seed*7+i*13)%11-5)*(up?-.7:1);pts.push([i*8,Math.max(2,Math.min(30,y))])}return svgLine(pts,up?'#22c089':'#ef4a5e')}
+  function miniBig(seed,up){const pts=[];let y=60+seed%10;for(let i=0;i<32;i++){y+=((seed*(i+1))%9-4)*Math.abs(Math.sin(i*.4))*2;pts.push([i*4,Math.max(4,Math.min(116,y))])}pts.unshift([0,116]);pts.push([124,116]);return `<svg viewBox="0 0 124 120" preserveAspectRatio="none"><defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="${up?'#22c089':'#ef4a5e'}" stop-opacity=".5"/><stop offset="1" stop-color="${up?'#22c089':'#ef4a5e'}" stop-opacity="0"/></linearGradient></defs><path d="${pts.map((p,i)=>`${i?'L':'M'}${p[0]},${p[1]}`).join(' ')} L124,120 L0,120 Z" fill="url(#g)"/><path d="${pts.map((p,i)=>`${i?'L':'M'}${p[0]},${p[1]}`).join(' ')}" stroke="${up?'#22c089':'#ef4a5e'}" stroke-width="1.6" fill="none"/></svg>`}
+  tick.forEach((s,i)=>{
+    const up=s.chg>=0;
+    const r=document.createElement('div');
+    r.className='row';
+    r.innerHTML=`<div class="left"><span class="logo">${s.logo}</span><div class="name"><b>${s.sym}</b><small>${s.cn}</small></div></div>
+      <div class="chart">${mini(s.price*1e3|0,up)}</div>
+      <div><div class="num ${up?'up':'down'}">${s.price.toFixed(2)}</div><div class="chg ${up?'up':'down'}">${up?'+':''}${s.chg.toFixed(2)}%</div></div>`;
+    r.onclick=()=>open(i);rows.appendChild(r);
+  });
+  function open(i){
+    const s=tick[i];const up=s.chg>=0;
+    document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',j===i));
+    let old=document.querySelector('.detail.show');if(old)old.remove();
+    const d=document.createElement('div');d.className='detail show';
+    d.innerHTML=`<h4>${s.sym} · ${s.cn} · ${up?'看涨':'回落'}</h4>
+      <div class="big">${miniBig(s.sym.length*97+i*43,up)}</div>
+      <div class="kpis">
+        <span>最高<b class="up">${s.hi.toFixed(2)}</b></span>
+        <span>最低<b class="down">${s.lo.toFixed(2)}</b></span>
+        <span>PE<b>${s.pe||'—'}</b></span>
+        <span>市值<b>${s.mcap}</b></span>
+      </div>
+      <div class="risk">⚠ 风险提示：当前${up?'多头占优但需警惕回踩':'下行通道未破'};建议结合成交量与消息面综合判断,模拟数据仅供参考。</div>`;
+    rows.appendChild(d);
+  }
+  const clock=document.getElementById('clock');
+  function pad(n){return String(n).padStart(2,'0')}
+  function tickClock(){const d=new Date();clock.textContent=`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;setTimeout(tickClock,1000-d.getMilliseconds())}
+  tickClock();
+  setInterval(()=>{
+    tick.forEach(s=>{const r=s.chg;s.price+=((Math.random()-.5)*s.price*.003);s.chg=r+(Math.random()-.5)*.04});
+    rows.querySelectorAll('.row').forEach((r,i)=>{
+      const s=tick[i];const up=s.chg>=0;
+      r.querySelector('.num').textContent=s.price.toFixed(2);
+      r.querySelector('.num').className='num '+(up?'up':'down');
+      r.querySelector('.chg').textContent=(up?'+':'')+s.chg.toFixed(2)+'%';
+      r.querySelector('.chart').innerHTML=mini(s.price*1e3|0,up);
+    });
+  },1400);
+})();
+</script>
+</body>
+</html>

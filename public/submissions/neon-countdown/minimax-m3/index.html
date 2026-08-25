@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>倒计时 · NEON</title>
+<style>
+  :root{--bg:#08070f;--neon:#00f0ff;--warn:#ff2d7e;--gold:#ffd66b}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(120% 80% at 50% 50%,#1a0c2c 0%,#08070f 70%);
+    color:#fff;font-family:"SF Pro Display","PingFang SC",sans-serif;
+    overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;
+  }
+  body::before{content:"";position:fixed;inset:0;background:
+    linear-gradient(transparent 50%,#ffffff04 50%),
+    repeating-linear-gradient(90deg,#ffffff04 0 1px,transparent 1px 80px);
+    background-size:100% 4px,100% 100%;pointer-events:none}
+  .bg-glow{position:fixed;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%,var(--glow,#00f0ff22),transparent 50%);transition:background .5s}
+  .stage{position:relative;z-index:2;text-align:center;padding:24px}
+  .label{font-size:11px;letter-spacing:8px;opacity:.6;text-transform:uppercase;margin-bottom:18px}
+  .ring-wrap{position:relative;width:min(78vmin,360px);aspect-ratio:1;margin:0 auto 18px}
+  .ring{position:absolute;inset:0}
+  .num{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:min(34vmin,170px);font-weight:200;letter-spacing:-4px;
+    font-variant-numeric:tabular-nums;color:#fff;
+    text-shadow:0 0 30px var(--glow-color,#00f0ff),0 0 60px var(--glow-color,#00f0ff);
+    transition:transform .25s;
+  }
+  .num.beat{animation:beat .9s ease-out}
+  @keyframes beat{0%{transform:scale(1)}30%{transform:scale(1.06)}100%{transform:scale(1)}}
+  .num.done{color:var(--gold);text-shadow:0 0 40px var(--gold)}
+  .ticks{position:absolute;inset:8%;display:flex;justify-content:space-between;align-items:center;padding:0 6%}
+  .ticks i{display:block;width:2px;height:14px;background:#ffffff18;border-radius:2px;transition:.2s}
+  .ticks i.on{background:var(--neon);box-shadow:0 0 10px var(--neon)}
+  .status{margin-top:6px;font-size:12px;letter-spacing:6px;opacity:.55}
+  .btn{
+    margin-top:24px;padding:12px 28px;border-radius:999px;border:1px solid #ffffff33;
+    background:transparent;color:#fff;cursor:pointer;font-size:13px;letter-spacing:4px;
+    transition:.25s;display:inline-flex;align-items:center;gap:10px;
+  }
+  .btn:hover{background:#ffffff14;border-color:#fff}
+  .btn::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--neon);box-shadow:0 0 8px var(--neon)}
+  .confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+  .confetti i{position:absolute;top:-10vh;width:8px;height:14px;background:var(--c,#fff);border-radius:2px;animation:fall linear forwards}
+  @keyframes fall{to{transform:translate(var(--tx),120vh) rotate(720deg)}}
+  .flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;transition:.5s}
+  .flash.on{opacity:.6}
+  body.final .bg-glow{background:radial-gradient(circle at 50% 50%,#ffd66b55,transparent 60%)}
+</style>
+</head>
+<body>
+<div class="bg-glow" id="glow"></div>
+<div class="flash" id="flash"></div>
+<div class="confetti" id="confetti"></div>
+<div class="stage">
+  <div class="label">NEON COUNTDOWN · 10s</div>
+  <div class="ring-wrap">
+    <svg class="ring" viewBox="0 0 100 100">
+      <defs>
+        <linearGradient id="g" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#00f0ff"/><stop offset="1" stop-color="#ff2d7e"/>
+        </linearGradient>
+      </defs>
+      <circle cx="50" cy="50" r="46" fill="none" stroke="#ffffff10" stroke-width="3"/>
+      <circle id="arc" cx="50" cy="50" r="46" fill="none" stroke="url(#g)" stroke-width="3" stroke-linecap="round"
+              stroke-dasharray="289" stroke-dashoffset="289" transform="rotate(-90 50 50)"/>
+    </svg>
+    <div class="ticks" id="ticks"></div>
+    <div class="num" id="num">10</div>
+  </div>
+  <div class="status" id="status">STANDBY · 启动</div>
+  <button class="btn" id="btn">RESTART</button>
+</div>
+<script>
+(()=>{
+  const num=document.getElementById('num'),arc=document.getElementById('arc'),btn=document.getElementById('btn');
+  const status=document.getElementById('status'),ticks=document.getElementById('ticks'),glow=document.getElementById('glow');
+  const flash=document.getElementById('flash'),confetti=document.getElementById('confetti');
+  for(let i=0;i<20;i++){const t=document.createElement('i');ticks.appendChild(t)}
+  const tickEls=[...ticks.children];
+  const TOTAL=10;const CIRC=2*Math.PI*46;let left=TOTAL,running=false,tickT=null;
+  function colorFor(s){if(s<=3)return'#ff2d7e';if(s<=6)return'#ffd66b';return'#00f0ff'}
+  function render(){
+    const p=left/TOTAL;
+    arc.setAttribute('stroke-dashoffset',CIRC*(1-p));
+    arc.style.transition='linear .95s';
+    if(left===0){arc.setAttribute('stroke-dashoffset',CIRC);arc.style.transition='none'}
+    const c=colorFor(left);
+    document.documentElement.style.setProperty('--neon',c);
+    document.documentElement.style.setProperty('--glow-color',c);
+    glow.style.setProperty('--glow',c+'33');
+    num.textContent=left===0?'GO!':left;
+    num.classList.remove('beat');void num.offsetWidth;num.classList.add('beat');
+    num.style.setProperty('--glow-color',c);
+    tickEls.forEach((t,i)=>t.classList.toggle('on',i<(TOTAL-left)));
+    status.textContent=left===0?'COMPLETE · 完美落幕':'T-MINUS · 即将发布';
+    document.body.classList.toggle('final',left===0);
+  }
+  function step(){if(left>0){left--;render();if(left===0){boom();clearInterval(tickT);tickT=null;running=false;return}}else{clearInterval(tickT);tickT=null;running=false}}
+  function boom(){
+    flash.classList.add('on');setTimeout(()=>flash.classList.remove('on'),400);
+    const palette=['#ffd66b','#ff2d7e','#00f0ff','#7af0a5','#a880ff'];
+    for(let i=0;i<140;i++){const c=document.createElement('i');c.style.left=Math.random()*100+'%';c.style.setProperty('--c',palette[i%palette.length]);c.style.setProperty('--tx',(Math.random()-.5)*400+'px');c.style.animationDuration=(1.5+Math.random()*2)+'s';c.style.animationDelay=Math.random()*.4+'s';confetti.appendChild(c);setTimeout(()=>c.remove(),4000)}
+  }
+  function start(){if(running)return;running=true;left=TOTAL;confetti.innerHTML='';render();tickT=setInterval(step,1000)}
+  btn.addEventListener('click',()=>{clearInterval(tickT);start()});
+  setTimeout(start,600);
+})();
+</script>
+</body>
+</html>

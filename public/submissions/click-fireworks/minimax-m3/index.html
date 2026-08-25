@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no" />
+<title>Fireworks · 烟花夜</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#050610}
+  canvas{display:block;position:fixed;inset:0;cursor:crosshair}
+  .hud{position:fixed;top:18px;left:50%;transform:translateX(-50%);font-family:"SF Pro Display","PingFang SC",sans-serif;color:#fffc;font-size:12px;letter-spacing:6px;text-transform:uppercase;pointer-events:none;mix-blend-mode:screen;text-shadow:0 0 12px #fff6}
+  .hud b{display:inline-block;margin:0 6px;background:#fff2;padding:4px 10px;border-radius:999px;font-size:11px;color:#fff;letter-spacing:2px}
+  .hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);font-family:"SF Pro Display",sans-serif;color:#ffffff60;font-size:12px;letter-spacing:3px;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+<div class="hud">点 击 任 意 位 置 放 烟 花<b id="fps">FPS 60</b><b id="cnt">0</b></div>
+<div class="hint">CLICK / TAP ANYWHERE · DOUBLE CLICK FOR BOUQUET</div>
+<script>
+(()=>{
+  const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+  const fpsEl=document.getElementById('fps'),cntEl=document.getElementById('cnt');
+  let W,H;function resize(){W=cv.width=innerWidth;H=cv.height=innerHeight}resize();addEventListener('resize',resize);
+  const palette=[[255,90,140],[255,170,80],[255,235,120],[120,255,200],[120,200,255],[200,140,255],[255,120,200]];
+  const parts=[];let total=0;let fpsAvg=60,frames=0,last=performance.now();
+  function spawn(x,y,multi=1){
+    const color=palette[Math.random()*palette.length|0];
+    const count=(80+Math.random()*60|0)*multi;
+    const speed=4+Math.random()*5;
+    for(let i=0;i<count;i++){
+      const a=Math.random()*Math.PI*2;
+      const v=speed*(0.4+Math.random())*multi;
+      parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-2,life:60+Math.random()*40|max:90+Math.random()*40,r:1.4+Math.random()*1.6,c:[...color],drag:.985,grav:.04,trail:[]});
+    }
+    total++;
+  }
+  function launch(x,y){spawn(x,y,1)}
+  function bouquet(x,y){for(let k=0;k<5;k++)setTimeout(()=>spawn(x+(Math.random()-.5)*120,y+(Math.random()-.5)*80,0.7),k*60)}
+  cv.addEventListener('click',e=>{const r=cv.getBoundingClientRect();launch(e.clientX-r.left,e.clientY-r.top)});
+  cv.addEventListener('dblclick',e=>{const r=cv.getBoundingClientRect();bouquet(e.clientX-r.left,e.clientY-r.top)});
+  function auto(){
+    if(Math.random()<.005)spawn(Math.random()*W,Math.random()*H*.6,0.6);
+    requestAnimationFrame(auto);
+  }auto();
+  function frame(t){
+    requestAnimationFrame(frame);
+    ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='rgba(5,6,16,0.22)';ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    for(let i=parts.length-1;i>=0;i--){
+      const p=parts[i];p.vx*=p.drag;p.vy=p.vy*p.drag+p.grav;p.x+=p.vx;p.y+=p.vy;
+      if(p.trail.length>3)p.trail.shift();p.trail.push([p.x,p.y]);
+      p.life--;
+      const a=Math.max(0,p.life/p.max);
+      if(a<=0||p.y>H+40){parts.splice(i,1);continue}
+      for(let j=0;j<p.trail.length-1;j++){
+        const al=(j/p.trail.length)*.3*a;
+        ctx.fillStyle=`rgba(${p.c[0]},${p.c[1]},${p.c[2]},${al})`;
+        ctx.beginPath();ctx.arc(p.trail[j][0],p.trail[j][1],p.r*(j/p.trail.length+.4),0,Math.PI*2);ctx.fill();
+      }
+      ctx.fillStyle=`rgba(${p.c[0]},${p.c[1]},${p.c[2]},${a})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r*(1+Math.sin(t*.02)*.2),0,Math.PI*2);ctx.fill();
+      ctx.fillStyle=`rgba(255,255,255,${a*.4})`;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r*.5,0,Math.PI*2);ctx.fill();
+    }
+    frames++;if(t-last>500){fpsAvg=Math.round(frames*1000/(t-last));fpsEl.textContent='FPS '+fpsAvg;frames=0;last=t}
+    cntEl.textContent=parts.length;
+  }requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

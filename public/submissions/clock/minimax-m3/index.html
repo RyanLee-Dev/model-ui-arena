@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>极昼极夜 · 时钟</title>
+<style>
+  :root{
+    --bg-day:#f4ecdc; --bg-dusk:#e7c39a; --bg-night:#0a1530;
+    --ink:#1d2538; --gold:#c89b3c; --mute:#8b8a92;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;font-family:-apple-system,"SF Pro Display","PingFang SC","Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased}
+  body{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 90% at 50% 0%,var(--bg) 0%,#0a0f1f 100%);
+    color:var(--ink);overflow:hidden;transition:background 1.2s ease;
+  }
+  body.day{--bg:var(--bg-day)}
+  body.dusk{--bg:var(--bg-dusk)}
+  body.night{--bg:var(--bg-night);color:#eaeaf2}
+  .stage{display:flex;flex-direction:column;align-items:center;gap:18px;padding:24px;width:100%}
+  .face{
+    position:relative;width:min(78vmin,360px);aspect-ratio:1;border-radius:50%;
+    background:radial-gradient(circle at 30% 25%,#ffffffcc,#d9d2c3 55%,#9b8e75 100%);
+    box-shadow:
+      inset 0 0 0 2px #ffffff80,
+      inset 0 0 0 8px #2b241a,
+      inset 0 0 0 9px #d8b96a,
+      inset 0 22px 28px -18px #0006,
+      inset 0 -28px 40px -24px #0008,
+      0 30px 60px -20px #0008, 0 10px 30px -10px #000a;
+  }
+  body.night .face{
+    background:radial-gradient(circle at 30% 25%,#2a3656 0%,#15203d 55%,#060912 100%);
+    box-shadow:
+      inset 0 0 0 2px #ffffff14,
+      inset 0 0 0 8px #06080f,
+      inset 0 0 0 9px #d8b96a55,
+      inset 0 22px 28px -18px #0009,
+      inset 0 -28px 40px -24px #000a,
+      0 0 60px -10px #d8b96a44;
+  }
+  .tick{position:absolute;left:50%;top:50%;transform-origin:50% 100%;transform:translate(-50%,-100%) rotate(0deg);width:3px;height:46%;background:#1d2538;border-radius:2px;opacity:.85}
+  .tick.major{width:6px;height:49%;background:#0d1322}
+  body.night .tick{background:#eaeaf2}
+  body.night .tick.major{background:#d8b96a}
+  .num{position:absolute;left:50%;top:50%;font-weight:700;font-size:clamp(20px,7vmin,30px);color:#1d2538;transform:translate(-50%,-50%)}
+  body.night .num{color:#eaeaf2}
+  .n12{transform:translate(-50%,-50%) translateY(-40%)}
+  .n3 {transform:translate(-50%,-50%) translateX(40%)}
+  .n6 {transform:translate(-50%,-50%) translateY(40%)}
+  .n9 {transform:translate(-50%,-50%) translateX(-40%)}
+  .hand{position:absolute;left:50%;top:50%;transform-origin:50% 100%;border-radius:6px}
+  .hand.h{width:8px;height:30%;background:#1d2538;transform:translate(-50%,-100%) rotate(0deg)}
+  .hand.m{width:6px;height:40%;background:#1d2538;transform:translate(-50%,-100%) rotate(0deg)}
+  .hand.s{width:2px;height:44%;background:var(--gold);transform:translate(-50%,-100%) rotate(0deg);box-shadow:0 0 10px var(--gold)}
+  body.night .hand.h,body.night .hand.m{background:#eaeaf2}
+  .hub{position:absolute;left:50%;top:50%;width:14px;height:14px;background:radial-gradient(circle at 30% 30%,#fff,#888 70%);border-radius:50%;transform:translate(-50%,-50%);z-index:5;box-shadow:0 1px 4px #0008}
+  .meta{display:flex;gap:24px;align-items:baseline;color:inherit;opacity:.85}
+  .digital{font-variant-numeric:tabular-nums;font-weight:600;font-size:clamp(28px,8vmin,44px);letter-spacing:2px}
+  .digital small{font-size:.45em;opacity:.55;margin-left:6px}
+  .date{font-size:14px;opacity:.7;letter-spacing:1px}
+  .label{font-size:12px;letter-spacing:6px;text-transform:uppercase;opacity:.5;margin-bottom:-6px}
+  .pulse{position:fixed;inset:0;pointer-events:none;background:radial-gradient(60% 40% at 50% 50%, transparent 60%, #ffffff08 100%);animation:breathe 6s ease-in-out infinite}
+  @keyframes breathe{0%,100%{opacity:.4}50%{opacity:.95}}
+</style>
+</head>
+<body class="day">
+<div class="pulse"></div>
+<div class="stage">
+  <div class="label">CHRONOS · 极昼极夜</div>
+  <div class="digital" id="dig">--:--:--<small id="ap">AM</small></div>
+  <div class="face" id="face">
+    <div class="tick major" style="transform:translate(-50%,-100%) rotate(0deg)"></div>
+    <div class="tick major" style="transform:translate(-50%,-100%) rotate(90deg)"></div>
+    <div class="tick major" style="transform:translate(-50%,-100%) rotate(180deg)"></div>
+    <div class="tick major" style="translate(-50%,-100%) rotate(270deg);transform:translate(-50%,-100%) rotate(270deg)"></div>
+    <div class="num n12">12</div>
+    <div class="num n3">3</div>
+    <div class="num n6">6</div>
+    <div class="num n9">9</div>
+    <div class="hand h" id="h"></div>
+    <div class="hand m" id="m"></div>
+    <div class="hand s" id="s"></div>
+    <div class="hub"></div>
+  </div>
+  <div class="meta">
+    <div class="date" id="date">--</div>
+    <div class="date" id="phase">DAY</div>
+  </div>
+</div>
+<script>
+(()=>{
+  const face=document.getElementById('face'),body=document.body;
+  const digits=['Ⅰ','Ⅱ','Ⅲ','Ⅳ','Ⅴ','Ⅵ','Ⅶ','Ⅷ','Ⅸ','Ⅹ','Ⅺ','Ⅻ'];
+  for(let i=0;i<12;i++){
+    if(i%3===0)continue;
+    const t=document.createElement('div');
+    t.className='tick';t.style.transform=`translate(-50%,-100%) rotate(${i*30}deg)`;
+    face.appendChild(t);
+  }
+  const h=document.getElementById('h'),m=document.getElementById('m'),s=document.getElementById('s');
+  const dig=document.getElementById('dig'),ap=document.getElementById('ap'),dateEl=document.getElementById('date'),ph=document.getElementById('phase');
+  const wk=['周日','周一','周二','周三','周四','周五','周六'];
+  function pad(n){return String(n).padStart(2,'0')}
+  function update(){
+    const d=new Date();
+    const ms=d.getMilliseconds(),sec=d.getSeconds()+ms/1000;
+    const min=d.getMinutes()+sec/60;
+    const hr=(d.getHours()%12)+min/60;
+    h.style.transform=`translate(-50%,-100%) rotate(${hr*30}deg)`;
+    m.style.transform=`translate(-50%,-100%) rotate(${min*6}deg)`;
+    s.style.transform=`translate(-50%,-100%) rotate(${sec*6}deg)`;
+    const hh=d.getHours();
+    dig.firstChild.textContent=`${pad(hh%12||12)}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    ap.textContent=hh<12?'AM':'PM';
+    dateEl.textContent=`${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} · ${wk[d.getDay()]}`;
+    let phase='DAY';
+    if(hh>=6&&hh<17)phase='DAY';
+    else if(hh>=17&&hh<19)phase='DUSK';
+    else phase='NIGHT';
+    ph.textContent=phase;
+    body.classList.remove('day','dusk','night');body.classList.add(phase.toLowerCase());
+  }
+  update();setInterval(update,80);
+})();
+</script>
+</body>
+</html>
