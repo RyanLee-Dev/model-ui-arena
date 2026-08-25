@@ -765,6 +765,23 @@
     "updatedAt": "2026-08-25T09:18:35.329Z"
   },
   {
+    "id": "clock:gpt-5.6-terra",
+    "theme": "clock",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/clock/gpt-5.6-terra/",
+    "publicPath": "/submissions/clock/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 2214,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:09:09.489Z"
+  },
+  {
     "id": "recorder:ox-alpha",
     "theme": "recorder",
     "model": "ox-alpha",
@@ -1528,6 +1545,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-08-25T09:18:35.347Z"
+  },
+  {
+    "id": "recorder:gpt-5.6-terra",
+    "theme": "recorder",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/recorder/gpt-5.6-terra/",
+    "publicPath": "/submissions/recorder/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 2497,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:09:09.578Z"
   },
   {
     "id": "weather-card:ox-alpha",
@@ -2295,6 +2329,23 @@
     "updatedAt": "2026-08-25T09:18:35.365Z"
   },
   {
+    "id": "weather-card:gpt-5.6-terra",
+    "theme": "weather-card",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/weather-card/gpt-5.6-terra/",
+    "publicPath": "/submissions/weather-card/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 3046,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:09:09.669Z"
+  },
+  {
     "id": "stock-panel:ox-alpha",
     "theme": "stock-panel",
     "model": "ox-alpha",
@@ -3058,6 +3109,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-08-25T09:18:35.358Z"
+  },
+  {
+    "id": "stock-panel:gpt-5.6-terra",
+    "theme": "stock-panel",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/stock-panel/gpt-5.6-terra/",
+    "publicPath": "/submissions/stock-panel/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 2076,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:09:09.757Z"
   },
   {
     "id": "click-fireworks:ox-alpha",
@@ -3825,6 +3893,23 @@
     "updatedAt": "2026-08-25T09:18:35.323Z"
   },
   {
+    "id": "click-fireworks:gpt-5.6-terra",
+    "theme": "click-fireworks",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/click-fireworks/gpt-5.6-terra/",
+    "publicPath": "/submissions/click-fireworks/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 1316,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:10:17.384Z"
+  },
+  {
     "id": "neon-countdown:ox-alpha",
     "theme": "neon-countdown",
     "model": "ox-alpha",
@@ -4146,6 +4231,23 @@
     "unlimitedLines": false,
     "usesBitmap": false,
     "updatedAt": "2026-08-25T09:18:35.338Z"
+  },
+  {
+    "id": "neon-countdown:gpt-5.6-terra",
+    "theme": "neon-countdown",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/neon-countdown/gpt-5.6-terra/",
+    "publicPath": "/submissions/neon-countdown/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 1764,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:10:17.485Z"
   },
   {
     "id": "particle-gravity:ox-alpha",
@@ -4471,6 +4573,23 @@
     "updatedAt": "2026-08-25T09:18:35.341Z"
   },
   {
+    "id": "particle-gravity:gpt-5.6-terra",
+    "theme": "particle-gravity",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/particle-gravity/gpt-5.6-terra/",
+    "publicPath": "/submissions/particle-gravity/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 1733,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:10:17.580Z"
+  },
+  {
     "id": "cheetah-trophy-run:ox-alpha",
     "theme": "cheetah-trophy-run",
     "model": "ox-alpha",
@@ -4792,6 +4911,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-08-25T09:18:35.314Z"
+  },
+  {
+    "id": "cheetah-trophy-run:gpt-5.6-terra",
+    "theme": "cheetah-trophy-run",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/cheetah-trophy-run/gpt-5.6-terra/",
+    "publicPath": "/submissions/cheetah-trophy-run/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 0,
+    "sizeBytes": 4282,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:11:14.670Z"
   },
   {
     "id": "dslr-camera:ox-alpha",
@@ -5117,6 +5253,23 @@
     "updatedAt": "2026-08-25T09:18:35.332Z"
   },
   {
+    "id": "dslr-camera:gpt-5.6-terra",
+    "theme": "dslr-camera",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/dslr-camera/gpt-5.6-terra/",
+    "publicPath": "/submissions/dslr-camera/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 0,
+    "sizeBytes": 3189,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:11:14.758Z"
+  },
+  {
     "id": "schwarzschild-black-hole:ox-alpha",
     "theme": "schwarzschild-black-hole",
     "model": "ox-alpha",
@@ -5319,6 +5472,23 @@
     "unlimitedLines": true,
     "usesBitmap": false,
     "updatedAt": "2026-08-25T09:18:35.350Z"
+  },
+  {
+    "id": "schwarzschild-black-hole:gpt-5.6-terra",
+    "theme": "schwarzschild-black-hole",
+    "model": "gpt-5.6-terra",
+    "filename": "index.html",
+    "path": "/submissions/schwarzschild-black-hole/gpt-5.6-terra/",
+    "publicPath": "/submissions/schwarzschild-black-hole/gpt-5.6-terra/index.html",
+    "renderKind": "html",
+    "linesTotal": 2,
+    "linesCss": 1,
+    "linesJs": 1,
+    "sizeBytes": 4440,
+    "withinLineLimit": true,
+    "unlimitedLines": true,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:11:48.687Z"
   },
   {
     "id": "carwash-decision:ox-alpha",
@@ -6174,5 +6344,24 @@
     "updatedAt": "2026-08-25T09:18:35.309Z",
     "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
     "answerText": "# 洗车决策：走过去 vs 开过去\n\n## 决策\n\n**走过去，毫无疑问。**\n\n## 分析\n\n### 时间成本\n- 50 米步行 ≈ 40-50 秒\n- 开车：上车（15s）→ 发动机启动（5s）→ 缓慢挪动（30s）→ 停车熄火（15s）≈ 65 秒\n- **步行更快，且零启动成本**\n\n### 安全成本\n- 50 米内频繁启停，冷车状态下油耗和磨损远超正常行驶\n- 洗车店门口车流、水渍、行人密集，短距挪车增加刮蹭风险\n- 50 米开车走的其实是\"不值得冒的风险\"\n\n### 隐性收益\n- 多走几步路，少排几克碳\n- 短途步行让身体从久坐中苏醒，血液循环启动更快\n- 心理上：走去的\"仪式感\"比开车更轻快\n\n### 唯一例外\n以下情况可以开车：\n- 下大雨且未带伞\n- 东西太重搬不动\n- 洗车流程要求你把车开进工位（但这不影响你\"走过去取车/开进工位\"的决策）\n\n## 结论\n\n> 50 米的距离，本质上是一个\"走路问题\"而非\"开车问题\"。把车钥匙装好，走过去，让洗车店帮你把车开进工位。这是最高效、最安全、最省心的方案。"
+  },
+  {
+    "id": "carwash-decision:gpt-5.6-terra",
+    "theme": "carwash-decision",
+    "model": "gpt-5.6-terra",
+    "filename": "response.md",
+    "path": "/submissions/carwash-decision/gpt-5.6-terra/response.md",
+    "publicPath": "/submissions/carwash-decision/gpt-5.6-terra/response.md",
+    "renderKind": "text",
+    "linesTotal": 6,
+    "linesCss": 0,
+    "linesJs": 0,
+    "sizeBytes": 392,
+    "withinLineLimit": true,
+    "unlimitedLines": false,
+    "usesBitmap": false,
+    "updatedAt": "2026-08-25T10:11:48.779Z",
+    "questionText": "Q1: 我想去洗车，洗车店距离我家 50 米，你说我应该开车过去还是走过去？",
+    "answerText": "结论：开车过去\n理由1：洗车的对象是车，必须把车带到洗车店，走过去无法完成洗车。\n理由2：50 米距离极短，低速开过去即可，注意观察行人并选择安全的掉头或停车位置。\n理由3：若洗完车还要回家，直接开车能避免步行往返和取车的额外时间。\n建议：确认店门口可进车后，缓慢开过去洗。"
   }
 ]
